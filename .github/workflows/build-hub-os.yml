@@ -1,0 +1,131 @@
+# Manual build of the BigFred hub OS image (Buildroot + apps).
+# Actions → Workflows → "Build hub OS image" → Run workflow
+
+name: Build hub OS image
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean:
+        description: Full rebuild (wipe os/output and os/buildroot before build)
+        type: boolean
+        default: false
+      skip_tests:
+        description: Skip Go unit tests for hub apps
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-hub-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: buildroot image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    env:
+      MAKEFLAGS: -j$(( $(nproc) ))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Buildroot host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            sed \
+            make \
+            binutils \
+            gcc \
+            g++ \
+            bash \
+            patch \
+            gzip \
+            bzip2 \
+            perl \
+            tar \
+            cpio \
+            python3 \
+            unzip \
+            rsync \
+            wget \
+            curl \
+            file \
+            bc \
+            ca-certificates \
+            libncurses-dev \
+            libssl-dev \
+            debianutils
+
+      - name: Cache Buildroot downloads
+        uses: actions/cache@v4
+        id: cache-dl
+        with:
+          path: os/output/dl
+          key: br-dl-${{ runner.os }}-2024.11-${{ hashFiles('os/configs/**', 'os/overlays/**', 'os/board/**', 'apps/**') }}
+          restore-keys: |
+            br-dl-${{ runner.os }}-2024.11-
+
+      - name: Cache Buildroot source tree
+        uses: actions/cache@v4
+        id: cache-br-src
+        with:
+          path: |
+            os/buildroot
+            os/buildroot-2024.11.tar.gz
+          key: br-src-${{ runner.os }}-2024.11
+          restore-keys: |
+            br-src-${{ runner.os }}-
+
+      - name: Clean build directories
+        if: inputs.clean
+        run: make -C os distclean
+
+      - name: Test hub apps
+        if: inputs.skip_tests != true
+        run: make -C apps test
+
+      - name: Build hub OS image
+        run: make -C os image
+
+      - name: Image summary
+        run: |
+          ls -lh os/output/images/
+          sha256sum os/output/images/hub-nvme.img | tee os/output/images/hub-nvme.img.sha256
+
+      - name: Upload hub-nvme.img
+        uses: actions/upload-artifact@v4
+        with:
+          name: bigfred-hub-nvme-${{ github.run_number }}
+          path: |
+            os/output/images/hub-nvme.img
+            os/output/images/hub-nvme.img.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Job summary
+        run: |
+          {
+            echo "### Hub OS build"
+            echo ""
+            echo "- Run: \`${{ github.run_number }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Artifact: \`bigfred-hub-nvme-${{ github.run_number }}\`"
+            echo ""
+            echo '```'
+            cat os/output/images/hub-nvme.img.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
