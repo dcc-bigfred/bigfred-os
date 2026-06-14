@@ -8,10 +8,13 @@ RUN chmod +x /usr/local/bin/install-buildroot-deps.sh \
 	&& /usr/local/bin/install-buildroot-deps.sh \
 	&& apt-get install -y --no-install-recommends golang-go \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& groupadd -g 1000 builder \
-	&& useradd -u 1000 -g 1000 -d /work -M -s /bin/bash builder \
 	&& mkdir -p /work \
-	&& chown builder:builder /work
+	&& if getent passwd 1000 >/dev/null; then \
+		usermod -d /work -s /bin/bash "$(getent passwd 1000 | cut -d: -f1)"; \
+	   else \
+		useradd -u 1000 -g "$(getent group 1000 | cut -d: -f1)" -d /work -M -s /bin/bash builder; \
+	   fi \
+	&& chown 1000:1000 /work
 
 WORKDIR /work
-USER builder
+USER 1000:1000

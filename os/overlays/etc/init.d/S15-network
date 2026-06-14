@@ -1,30 +1,26 @@
 #!/bin/sh
-# Static IP by default; optional DHCP via /etc/bigfred/network.conf
+# Ethernet: auto-detect subnet or DHCP via configure-ethernet
 
-CONF=/etc/bigfred/network.conf
+CONFIGURE=/usr/sbin/configure-ethernet
 
 case "$1" in
 start)
-	. "$CONF" 2>/dev/null || true
-	IFACE="${HUB_IFACE:-eth0}"
-	ip link set "$IFACE" up
-
-	if [ "${HUB_USE_DHCP:-0}" = "1" ]; then
-		dhclient "$IFACE"
+	if [ -x "$CONFIGURE" ]; then
+		"$CONFIGURE"
 	else
-		IP="${HUB_IP:-192.168.10.10}"
-		PFX="${HUB_PREFIX:-24}"
-		GW="${HUB_GW:-192.168.10.1}"
-		ip addr flush dev "$IFACE"
-		ip addr add "${IP}/${PFX}" dev "$IFACE"
-		ip route add default via "$GW" 2>/dev/null || true
+		echo "S15-network: $CONFIGURE missing" >&2
+		exit 1
 	fi
 	;;
 stop)
-	. "$CONF" 2>/dev/null || true
-	IFACE="${HUB_IFACE:-eth0}"
 	killall dhclient 2>/dev/null
-	ip addr flush dev "$IFACE" 2>/dev/null
+	for iface in /sys/class/net/*; do
+		[ -d "$iface" ] || continue
+		name=$(basename "$iface")
+		[ "$name" = "lo" ] && continue
+		[ -d "$iface/wireless" ] && continue
+		ip addr flush dev "$name" 2>/dev/null || true
+	done
 	;;
 restart)
 	$0 stop

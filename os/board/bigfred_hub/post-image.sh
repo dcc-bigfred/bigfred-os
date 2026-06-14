@@ -30,13 +30,24 @@ if [ -n "${RPI_FW}" ] && [ -d "${RPI_FW}" ]; then
 	cp -v "${RPI_FW}"/start*.elf "${RPI_FW}"/fixup*.dat "${BOOT_DIR}/" 2>/dev/null || true
 fi
 
-cp -v "${TARGET_DIR}/boot/config.txt" "${BOOT_DIR}/config.txt"
-cp -v "${TARGET_DIR}/boot/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
+# rpi-firmware installs these under BINARIES_DIR (not target/boot/).
+RPI_FW_IMG="${BINARIES_DIR}/rpi-firmware"
+if [ -f "${RPI_FW_IMG}/config.txt" ]; then
+	cp -v "${RPI_FW_IMG}/config.txt" "${BOOT_DIR}/config.txt"
+else
+	cp -v "${BOARD_DIR}/config.txt" "${BOOT_DIR}/config.txt"
+fi
+if [ -f "${RPI_FW_IMG}/cmdline.txt" ]; then
+	cp -v "${RPI_FW_IMG}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
+else
+	cp -v "${BOARD_DIR}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
+fi
 
 # mtools image for genimage
 BOOT_MBR="${BINARIES_DIR}/boot.vfat"
 rm -f "${BOOT_MBR}"
-"${HOST_DIR}/bin/mkdosfs" -n BOOT -C "${BOOT_MBR}" 64M
+# -C size is in 1024-byte blocks (65536 × 1 KiB = 64 MiB)
+"${HOST_DIR}/sbin/mkdosfs" -n BOOT -C "${BOOT_MBR}" $((64 * 1024))
 for f in "${BOOT_DIR}"/*; do
 	[ -e "$f" ] || continue
 	"${HOST_DIR}/bin/mcopy" -i "${BOOT_MBR}" "$f" ::/

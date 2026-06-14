@@ -31,6 +31,10 @@ make image                  # host (wymaga zależności Buildroot)
 make image-using-docker     # Ubuntu 24.04 w Dockerze (uid/gid 1000:1000)
 ```
 
+Docker montuje repo pod **tą samą ścieżką bezwzględną** co na hoście. Host tools z
+`$ORIGIN/../lib` są OK; `rm -rf os/output` potrzebne tylko gdy RUNPATH wskazuje
+**inną** starą ścieżkę absolutną (np. po buildzie z `/work` zamiast z pełnej ścieżki).
+
 Albo tylko warstwa OS:
 
 ```bash
@@ -39,6 +43,9 @@ make image
 ```
 
 Zależności hosta (Ubuntu/Debian): `sudo docker/install-buildroot-deps.sh`
+(m.in. `flex`/`libfl2` — cross-`ar` z binutils linkuje `libfl.so.2`).
+
+Po zmianie obrazu Docker: `make docker-image`, potem `make image-using-docker`.
 
 ### Błędy hosta przy GCC 15 (Manjaro/Arch)
 

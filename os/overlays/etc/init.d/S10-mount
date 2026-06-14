@@ -15,7 +15,7 @@ start)
 		fi
 	fi
 
-	mkdir -p /data/sqlite /data/redis /data/alloy \
+	mkdir -p /data/etc /data/sqlite /data/redis /data/alloy \
 		/data/logs/bigfred /data/logs/redis /data/logs/alloy
 
 	# Enforce read-only root (hub spec)

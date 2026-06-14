@@ -35,4 +35,7 @@ apt-get install -y --no-install-recommends \
 	ca-certificates \
 	libncurses-dev \
 	libssl-dev \
-	debianutils
+	debianutils \
+	flex \
+	libfl2 \
+	bison

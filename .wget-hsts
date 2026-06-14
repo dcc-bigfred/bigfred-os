@@ -1,0 +1,14 @@
+# HSTS 1.0 Known Hosts database for GNU Wget.
+# Edit at your own risk.
+# <hostname>	<port>	<incl. subdomains>	<created>	<max-age>
+www.mpfr.org	0	1	1780562421	31536000
+snapshot.debian.org	0	0	1780562132	15768000
+raw.githubusercontent.com	0	0	1780563885	31536000
+cdn.kernel.org	0	0	1780566274	31557600
+www.busybox.net	0	0	1780565893	63072000
+www.zlib.net	0	1	1780561878	63072000
+matt.ucc.asn.au	0	0	1780566229	5184000
+curl.se	0	0	1780566396	31536000
+codeload.github.com	0	0	1780566759	31536000
+ftp.isc.org	0	1	1780566005	63072000
+github.com	0	1	1780566868	31536000
