@@ -10,6 +10,7 @@ CGO_ENABLED ?= 0
 
 # Subdirectories of apps/ that contain main.go
 APPS        := $(patsubst %/main.go,%,$(wildcard */main.go))
+GENERIC_APPS := $(filter-out bigfred-os-ui,$(APPS))
 BINARIES    := $(addprefix $(BIN_DIR)/,$(APPS))
 
 GO_BUILD    = cd "$(ROOT)" && CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) \
@@ -21,7 +22,11 @@ all: build
 
 build: $(BINARIES)
 
+$(BIN_DIR)/bigfred-os-ui: bigfred-os-ui/main.go
+	@$(MAKE) -C bigfred-os-ui OUT="$(BIN_DIR)/bigfred-os-ui" GOOS=$(GOOS) GOARCH=$(GOARCH)
+
 $(BIN_DIR)/%: %/main.go
+	@if [ "$*" = "bigfred-os-ui" ]; then exit 0; fi
 	@mkdir -p "$(BIN_DIR)"
 	@echo "==> apps/$*"
 	$(GO_BUILD) "$(BIN_DIR)/$*" ./apps/$*

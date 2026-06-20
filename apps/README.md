@@ -26,6 +26,7 @@ make -C apps test
 
 | App | Role |
 |-----|------|
+| `bigfred-os-ui` | Hub admin web UI (logs, services, supervisord) |
 | `rotate-hub-logs` | Log rotation under `/data/logs` |
 | `fanctl` | Pi 5 active cooler (§8.8) |
 

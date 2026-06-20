@@ -1,0 +1,35 @@
+#!/bin/sh
+# Grafana OSS (BR2_PACKAGE_GRAFANA)
+
+GRAFANA_BIN=/usr/bin/grafana-server
+GRAFANA_HOME=/usr/share/grafana
+GRAFANA_CFG=/etc/grafana/grafana.ini
+PIDFILE=/var/run/grafana.pid
+
+case "$1" in
+start)
+	[ -x "$GRAFANA_BIN" ] || exit 0
+	[ -f "$GRAFANA_CFG" ] || exit 0
+	mkdir -p /data/opt/grafana/data /data/opt/grafana/log /data/opt/grafana/plugins
+	printf "Starting grafana: "
+	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$GRAFANA_BIN" -- \
+		--homepath="$GRAFANA_HOME" \
+		--config="$GRAFANA_CFG"
+	taskset -cp 0,1 "$(cat "$PIDFILE")" 2>/dev/null || true
+	echo "OK"
+	;;
+stop)
+	[ -x "$GRAFANA_BIN" ] || exit 0
+	printf "Stopping grafana: "
+	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
+	echo "OK"
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

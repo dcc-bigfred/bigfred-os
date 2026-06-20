@@ -5,3 +5,19 @@ config BR2_PACKAGE_ALLOY
 	  Install a prebuilt Grafana Alloy binary from the overlay path
 	  package/alloy/alloy-linux-arm64. Enable when you ship the binary;
 	  otherwise install Alloy manually under /usr/bin on the device.
+
+config BR2_PACKAGE_GRAFANA
+	bool "Grafana OSS (prebuilt binary)"
+	default y
+	help
+	  Install Grafana from the official prebuilt tarball matching the
+	  target CPU (arm64 / armv7). Runtime data: /data/opt/grafana.
+
+config BR2_PACKAGE_VICTORIAMETRICS
+	bool "VictoriaMetrics single-node (prebuilt binary)"
+	default y
+	help
+	  Install VictoriaMetrics from the official GitHub release binary
+	  matching the target CPU (arm64 / arm). Runtime data:
+	  /data/opt/victoriametrics. Uses a longer in-memory flush interval
+	  to reduce disk writes.

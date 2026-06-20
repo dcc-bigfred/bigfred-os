@@ -15,6 +15,9 @@ HOST_M4_MAKE_ENV = $(HOST_GCC15_C_ENV)
 HOST_E2FSPROGS_CONF_ENV = $(HOST_GCC15_C_ENV)
 HOST_E2FSPROGS_MAKE_ENV = $(HOST_GCC15_C_ENV)
 
+# Prebuilt binary arch mapping (Grafana, VictoriaMetrics, …)
+include $(BR2_EXTERNAL_BIGFRED_HUB_PATH)/package/prebuilt-arch.mk
+
 # BR2_EXTERNAL packages
 EXTERNAL_PKG_MKS := $(sort $(wildcard $(BR2_EXTERNAL_BIGFRED_HUB_PATH)/package/*/*.mk))
 include $(EXTERNAL_PKG_MKS)

@@ -14,8 +14,8 @@ partycji `/` w trybie RW lub przez własny pakiet Buildroot).
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Jądro** | Raspberry Pi `linux` 6.6 (`bcm2712`) + fragmenty RT i USB-ACM |
 | **Rootfs** | BusyBox init, musl, RO `/`, RW `/data` |
-| **Usługi** | Redis, SQLite, Dropbear, watchdog, fanctl, opcjonalnie Alloy |
-| **Init** | `S05`…`S95` zgodnie z §8.3 (bez `S60-bigfred`) |
+| **Usługi** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, opcjonalnie Alloy |
+| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`; bez `S60-bigfred`) |
 
 ## Wymagania hosta
 
@@ -111,6 +111,12 @@ Po flashu, z innego builda Go (`GOOS=linux GOARCH=arm64`):
 
 Bazy: `/data/sqlite/`, Redis: `/data/redis/`.
 
+Monitoring: Grafana (`http://:3000`, admin/bigfred) z datasource VictoriaMetrics
+(`:8428`). Dane: `/data/opt/grafana`, `/data/opt/victoriametrics`.
+Flush VM na dysk: `-inmemoryDataFlushInterval=5m` w `/etc/default/victoriametrics`.
+
+Panel admina: `bigfred-os-ui` (`http://:8090`, konfiguracja w `/data/etc/bigfred-os-ui.conf`).
+
 ## Struktura
 
 ```text
@@ -119,7 +125,7 @@ os/
 ├── board/bigfred_hub/ # cmdline, config.txt, genimage, post-*.sh
 ├── overlays/          # fstab, init.d, redis, crontab, udev
 ├── kernel/            # (fragmenty w configs/linux-hub.fragment)
-├── package/           # opcjonalnie alloy (Go apps: ../apps/)
+├── package/           # alloy, grafana, victoriametrics (Go apps: ../apps/)
 ├── scripts/           # flash-nvme.sh
 ../apps/                 # Go apps → apps/.bin/ → /usr/sbin/ on image
 ├── Makefile

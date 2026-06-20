@@ -1,0 +1,43 @@
+#!/bin/sh
+# VictoriaMetrics single-node (BR2_PACKAGE_VICTORIAMETRICS)
+
+VM_BIN=/usr/bin/victoria-metrics
+VM_DEFAULTS=/etc/default/victoriametrics
+PIDFILE=/var/run/victoriametrics.pid
+
+case "$1" in
+start)
+	[ -x "$VM_BIN" ] || exit 0
+	[ -f "$VM_DEFAULTS" ] || exit 0
+	. "$VM_DEFAULTS"
+
+	STORAGE_DATA_PATH="${STORAGE_DATA_PATH:-/data/opt/victoriametrics}"
+	HTTP_LISTEN_ADDR="${HTTP_LISTEN_ADDR:-:8428}"
+	RETENTION_PERIOD="${RETENTION_PERIOD:-12}"
+	INMEMORY_DATA_FLUSH_INTERVAL="${INMEMORY_DATA_FLUSH_INTERVAL:-5m}"
+
+	mkdir -p "$STORAGE_DATA_PATH"
+	printf "Starting victoriametrics: "
+	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$VM_BIN" -- \
+		-storageDataPath="$STORAGE_DATA_PATH" \
+		-httpListenAddr="$HTTP_LISTEN_ADDR" \
+		-retentionPeriod="$RETENTION_PERIOD" \
+		-inmemoryDataFlushInterval="$INMEMORY_DATA_FLUSH_INTERVAL"
+	taskset -cp 0,1 "$(cat "$PIDFILE")" 2>/dev/null || true
+	echo "OK"
+	;;
+stop)
+	[ -x "$VM_BIN" ] || exit 0
+	printf "Stopping victoriametrics: "
+	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
+	echo "OK"
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

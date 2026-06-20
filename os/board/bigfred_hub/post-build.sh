@@ -12,9 +12,14 @@ mkdir -p "${TARGET_DIR}/data"
 mkdir -p "${TARGET_DIR}/data/sqlite"
 mkdir -p "${TARGET_DIR}/data/redis"
 mkdir -p "${TARGET_DIR}/data/alloy"
+mkdir -p "${TARGET_DIR}/data/opt/grafana/data"
+mkdir -p "${TARGET_DIR}/data/opt/grafana/log"
+mkdir -p "${TARGET_DIR}/data/opt/grafana/plugins"
+mkdir -p "${TARGET_DIR}/data/opt/victoriametrics"
 mkdir -p "${TARGET_DIR}/data/logs/bigfred"
 mkdir -p "${TARGET_DIR}/data/logs/redis"
 mkdir -p "${TARGET_DIR}/data/logs/alloy"
+mkdir -p "${TARGET_DIR}/data/etc"
 
 # Placeholder for BigFred (installed separately by operator)
 mkdir -p "${TARGET_DIR}/usr/share/bigfred/web"
@@ -43,6 +48,13 @@ if [ -f "${HUB}/board/bigfred_hub/network.conf" ] && \
 	mkdir -p "${TARGET_DIR}/etc/bigfred"
 	install -m 0644 "${HUB}/board/bigfred_hub/network.conf" \
 		"${TARGET_DIR}/etc/bigfred/network.conf"
+fi
+
+# bigfred-os-ui seed (copied to /data/etc on first boot by S10-mount)
+if [ -f "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" ]; then
+	mkdir -p "${TARGET_DIR}/etc/bigfred"
+	install -m 0644 "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" \
+		"${TARGET_DIR}/etc/bigfred/bigfred-os-ui.conf"
 fi
 
 exit 0

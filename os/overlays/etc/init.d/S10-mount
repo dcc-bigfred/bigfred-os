@@ -16,7 +16,15 @@ start)
 	fi
 
 	mkdir -p /data/etc /data/sqlite /data/redis /data/alloy \
+		/data/opt/grafana/data /data/opt/grafana/log /data/opt/grafana/plugins \
+		/data/opt/victoriametrics \
 		/data/logs/bigfred /data/logs/redis /data/logs/alloy
+
+	if [ ! -f /data/etc/bigfred-os-ui.conf ] && \
+	   [ -f /etc/bigfred/bigfred-os-ui.conf ]; then
+		cp /etc/bigfred/bigfred-os-ui.conf /data/etc/bigfred-os-ui.conf
+		chmod 640 /data/etc/bigfred-os-ui.conf
+	fi
 
 	# Enforce read-only root (hub spec)
 	mount -o remount,ro / 2>/dev/null || true

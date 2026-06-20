@@ -1,0 +1,35 @@
+#!/bin/sh
+# BigFred hub OS admin UI (apps/bigfred-os-ui)
+
+UI_BIN=/usr/sbin/bigfred-os-ui
+UI_CONF=/data/etc/bigfred-os-ui.conf
+PIDFILE=/var/run/bigfred-os-ui.pid
+
+case "$1" in
+start)
+	[ -x "$UI_BIN" ] || exit 0
+	[ -f "$UI_CONF" ] || {
+		echo "S48-bigfred-os-ui: missing $UI_CONF" >&2
+		exit 0
+	}
+	printf "Starting bigfred-os-ui: "
+	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$UI_BIN" -- \
+		--config "$UI_CONF"
+	taskset -cp 0,1 "$(cat "$PIDFILE")" 2>/dev/null || true
+	echo "OK"
+	;;
+stop)
+	[ -x "$UI_BIN" ] || exit 0
+	printf "Stopping bigfred-os-ui: "
+	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
+	echo "OK"
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

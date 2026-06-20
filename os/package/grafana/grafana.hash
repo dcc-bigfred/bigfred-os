@@ -1,0 +1,4 @@
+# From https://dl.grafana.com/oss/release/grafana-11.6.1.linux-arm64.tar.gz.sha256
+sha256  6b45fc6c2e534aee02220c1e8ed792bf4bb44ceac2da5ba0cd66e9579496f73e  grafana-11.6.1.linux-arm64.tar.gz
+# From https://dl.grafana.com/oss/release/grafana-11.6.1.linux-armv7.tar.gz.sha256
+sha256  4f634830264531edc029076fa0805b14364f3127ceb1bf7c5fde3e2fb675ecc5  grafana-11.6.1.linux-armv7.tar.gz
