@@ -406,6 +406,16 @@ button {
   color: var(--muted);
 }
 
+.services-badge.fatal {
+  background: rgba(232, 108, 108, 0.15);
+  color: #e86c6c;
+}
+
+.services-badge.unknown {
+  background: rgba(201, 162, 77, 0.15);
+  color: #c9a24d;
+}
+
 .services-actions {
   display: flex;
   flex-wrap: wrap;

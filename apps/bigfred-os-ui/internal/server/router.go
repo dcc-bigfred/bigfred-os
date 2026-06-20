@@ -17,12 +17,13 @@ import (
 
 // Config holds runtime dependencies for the HTTP server.
 type Config struct {
-	Auth         *auth.Service
-	LogRoots     []string
-	InitDir      string
-	StaticFS     fs.FS
-	SecureCookie bool
-	DevOrigins   []string
+	Auth            *auth.Service
+	LogRoots        []string
+	InitDir         string
+	SupervisordConf string
+	StaticFS        fs.FS
+	SecureCookie    bool
+	DevOrigins      []string
 }
 
 func NewRouter(cfg Config) http.Handler {
@@ -54,6 +55,8 @@ func NewRouter(cfg Config) http.Handler {
 			r.Get("/logs/stream", streamLogsHandler(cfg))
 			r.Get("/services", listServicesHandler(cfg))
 			r.Post("/services/{id}/{action}", serviceActionHandler(cfg))
+			r.Get("/supervisord/programs", listSupervisordProgramsHandler(cfg))
+			r.Post("/supervisord/programs/{name}/{action}", supervisordProgramActionHandler(cfg))
 		})
 	})
 

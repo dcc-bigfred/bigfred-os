@@ -33,12 +33,13 @@ export default function LogsPage() {
   useEffect(() => {
     fetchLogs()
       .then((list) => {
-        setEntries(list);
-        if (list.length > 0) {
-          setSelectedId((prev) => prev ?? list[0].id);
+        const entries = list ?? [];
+        setEntries(entries);
+        if (entries.length > 0) {
+          setSelectedId((prev) => prev ?? entries[0].id);
         }
       })
-      .catch(() => setListError("Nie udało się pobrać listy logów."));
+      .catch(() => setListError("Could not load the log file list."));
   }, []);
 
   useEffect(() => {
@@ -60,10 +61,10 @@ export default function LogsPage() {
       try {
         const msg = JSON.parse(ev.data as string) as LogWSMessage;
         if (msg.type === "history") {
-          setLines(msg.lines);
+          setLines(msg.lines ?? []);
           stickToBottom.current = true;
         } else if (msg.type === "line") {
-          setLines((prev) => [...prev, msg.text]);
+          setLines((prev) => [...(prev ?? []), msg.text ?? ""]);
         } else if (msg.type === "error") {
           setStatus("error");
         }
@@ -93,10 +94,10 @@ export default function LogsPage() {
   return (
     <div className="logs-layout">
       <aside className="logs-sidebar">
-        <h3>Pliki logów</h3>
+        <h3>Log files</h3>
         {listError ? <p className="logs-empty">{listError}</p> : null}
         {!listError && entries.length === 0 ? (
-          <p className="logs-empty">Brak plików logów w skonfigurowanych katalogach.</p>
+          <p className="logs-empty">No log files in the configured directories.</p>
         ) : null}
         {grouped.map(([root, items]) => (
           <div key={root} className="logs-group">
@@ -127,14 +128,14 @@ export default function LogsPage() {
               : "—"}
           </span>
           <span className={`logs-status ${status}`}>
-            {status === "connected" && "Połączono — strumień na żywo"}
-            {status === "connecting" && "Łączenie…"}
-            {status === "error" && "Błąd strumienia"}
-            {status === "idle" && "Rozłączono"}
+            {status === "connected" && "Connected — live stream"}
+            {status === "connecting" && "Connecting…"}
+            {status === "error" && "Stream error"}
+            {status === "idle" && "Disconnected"}
           </span>
         </div>
         <pre ref={outputRef} className="logs-output" onScroll={onScroll}>
-          {lines.length === 0 ? "Oczekiwanie na dane…" : lines.join("\n")}
+          {(lines ?? []).length === 0 ? "Waiting for data…" : (lines ?? []).join("\n")}
         </pre>
       </section>
     </div>

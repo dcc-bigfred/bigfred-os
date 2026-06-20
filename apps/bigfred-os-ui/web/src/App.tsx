@@ -4,8 +4,8 @@ import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import LogsPage from "./pages/LogsPage";
+import SupervisordPage from "./pages/SupervisordPage";
 import ServicesPage from "./pages/ServicesPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
 
 export default function App() {
   return (
@@ -16,7 +16,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
               <Route index element={<Navigate to="/logs" replace />} />
-              <Route path="supervisord" element={<PlaceholderPage title="Supervisord" />} />
+              <Route path="supervisord" element={<SupervisordPage />} />
               <Route path="services" element={<ServicesPage />} />
               <Route path="logs" element={<LogsPage />} />
             </Route>

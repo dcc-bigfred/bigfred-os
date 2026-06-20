@@ -22,7 +22,7 @@ export default function AppShell() {
         <div className="app-user">
           <span>{user?.username}</span>
           <button type="button" className="btn-ghost" onClick={() => void signOut()}>
-            Wyloguj
+            Sign out
           </button>
         </div>
       </header>

@@ -29,9 +29,9 @@ export default function LoginPage() {
       setUser(me);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.code === "invalid_credentials" ? "Nieprawidłowy login lub hasło." : err.code);
+        setError(err.code === "invalid_credentials" ? "Invalid username or password." : err.code);
       } else {
-        setError("Błąd połączenia z serwerem.");
+        setError("Could not connect to the server.");
       }
     } finally {
       setPending(false);
@@ -42,9 +42,9 @@ export default function LoginPage() {
     <div className="login-page">
       <form className="login-card" onSubmit={(e) => void onSubmit(e)}>
         <h1>BigFred Hub OS</h1>
-        <p>Panel administracyjny huba</p>
+        <p>Hub administration panel</p>
         {error ? <div className="login-error">{error}</div> : null}
-        <label htmlFor="username">Login</label>
+        <label htmlFor="username">Username</label>
         <input
           id="username"
           name="username"
@@ -53,7 +53,7 @@ export default function LoginPage() {
           onChange={(e) => setUsername(e.target.value)}
           required
         />
-        <label htmlFor="password">Hasło</label>
+        <label htmlFor="password">Password</label>
         <input
           id="password"
           name="password"
@@ -64,7 +64,7 @@ export default function LoginPage() {
           required
         />
         <button type="submit" disabled={pending}>
-          {pending ? "Logowanie…" : "Zaloguj"}
+          {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </div>

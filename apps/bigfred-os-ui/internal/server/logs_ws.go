@@ -16,7 +16,7 @@ const historyLines = 300
 
 type wsMessage struct {
 	Type  string   `json:"type"`
-	Lines []string `json:"lines,omitempty"`
+	Lines []string `json:"lines"`
 	Text  string   `json:"text,omitempty"`
 	Error string   `json:"error,omitempty"`
 }
@@ -96,6 +96,9 @@ func sendHistory(ctx context.Context, conn *websocket.Conn, path string) error {
 	lines, err := logs.TailLast(path, historyLines)
 	if err != nil {
 		return err
+	}
+	if lines == nil {
+		lines = []string{}
 	}
 	return writeWS(conn, ctx, wsMessage{Type: "history", Lines: lines})
 }

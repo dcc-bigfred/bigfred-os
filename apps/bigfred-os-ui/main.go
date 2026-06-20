@@ -20,6 +20,7 @@ import (
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
 )
 
 //go:embed all:web/dist
@@ -39,7 +40,8 @@ func run() int {
 		legacyLogRoot string
 		secureCookie bool
 		staticDir    string
-		initDir      string
+		initDir          string
+		supervisordConf  string
 	)
 
 	flag.StringVar(&configPath, "config", config.DefaultPath,
@@ -52,9 +54,10 @@ func run() int {
 	flag.BoolVar(&secureCookie, "secure-cookie", false, "set Secure flag on session cookie")
 	flag.StringVar(&staticDir, "static-dir", "", "serve frontend from disk instead of embedded bundle (dev)")
 	flag.StringVar(&initDir, "init-dir", services.DefaultInitDir, "SysV init scripts directory")
+	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
 	}
@@ -72,11 +75,12 @@ func run() int {
 	}
 
 	handler := server.NewRouter(server.Config{
-		Auth:         authSvc,
-		LogRoots:     logs.ParseRoots(logRoots, legacyLogRoot),
-		InitDir:      initDir,
-		StaticFS:     staticFS,
-		SecureCookie: secureCookie,
+		Auth:            authSvc,
+		LogRoots:        logs.ParseRoots(logRoots, legacyLogRoot),
+		InitDir:         initDir,
+		SupervisordConf: supervisordConf,
+		StaticFS:        staticFS,
+		SecureCookie:    secureCookie,
 		DevOrigins: []string{
 			"http://localhost:5174",
 			"http://127.0.0.1:5174",
@@ -107,7 +111,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir *string) error {
+func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -135,6 +139,9 @@ func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacy
 	}
 	if !flagPassed("init-dir") && fc.InitDir != "" {
 		*initDir = fc.InitDir
+	}
+	if !flagPassed("supervisord-conf") && fc.SupervisordConf != "" {
+		*supervisordConf = fc.SupervisordConf
 	}
 	return nil
 }

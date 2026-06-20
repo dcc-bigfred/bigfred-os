@@ -14,10 +14,11 @@ type File struct {
 	HTTP         string
 	Username     string
 	Password     string
-	LogRoot      string
-	LogRoots     string
-	InitDir      string
-	SecureCookie *bool
+	LogRoot         string
+	LogRoots        string
+	InitDir         string
+	SupervisordConf string
+	SecureCookie    *bool
 }
 
 // LoadOptional reads path when it exists. Missing file returns (nil, nil).
@@ -64,6 +65,8 @@ func Parse(text string) *File {
 			f.LogRoots = value
 		case "INIT_DIR", "INITDIR":
 			f.InitDir = value
+		case "SUPERVISORD_CONF", "SUPERVISORDCONF":
+			f.SupervisordConf = value
 		case "SECURE_COOKIE", "SECURECOOKIE":
 			v := parseBool(value)
 			f.SecureCookie = &v

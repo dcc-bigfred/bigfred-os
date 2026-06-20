@@ -1,14 +1,48 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
-  fetchServices,
-  serviceAction,
-  type HubService,
-  type ServiceAction,
+  fetchSupervisordPrograms,
+  supervisordProgramAction,
+  type HubSupervisordProgram,
+  type SupervisordAction,
 } from "../api/client";
 
-export default function ServicesPage() {
-  const [services, setServices] = useState<HubService[]>([]);
+function statusLabel(status: string): string {
+  switch (status) {
+    case "RUNNING":
+      return "running";
+    case "STOPPED":
+      return "stopped";
+    case "STARTING":
+      return "starting";
+    case "BACKOFF":
+      return "retrying";
+    case "FATAL":
+      return "failed";
+    case "EXITED":
+      return "exited";
+    default:
+      return status.toLowerCase();
+  }
+}
+
+function statusClass(status: string): string {
+  switch (status) {
+    case "RUNNING":
+      return "running";
+    case "STOPPED":
+    case "EXITED":
+      return "stopped";
+    case "FATAL":
+    case "BACKOFF":
+      return "fatal";
+    default:
+      return "unknown";
+  }
+}
+
+export default function SupervisordPage() {
+  const [programs, setPrograms] = useState<HubSupervisordProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -18,9 +52,9 @@ export default function ServicesPage() {
     setError(null);
     setLoading(true);
     try {
-      setServices(await fetchServices());
+      setPrograms(await fetchSupervisordPrograms());
     } catch {
-      setError("Could not load the service list.");
+      setError("Could not load the supervisord program list.");
     } finally {
       setLoading(false);
     }
@@ -30,12 +64,12 @@ export default function ServicesPage() {
     void load();
   }, [load]);
 
-  const runAction = async (id: string, action: ServiceAction) => {
-    const key = `${id}:${action}`;
+  const runAction = async (name: string, action: SupervisordAction) => {
+    const key = `${name}:${action}`;
     setPending(key);
     setActionError(null);
     try {
-      await serviceAction(id, action);
+      await supervisordProgramAction(name, action);
       await load();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -48,49 +82,54 @@ export default function ServicesPage() {
     }
   };
 
-  const isPending = (id: string, action: ServiceAction) => pending === `${id}:${action}`;
+  const isPending = (name: string, action: SupervisordAction) => pending === `${name}:${action}`;
 
   return (
     <div className="services-page">
       <div className="services-header">
-        <h2>SysV services</h2>
+        <h2>Supervisord</h2>
         <button type="button" className="btn-ghost" onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
       </div>
-      <p className="services-hint">Scripts from <code>/etc/init.d/S??-*</code> discovered dynamically.</p>
+      <p className="services-hint">
+        Programs from <code>/data/etc/supervisord/supervisord.conf</code> — controlled via{" "}
+        <code>supervisorctl</code>.
+      </p>
 
       {actionError ? <div className="services-error">{actionError}</div> : null}
       {loading ? <p className="services-empty">Loading…</p> : null}
       {!loading && error ? <p className="services-empty">{error}</p> : null}
-      {!loading && !error && services.length === 0 ? (
-        <p className="services-empty">No init scripts in /etc/init.d.</p>
+      {!loading && !error && programs.length === 0 ? (
+        <p className="services-empty">No programs in the supervisord configuration.</p>
       ) : null}
 
-      {!loading && !error && services.length > 0 ? (
+      {!loading && !error && programs.length > 0 ? (
         <div className="services-table-wrap">
           <table className="services-table">
             <thead>
               <tr>
-                <th>Service</th>
+                <th>Program</th>
                 <th>Status</th>
-                <th>Script</th>
+                <th>Group</th>
+                <th>Command</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {services.map((svc) => (
-                <tr key={svc.id}>
+              {programs.map((prog) => (
+                <tr key={prog.name}>
                   <td>
-                    <div className="services-name">{svc.name}</div>
-                    <div className="services-id">{svc.id}</div>
+                    <div className="services-name">{prog.name}</div>
+                    {prog.pid ? <div className="services-id">PID {prog.pid}</div> : null}
                   </td>
                   <td>
-                    <span className={`services-badge ${svc.running ? "running" : "stopped"}`}>
-                      {svc.running ? "running" : "stopped"}
+                    <span className={`services-badge ${statusClass(prog.status)}`}>
+                      {statusLabel(prog.status)}
                     </span>
                   </td>
-                  <td className="services-script">{svc.script}</td>
+                  <td className="services-script">{prog.group || "—"}</td>
+                  <td className="services-script">{prog.command || "—"}</td>
                   <td className="services-actions">
                     {(["start", "stop", "restart"] as const).map((action) => (
                       <button
@@ -98,9 +137,9 @@ export default function ServicesPage() {
                         type="button"
                         className="btn-action"
                         disabled={pending !== null}
-                        onClick={() => void runAction(svc.id, action)}
+                        onClick={() => void runAction(prog.name, action)}
                       >
-                        {isPending(svc.id, action)
+                        {isPending(prog.name, action)
                           ? "…"
                           : action === "start"
                             ? "Start"

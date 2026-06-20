@@ -6,7 +6,7 @@ export default function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) {
-    return <div className="app-main">Ładowanie…</div>;
+    return <div className="app-main">Loading…</div>;
   }
 
   if (!user) {

@@ -38,6 +38,8 @@ Or pass flags directly (override config file values):
 | `--password` | *(required)* | Password |
 | `--log-roots` | `/data/logs,/var/log` | Comma-separated log directories |
 | `--log-root` | *(deprecated)* | Single log directory |
+| `--init-dir` | `/etc/init.d` | SysV init scripts directory |
+| `--supervisord-conf` | `/data/etc/supervisord/supervisord.conf` | supervisord configuration file |
 | `--secure-cookie` | `false` | Set `Secure` on session cookie (HTTPS) |
 | `--static-dir` | *(embedded)* | Serve frontend from disk (dev) |
 
@@ -78,7 +80,7 @@ Open http://localhost:5174
 | Tab | Status |
 |-----|--------|
 | **Logs** | Live tail over WebSocket (`/api/v1/logs/stream`) |
-| Supervisord | Placeholder |
+| **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
 
 ## API
@@ -88,5 +90,7 @@ Open http://localhost:5174
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/services` — list init scripts and running state
 - `POST /api/v1/services/{id}/{action}` — `start`, `stop`, or `restart`
+- `GET /api/v1/supervisord/programs` — list supervisord programs (config + status)
+- `POST /api/v1/supervisord/programs/{name}/{action}` — `start`, `stop`, or `restart`
 - `GET /api/v1/logs` — list log files from configured roots
 - `GET /api/v1/logs/stream?id=<root-id:path>` — WebSocket stream
