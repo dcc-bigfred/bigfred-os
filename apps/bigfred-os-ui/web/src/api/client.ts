@@ -113,3 +113,72 @@ export function supervisordProgramAction(name: string, action: SupervisordAction
     { method: "POST" },
   );
 }
+
+export interface RedisKeySummary {
+  key: string;
+  ttl: number;
+}
+
+export interface RedisKeyDetail {
+  key: string;
+  type: string;
+  ttl: number;
+  value: unknown;
+}
+
+export function fetchRedisKeys(pattern = "*"): Promise<RedisKeySummary[]> {
+  const q = new URLSearchParams({ pattern });
+  return apiFetch<RedisKeySummary[]>(`/api/v1/redis/keys?${q}`);
+}
+
+export function fetchRedisKey(key: string): Promise<RedisKeyDetail> {
+  const q = new URLSearchParams({ key });
+  return apiFetch<RedisKeyDetail>(`/api/v1/redis/key?${q}`);
+}
+
+export function deleteRedisKey(key: string): Promise<void> {
+  const q = new URLSearchParams({ key });
+  return apiFetch<void>(`/api/v1/redis/key?${q}`, { method: "DELETE" });
+}
+
+export type RedisKeyWSMessage =
+  | { type: "snapshot"; detail: RedisKeyDetail }
+  | { type: "update"; detail: RedisKeyDetail }
+  | { type: "deleted" }
+  | { type: "error"; error: string };
+
+export function redisKeyStreamURL(key: string): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/api/v1/redis/stream?key=${encodeURIComponent(key)}`;
+}
+
+export interface EtcFile {
+  path: string;
+  name: string;
+  size: number;
+  modified: string;
+}
+
+export interface EtcFileContent {
+  path: string;
+  content: string;
+  size: number;
+  modified: string;
+}
+
+export function fetchEtcFiles(): Promise<EtcFile[]> {
+  return apiFetch<EtcFile[]>("/api/v1/etc/files");
+}
+
+export function fetchEtcFile(path: string): Promise<EtcFileContent> {
+  const q = new URLSearchParams({ path });
+  return apiFetch<EtcFileContent>(`/api/v1/etc/file?${q}`);
+}
+
+export function saveEtcFile(path: string, content: string): Promise<EtcFileContent> {
+  const q = new URLSearchParams({ path });
+  return apiFetch<EtcFileContent>(`/api/v1/etc/file?${q}`, {
+    method: "PUT",
+    body: JSON.stringify({ content }),
+  });
+}

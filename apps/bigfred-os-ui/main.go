@@ -16,7 +16,9 @@ import (
 	"time"
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/config"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/etcdir"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
@@ -42,6 +44,8 @@ func run() int {
 		staticDir    string
 		initDir          string
 		supervisordConf  string
+		redisAddr        string
+		etcDir           string
 	)
 
 	flag.StringVar(&configPath, "config", config.DefaultPath,
@@ -55,9 +59,11 @@ func run() int {
 	flag.StringVar(&staticDir, "static-dir", "", "serve frontend from disk instead of embedded bundle (dev)")
 	flag.StringVar(&initDir, "init-dir", services.DefaultInitDir, "SysV init scripts directory")
 	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
+	flag.StringVar(&redisAddr, "redis-addr", redis.DefaultAddr, "Redis server address")
+	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
 	}
@@ -79,6 +85,8 @@ func run() int {
 		LogRoots:        logs.ParseRoots(logRoots, legacyLogRoot),
 		InitDir:         initDir,
 		SupervisordConf: supervisordConf,
+		RedisAddr:       redisAddr,
+		EtcDir:          etcDir,
 		StaticFS:        staticFS,
 		SecureCookie:    secureCookie,
 		DevOrigins: []string{
@@ -111,7 +119,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf *string) error {
+func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -142,6 +150,12 @@ func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacy
 	}
 	if !flagPassed("supervisord-conf") && fc.SupervisordConf != "" {
 		*supervisordConf = fc.SupervisordConf
+	}
+	if !flagPassed("redis-addr") && fc.RedisAddr != "" {
+		*redisAddr = fc.RedisAddr
+	}
+	if !flagPassed("etc-dir") && fc.EtcDir != "" {
+		*etcDir = fc.EtcDir
 	}
 	return nil
 }

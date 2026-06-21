@@ -6,6 +6,8 @@ import LoginPage from "./pages/LoginPage";
 import LogsPage from "./pages/LogsPage";
 import SupervisordPage from "./pages/SupervisordPage";
 import ServicesPage from "./pages/ServicesPage";
+import RedisPage from "./pages/RedisPage";
+import ConfigPage from "./pages/ConfigPage";
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
               <Route index element={<Navigate to="/logs" replace />} />
               <Route path="supervisord" element={<SupervisordPage />} />
               <Route path="services" element={<ServicesPage />} />
+              <Route path="redis" element={<RedisPage />} />
+              <Route path="config" element={<ConfigPage />} />
               <Route path="logs" element={<LogsPage />} />
             </Route>
           </Route>

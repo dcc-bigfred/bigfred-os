@@ -1,12 +1,37 @@
 #!/bin/sh
 
-REDIS_CONF=/etc/redis/redis.conf
+REDIS_CONF=/data/etc/redis.conf
+DEFAULT_REDIS_CONF=/etc/redis/redis.conf
 PIDFILE=/var/run/redis.pid
+
+ensure_redis_conf() {
+	mkdir -p /data/etc /data/redis /data/logs/redis
+	if [ -f "$REDIS_CONF" ]; then
+		return 0
+	fi
+	if [ -f "$DEFAULT_REDIS_CONF" ]; then
+		cp "$DEFAULT_REDIS_CONF" "$REDIS_CONF"
+	else
+		cat >"$REDIS_CONF" <<'EOF'
+bind 127.0.0.1
+port 6379
+daemonize no
+supervised no
+dir /data/redis
+dbfilename dump.rdb
+appendonly no
+save 60 100
+logfile /data/logs/redis/redis.log
+notify-keyspace-events "KA"
+EOF
+	fi
+	chmod 640 "$REDIS_CONF"
+}
 
 case "$1" in
 start)
-	[ -f "$REDIS_CONF" ] || exit 0
-	mkdir -p /data/redis
+	ensure_redis_conf
+	[ -f "$REDIS_CONF" ] || exit 1
 	printf "Starting redis: "
 	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x /usr/bin/redis-server -- \
 		"$REDIS_CONF"

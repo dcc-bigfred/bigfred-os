@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 )
 
 // Config holds runtime dependencies for the HTTP server.
@@ -21,6 +22,8 @@ type Config struct {
 	LogRoots        []string
 	InitDir         string
 	SupervisordConf string
+	RedisAddr       string
+	EtcDir          string
 	StaticFS        fs.FS
 	SecureCookie    bool
 	DevOrigins      []string
@@ -36,9 +39,11 @@ func NewRouter(cfg Config) http.Handler {
 	if len(cfg.DevOrigins) > 0 {
 		origins = cfg.DevOrigins
 	}
+	redisClient := redis.NewClient(cfg.RedisAddr)
+
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -57,6 +62,13 @@ func NewRouter(cfg Config) http.Handler {
 			r.Post("/services/{id}/{action}", serviceActionHandler(cfg))
 			r.Get("/supervisord/programs", listSupervisordProgramsHandler(cfg))
 			r.Post("/supervisord/programs/{name}/{action}", supervisordProgramActionHandler(cfg))
+			r.Get("/redis/keys", listRedisKeysHandler(redisClient))
+			r.Get("/redis/key", getRedisKeyHandler(redisClient))
+			r.Get("/redis/stream", streamRedisKeyHandler(cfg, redisClient))
+			r.Delete("/redis/key", deleteRedisKeyHandler(redisClient))
+			r.Get("/etc/files", listEtcFilesHandler(cfg))
+			r.Get("/etc/file", readEtcFileHandler(cfg))
+			r.Put("/etc/file", writeEtcFileHandler(cfg))
 		})
 	})
 

@@ -18,6 +18,8 @@ type File struct {
 	LogRoots        string
 	InitDir         string
 	SupervisordConf string
+	RedisAddr       string
+	EtcDir          string
 	SecureCookie    *bool
 }
 
@@ -67,6 +69,10 @@ func Parse(text string) *File {
 			f.InitDir = value
 		case "SUPERVISORD_CONF", "SUPERVISORDCONF":
 			f.SupervisordConf = value
+		case "REDIS_ADDR", "REDISADDR":
+			f.RedisAddr = value
+		case "ETC_DIR", "ETCDIR":
+			f.EtcDir = value
 		case "SECURE_COOKIE", "SECURECOOKIE":
 			v := parseBool(value)
 			f.SecureCookie = &v

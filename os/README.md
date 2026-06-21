@@ -109,7 +109,7 @@ Po flashu, z innego builda Go (`GOOS=linux GOARCH=arm64`):
 - `/usr/share/bigfred/web`
 - skrypt init `S60-bigfred` (wzorzec w dokumentacji §8.3) z `taskset -c 2,3`
 
-Bazy: `/data/sqlite/`, Redis: `/data/redis/`.
+Bazy: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, domyślnie RDB `save 60 100`).
 
 Monitoring: Grafana (`http://:3000`, admin/bigfred) z datasource VictoriaMetrics
 (`:8428`). Dane: `/data/opt/grafana`, `/data/opt/victoriametrics`.

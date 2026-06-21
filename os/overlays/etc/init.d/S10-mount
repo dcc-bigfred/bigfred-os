@@ -26,6 +26,18 @@ start)
 		chmod 640 /data/etc/bigfred-os-ui.conf
 	fi
 
+	if [ ! -f /data/etc/fanctl.conf ] && \
+	   [ -f /etc/bigfred/fanctl.conf ]; then
+		cp /etc/bigfred/fanctl.conf /data/etc/fanctl.conf
+		chmod 640 /data/etc/fanctl.conf
+	fi
+
+	if [ ! -f /data/etc/redis.conf ] && \
+	   [ -f /etc/redis/redis.conf ]; then
+		cp /etc/redis/redis.conf /data/etc/redis.conf
+		chmod 640 /data/etc/redis.conf
+	fi
+
 	# Enforce read-only root (hub spec)
 	mount -o remount,ro / 2>/dev/null || true
 	;;

@@ -14,7 +14,7 @@ programs=redis
 programs=scripts-executor
 
 [program:redis]
-command=/bin/bash -c 'valkey-server --port 6380'
+command=/bin/bash -c 'valkey-server --port 6379'
 autostart=true
 autorestart=true
 

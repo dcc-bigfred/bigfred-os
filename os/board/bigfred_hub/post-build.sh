@@ -57,4 +57,11 @@ if [ -f "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" ]; then
 		"${TARGET_DIR}/etc/bigfred/bigfred-os-ui.conf"
 fi
 
+# fanctl seed (copied to /data/etc on first boot by S10-mount)
+if [ -f "${HUB}/board/bigfred_hub/fanctl.conf" ]; then
+	mkdir -p "${TARGET_DIR}/etc/bigfred"
+	install -m 0644 "${HUB}/board/bigfred_hub/fanctl.conf" \
+		"${TARGET_DIR}/etc/bigfred/fanctl.conf"
+fi
+
 exit 0
