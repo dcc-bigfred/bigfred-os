@@ -26,6 +26,16 @@ function groupByDir(files: EtcFile[]): [string, EtcFile[]][] {
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
+function listErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 404) {
+      return "Config API not found — restart bigfred-os-ui to load the latest backend.";
+    }
+    return err.detail ?? err.code;
+  }
+  return "Could not load the file list.";
+}
+
 export default function ConfigPage() {
   const [files, setFiles] = useState<EtcFile[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -48,13 +58,9 @@ export default function ConfigPage() {
     setListLoading(true);
     try {
       const list = await fetchEtcFiles();
-      setFiles(list);
+      setFiles(Array.isArray(list) ? list : []);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setListError(err.detail ?? err.code);
-      } else {
-        setListError("Could not load the file list.");
-      }
+      setListError(listErrorMessage(err));
       setFiles([]);
     } finally {
       setListLoading(false);

@@ -51,13 +51,35 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
 
-  const body = await res.json().catch(() => ({}));
+  const text = await res.text();
+  let body: Record<string, unknown> = {};
+  if (text) {
+    try {
+      body = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      // plain-text error bodies (e.g. chi 404 page)
+    }
+  }
+
   if (!res.ok) {
-    const code = typeof body.error === "string" ? body.error : "unknown";
-    const detail = typeof body.message === "string" ? body.message : undefined;
+    const code = typeof body.error === "string" ? body.error : `http_${res.status}`;
+    const detail =
+      typeof body.message === "string"
+        ? body.message
+        : typeof body.error !== "string" && text
+          ? text.trim().slice(0, 200)
+          : undefined;
     throw new ApiError(res.status, code, detail);
   }
-  return body as T;
+
+  if (!text) {
+    return undefined as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(res.status, "bad_response", "Invalid JSON from server");
+  }
 }
 
 export function fetchMe(): Promise<CurrentUser> {
