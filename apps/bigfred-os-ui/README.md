@@ -6,7 +6,8 @@ Frontend to manage and diagnose BigFred OS based on Linux.
 
 ```bash
 make -C apps/bigfred-os-ui build
-# → apps/.bin/bigfred-os-ui
+Produces `apps/.bin/bigfred-os-ui-linux-<arch>` (hub, PAM) and
+`apps/.bin/bigfred-os-ui-<host-os>-<host-arch>` (local dev, static auth).
 ```
 
 Requires Node.js for the frontend bundle (`web/dist` embedded via `go:embed`).
@@ -20,22 +21,26 @@ All fonts and scripts are vendored at build time — no CDN at runtime
   --config /data/etc/bigfred-os-ui.conf
 ```
 
-Or pass flags directly (override config file values):
+Or pass flags directly (override config file values). On the hub image login uses **PAM**
+(`root` / password from `/data/etc/shadow`). For local dev without PAM:
 
 ```bash
-./apps/.bin/bigfred-os-ui \
+go run -tags '!pam' ./apps/bigfred-os-ui \
   --http 0.0.0.0:8090 \
-  --username admin \
-  --password 'change-me' \
+  --username root \
+  --password 'root' \
   --log-roots /data/logs,/var/log
 ```
+
+Hub production binary is built with `-tags pam` and links `libpam` (see `Makefile`).
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--config` | `/data/etc/bigfred-os-ui.conf` | Dotenv file (`KEY=value`) |
 | `--http` | `0.0.0.0:8090` | Listen address |
-| `--username` | *(required)* | Login |
-| `--password` | *(required)* | Password |
+| `--pam-service` | `bigfred-os-ui` | PAM service name (`/etc/pam.d/…`) |
+| `--username` | *(PAM)* | Static login (dev, `-tags '!pam'` only) |
+| `--password` | *(PAM)* | Static password (dev, `-tags '!pam'` only) |
 | `--log-roots` | `/data/logs,/var/log` | Comma-separated log directories |
 | `--log-root` | *(deprecated)* | Single log directory |
 | `--init-dir` | `/etc/init.d` | SysV init scripts directory |
@@ -50,8 +55,7 @@ starts the binary with `--config /data/etc/bigfred-os-ui.conf`.
 
 ```dotenv
 HTTP=0.0.0.0:8090
-USERNAME=admin
-PASSWORD=bigfred
+PAM_SERVICE=bigfred-os-ui
 LOG_ROOTS=/data/logs,/var/log
 SECURE_COOKIE=false
 ```
@@ -85,9 +89,10 @@ Open http://localhost:5174
 
 ## API
 
-- `POST /api/v1/auth/login` — session cookie (JWT)
+- `POST /api/v1/auth/login` — session cookie (JWT, PAM on hub)
 - `GET /api/v1/auth/me` — current user
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/password` — change Linux password (PAM)
 - `GET /api/v1/services` — list init scripts and running state
 - `POST /api/v1/services/{id}/{action}` — `start`, `stop`, or `restart`
 - `GET /api/v1/supervisord/programs` — list supervisord programs (config + status)

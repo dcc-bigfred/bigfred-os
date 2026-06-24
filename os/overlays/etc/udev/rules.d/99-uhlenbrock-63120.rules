@@ -1,2 +1,2 @@
-# Uhlenbrock LocoNet-Interface 63120 — replace xxxx/yyyy after udevadm on hardware
-# SUBSYSTEM=="tty", ATTRS{idVendor}=="xxxx", ATTRS{idProduct}=="yyyy", SYMLINK+="loconet-63120", GROUP="dialout", MODE="0660"
+# Uhlenbrock LocoNet-Interface 63120 — Silicon Labs CP210x (10c4:ea60)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="loconet-63120", GROUP="dialout", MODE="0660"

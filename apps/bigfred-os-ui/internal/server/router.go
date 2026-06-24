@@ -56,6 +56,7 @@ func NewRouter(cfg Config) http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(requireAuth(cfg.Auth))
 			r.Get("/auth/me", meHandler(cfg))
+			r.Post("/auth/password", changePasswordHandler(cfg))
 			r.Get("/logs", listLogsHandler(cfg))
 			r.Get("/logs/stream", streamLogsHandler(cfg))
 			r.Get("/services", listServicesHandler(cfg))

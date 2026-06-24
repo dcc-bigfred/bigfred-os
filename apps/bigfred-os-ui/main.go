@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/config"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/etcdir"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
@@ -34,25 +34,27 @@ func main() {
 
 func run() int {
 	var (
-		configPath   string
-		httpAddr     string
-		username     string
-		password     string
-		logRoots     string
-		legacyLogRoot string
-		secureCookie bool
-		staticDir    string
-		initDir          string
-		supervisordConf  string
-		redisAddr        string
-		etcDir           string
+		configPath      string
+		httpAddr        string
+		pamService      string
+		username        string
+		password        string
+		logRoots        string
+		legacyLogRoot   string
+		secureCookie    bool
+		staticDir       string
+		initDir         string
+		supervisordConf string
+		redisAddr       string
+		etcDir          string
 	)
 
 	flag.StringVar(&configPath, "config", config.DefaultPath,
 		"dotenv configuration file (KEY=value)")
 	flag.StringVar(&httpAddr, "http", "0.0.0.0:8090", "HTTP listen address")
-	flag.StringVar(&username, "username", "", "login username (required)")
-	flag.StringVar(&password, "password", "", "login password (required)")
+	flag.StringVar(&pamService, "pam-service", "bigfred-os-ui", "PAM service name for login")
+	flag.StringVar(&username, "username", "", "static login username (dev without PAM)")
+	flag.StringVar(&password, "password", "", "static login password (dev without PAM)")
 	flag.StringVar(&logRoots, "log-roots", "", "comma-separated log directories (default: /data/logs,/var/log)")
 	flag.StringVar(&legacyLogRoot, "log-root", "", "deprecated: single log directory (use --log-roots)")
 	flag.BoolVar(&secureCookie, "secure-cookie", false, "set Secure flag on session cookie")
@@ -63,12 +65,17 @@ func run() int {
 	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
 	}
 
-	authSvc, err := auth.New(username, password, 24*time.Hour)
+	authSvc, err := auth.New(auth.Config{
+		PAMService: pamService,
+		Username:   username,
+		Password:   password,
+		TTL:        24 * time.Hour,
+	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
@@ -119,7 +126,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir *string) error {
+func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -129,6 +136,9 @@ func mergeConfigFile(path string, httpAddr, username, password, logRoots, legacy
 	}
 	if !flagPassed("http") && fc.HTTP != "" {
 		*httpAddr = fc.HTTP
+	}
+	if !flagPassed("pam-service") && fc.PAMService != "" {
+		*pamService = fc.PAMService
 	}
 	if !flagPassed("username") && fc.Username != "" {
 		*username = fc.Username

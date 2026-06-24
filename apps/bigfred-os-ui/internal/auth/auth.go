@@ -13,8 +13,9 @@ import (
 const SessionCookieName = "bigfred_os_session"
 
 var (
-	ErrInvalidCredentials = errors.New("invalid_credentials")
-	ErrUnauthorized       = errors.New("unauthorized")
+	ErrInvalidCredentials   = errors.New("invalid_credentials")
+	ErrUnauthorized         = errors.New("unauthorized")
+	ErrPasswordChangeFailed = errors.New("password_change_failed")
 )
 
 // Session is the JWT subject after login.
@@ -22,22 +23,29 @@ type Session struct {
 	Username string `json:"username"`
 }
 
+// Config holds authentication settings.
+type Config struct {
+	PAMService string
+	Username   string // dev / tests without PAM
+	Password   string
+	TTL        time.Duration
+}
+
 type claims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-// Service validates CLI-configured credentials and issues session JWTs.
+// Service validates credentials and issues session JWTs.
 type Service struct {
-	username  string
-	password  string
+	checker   Checker
 	jwtSecret []byte
 	ttl       time.Duration
 }
 
-func New(username, password string, ttl time.Duration) (*Service, error) {
-	if username == "" || password == "" {
-		return nil, fmt.Errorf("username and password are required")
+func newService(checker Checker, ttl time.Duration) (*Service, error) {
+	if checker == nil {
+		return nil, fmt.Errorf("credential checker is required")
 	}
 	secret := make([]byte, 32)
 	if _, err := rand.Read(secret); err != nil {
@@ -47,18 +55,26 @@ func New(username, password string, ttl time.Duration) (*Service, error) {
 		ttl = 24 * time.Hour
 	}
 	return &Service{
-		username:  username,
-		password:  password,
+		checker:   checker,
 		jwtSecret: secret,
 		ttl:       ttl,
 	}, nil
 }
 
+// NewStatic creates a service with fixed credentials (unit tests).
+func NewStatic(username, password string, ttl time.Duration) (*Service, error) {
+	return newService(NewStaticChecker(username, password), ttl)
+}
+
 func (s *Service) Login(username, password string) (Session, error) {
-	if username != s.username || password != s.password {
-		return Session{}, ErrInvalidCredentials
+	if err := s.checker.Authenticate(username, password); err != nil {
+		return Session{}, err
 	}
-	return Session{Username: s.username}, nil
+	return Session{Username: username}, nil
+}
+
+func (s *Service) ChangePassword(username, current, newPassword string) error {
+	return s.checker.ChangePassword(username, current, newPassword)
 }
 
 func (s *Service) IssueToken(sess Session) (token string, expires time.Time, err error) {

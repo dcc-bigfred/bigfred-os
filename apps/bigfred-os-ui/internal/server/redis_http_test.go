@@ -22,7 +22,7 @@ func TestRedisAPI(t *testing.T) {
 	defer mr.Close()
 	mr.Set("bigfred:test", "value")
 
-	authSvc, err := auth.New("admin", "secret", time.Hour)
+	authSvc, err := auth.NewStatic("admin", "secret", time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}

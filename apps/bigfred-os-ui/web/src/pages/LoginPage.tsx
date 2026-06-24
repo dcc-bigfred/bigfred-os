@@ -10,7 +10,7 @@ interface LocationState {
 export default function LoginPage() {
   const { user, setUser } = useAuth();
   const location = useLocation();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("root");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);

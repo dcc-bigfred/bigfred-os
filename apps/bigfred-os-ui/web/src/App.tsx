@@ -8,6 +8,7 @@ import SupervisordPage from "./pages/SupervisordPage";
 import ServicesPage from "./pages/ServicesPage";
 import RedisPage from "./pages/RedisPage";
 import ConfigPage from "./pages/ConfigPage";
+import AccountPage from "./pages/AccountPage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
               <Route path="services" element={<ServicesPage />} />
               <Route path="redis" element={<RedisPage />} />
               <Route path="config" element={<ConfigPage />} />
+              <Route path="account" element={<AccountPage />} />
               <Route path="logs" element={<LogsPage />} />
             </Route>
           </Route>

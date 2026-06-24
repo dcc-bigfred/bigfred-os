@@ -91,8 +91,9 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 ## Konfiguracja przed wdrożeniem
 
 1. **Sieć** — `board/bigfred_hub/network.conf` (kopiowany do `/etc/bigfred/network.conf`).
-2. **Hasło root** — domyślnie `bigfred` w defconfig; zmień przez `make menuconfig`
-   → *System configuration* → *Root password*.
+2. **Hasło root** — domyślnie `root` w defconfig; zmień przez `make menuconfig`
+   → *System configuration* → *Root password*, lub na urządzeniu: `passwd root`
+   (hasło w `/data/etc/shadow`, panel **Account** w `bigfred-os-ui`).
 3. **Uhlenbrock 63120** — uzupełnij `overlays/etc/udev/rules.d/99-uhlenbrock-63120.rules`
    po `udevadm` (§3.5).
 4. **PREEMPT_RT** — fragment `configs/linux-hub.fragment`; jeśli kompilacja jądra

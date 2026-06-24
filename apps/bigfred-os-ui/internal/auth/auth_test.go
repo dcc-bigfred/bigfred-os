@@ -6,7 +6,7 @@ import (
 )
 
 func TestLoginAndVerify(t *testing.T) {
-	svc, err := New("admin", "secret", time.Hour)
+	svc, err := NewStatic("admin", "secret", time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,8 +34,18 @@ func TestLoginAndVerify(t *testing.T) {
 	}
 }
 
-func TestNewRequiresCredentials(t *testing.T) {
-	if _, err := New("", "x", time.Hour); err == nil {
-		t.Fatal("expected error for empty username")
+func TestStaticChangePassword(t *testing.T) {
+	svc, err := NewStatic("root", "old", time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.ChangePassword("root", "wrong", "new"); err != ErrInvalidCredentials {
+		t.Fatalf("expected invalid credentials, got %v", err)
+	}
+	if err := svc.ChangePassword("root", "old", "new"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.Login("root", "new"); err != nil {
+		t.Fatalf("login with new password: %v", err)
 	}
 }

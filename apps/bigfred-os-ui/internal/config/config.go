@@ -12,6 +12,7 @@ const DefaultPath = "/data/etc/bigfred-os-ui.conf"
 // File holds settings from a dotenv-style configuration file.
 type File struct {
 	HTTP         string
+	PAMService   string
 	Username     string
 	Password     string
 	LogRoot         string
@@ -57,6 +58,8 @@ func Parse(text string) *File {
 		switch strings.ToUpper(key) {
 		case "HTTP", "HTTP_ADDR", "LISTEN":
 			f.HTTP = value
+		case "PAM_SERVICE", "PAMSERVICE":
+			f.PAMService = value
 		case "USERNAME", "USER", "LOGIN":
 			f.Username = value
 		case "PASSWORD", "PASS":

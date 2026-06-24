@@ -38,10 +38,22 @@ start)
 		chmod 640 /data/etc/redis.conf
 	fi
 
+	# Root password on RW /data — passwd(1) updates /etc/shadow via bind mount
+	if [ ! -f /data/etc/shadow ] && [ -f /etc/shadow ]; then
+		cp -a /etc/shadow /data/etc/shadow
+		chmod 600 /data/etc/shadow
+	fi
+	if grep -q ' /data ' /proc/mounts && [ -f /data/etc/shadow ]; then
+		if ! grep -q ' /etc/shadow ' /proc/mounts; then
+			mount --bind /data/etc/shadow /etc/shadow
+		fi
+	fi
+
 	# Enforce read-only root (hub spec)
 	mount -o remount,ro / 2>/dev/null || true
 	;;
 stop)
+	umount /etc/shadow 2>/dev/null || true
 	umount /data 2>/dev/null || true
 	;;
 restart)

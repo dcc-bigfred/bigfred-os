@@ -97,6 +97,16 @@ export function logout(): Promise<void> {
   return apiFetch<void>("/api/v1/auth/logout", { method: "POST" });
 }
 
+export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  return apiFetch<void>("/api/v1/auth/password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}
+
 export function fetchLogs(): Promise<LogEntry[]> {
   return apiFetch<LogEntry[]>("/api/v1/logs");
 }

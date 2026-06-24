@@ -56,9 +56,9 @@ defconfig: buildroot
 menuconfig: buildroot
 	$(BR2_MAKE) menuconfig
 
-image: apps-build defconfig
-	@test -n "$$(ls -A '$(APPS_BIN_DIR)' 2>/dev/null)" || { \
-		echo "error: no binaries in $(APPS_BIN_DIR) — run: make apps-build"; exit 1; }
+image: defconfig
+	$(BR2_MAKE) linux-pam
+	$(MAKE) -C $(REPO_ROOT)/apps build
 	$(BR2_MAKE)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"

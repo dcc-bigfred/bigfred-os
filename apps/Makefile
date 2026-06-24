@@ -23,7 +23,7 @@ all: build
 build: $(BINARIES)
 
 $(BIN_DIR)/bigfred-os-ui: bigfred-os-ui/main.go
-	@$(MAKE) -C bigfred-os-ui OUT="$(BIN_DIR)/bigfred-os-ui" GOOS=$(GOOS) GOARCH=$(GOARCH)
+	@$(MAKE) -C bigfred-os-ui build GOOS=$(GOOS) GOARCH=$(GOARCH)
 
 $(BIN_DIR)/%: %/main.go
 	@if [ "$*" = "bigfred-os-ui" ]; then exit 0; fi

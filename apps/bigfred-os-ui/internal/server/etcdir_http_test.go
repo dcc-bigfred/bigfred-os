@@ -20,7 +20,7 @@ func TestEtcFilesAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	authSvc, err := auth.New("admin", "secret", time.Hour)
+	authSvc, err := auth.NewStatic("admin", "secret", time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
