@@ -11,10 +11,10 @@ const DefaultPath = "/data/etc/bigfred-os-ui.conf"
 
 // File holds settings from a dotenv-style configuration file.
 type File struct {
-	HTTP         string
-	PAMService   string
-	Username     string
-	Password     string
+	HTTP            string
+	PAMService      string
+	Username        string
+	Password        string
 	LogRoot         string
 	LogRoots        string
 	InitDir         string
