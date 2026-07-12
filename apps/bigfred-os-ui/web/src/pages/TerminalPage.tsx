@@ -25,9 +25,6 @@ export default function TerminalPage() {
   const [reconnectKey, setReconnectKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const termRef = useRef<Terminal | null>(null);
-  const fitRef = useRef<FitAddon | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
 
   const reconnect = useCallback(() => {
     setReconnectKey((k) => k + 1);
@@ -54,13 +51,9 @@ export default function TerminalPage() {
     term.open(container);
     fit.fit();
 
-    termRef.current = term;
-    fitRef.current = fit;
-
     setStatus("connecting");
     const ws = new WebSocket(terminalStreamURL());
     ws.binaryType = "arraybuffer";
-    wsRef.current = ws;
 
     const onData = term.onData((data) => {
       if (ws.readyState !== WebSocket.OPEN) {
@@ -115,9 +108,6 @@ export default function TerminalPage() {
       window.removeEventListener("resize", onWindowResize);
       ws.close();
       term.dispose();
-      termRef.current = null;
-      fitRef.current = null;
-      wsRef.current = null;
     };
   }, [reconnectKey]);
 

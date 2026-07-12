@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 
@@ -32,18 +34,31 @@ func streamTerminalHandler(cfg Config) http.HandlerFunc {
 		}
 
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-			InsecureSkipVerify: true,
+			OriginPatterns: terminalOriginPatterns(cfg.DevOrigins),
 		})
 		if err != nil {
 			return
 		}
 
-		ctx := r.Context()
+		ctx, cancel := context.WithCancel(r.Context())
+		defer cancel()
+
 		proc, err := terminal.Spawn("", nil, terminal.DefaultEnv(sess.Username), 80, 24)
 		if err != nil {
-			_ = writeTerminalError(conn, ctx, "spawn_failed")
+			_ = writeTerminalError(ctx, conn, "spawn_failed")
 			_ = conn.Close(websocket.StatusInternalError, "spawn_failed")
 			return
+		}
+
+		log.Printf("terminal: session opened for user %q", sess.Username)
+		defer log.Printf("terminal: session closed for user %q", sess.Username)
+
+		var once sync.Once
+		stop := func() {
+			once.Do(func() {
+				cancel()
+				_ = proc.Master.Close()
+			})
 		}
 
 		var wg sync.WaitGroup
@@ -51,11 +66,13 @@ func streamTerminalHandler(cfg Config) http.HandlerFunc {
 
 		go func() {
 			defer wg.Done()
+			defer stop()
 			pumpPTYToWS(ctx, conn, proc.Master)
 		}()
 
 		go func() {
 			defer wg.Done()
+			defer stop()
 			pumpWSToPTY(ctx, conn, proc.Master)
 		}()
 
@@ -65,9 +82,20 @@ func streamTerminalHandler(cfg Config) http.HandlerFunc {
 			_ = proc.Cmd.Process.Kill()
 			_, _ = proc.Cmd.Process.Wait()
 		}
-		_ = proc.Master.Close()
 		_ = conn.Close(websocket.StatusNormalClosure, "done")
 	}
+}
+
+func terminalOriginPatterns(devOrigins []string) []string {
+	patterns := make([]string, 0, len(devOrigins))
+	for _, o := range devOrigins {
+		u, err := url.Parse(o)
+		if err != nil || u.Host == "" {
+			continue
+		}
+		patterns = append(patterns, u.Host)
+	}
+	return patterns
 }
 
 func pumpPTYToWS(ctx context.Context, conn *websocket.Conn, master *os.File) {
@@ -118,7 +146,7 @@ func pumpWSToPTY(ctx context.Context, conn *websocket.Conn, master *os.File) {
 	}
 }
 
-func writeTerminalError(conn *websocket.Conn, ctx context.Context, code string) error {
+func writeTerminalError(ctx context.Context, conn *websocket.Conn, code string) error {
 	data, err := json.Marshal(map[string]string{"type": "error", "error": code})
 	if err != nil {
 		return err
