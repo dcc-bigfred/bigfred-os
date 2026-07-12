@@ -366,6 +366,41 @@ button {
   padding: 1rem;
 }
 
+.terminal-layout {
+  height: calc(100vh - 5rem);
+  min-height: 400px;
+}
+
+.terminal-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--log-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.terminal-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.terminal-container {
+  flex: 1;
+  min-height: 0;
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.terminal-container .xterm {
+  height: 100%;
+}
+
+.terminal-container .xterm-viewport {
+  border-radius: 4px;
+}
+
 .services-page h2 {
   margin: 0;
   font-size: 1.15rem;

@@ -84,6 +84,7 @@ Open http://localhost:5174
 | Tab | Status |
 |-----|--------|
 | **Logs** | Live tail over WebSocket (`/api/v1/logs/stream`) |
+| **Terminal** | Interactive shell over WebSocket (`/api/v1/terminal`, PTY + xterm.js; requires login) |
 | **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
 
@@ -99,3 +100,4 @@ Open http://localhost:5174
 - `POST /api/v1/supervisord/programs/{name}/{action}` — `start`, `stop`, or `restart`
 - `GET /api/v1/logs` — list log files from configured roots
 - `GET /api/v1/logs/stream?id=<root-id:path>` — WebSocket stream
+- `GET /api/v1/terminal` — WebSocket interactive shell (PTY)

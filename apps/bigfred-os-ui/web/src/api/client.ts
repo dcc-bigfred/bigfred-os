@@ -121,6 +121,11 @@ export function logStreamURL(id: string): string {
   return `${proto}//${window.location.host}/api/v1/logs/stream?id=${encodeURIComponent(id)}`;
 }
 
+export function terminalStreamURL(): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/api/v1/terminal`;
+}
+
 export function fetchServices(): Promise<HubService[]> {
   return apiFetch<HubService[]>("/api/v1/services");
 }
