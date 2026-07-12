@@ -18,6 +18,9 @@ export default function AppShell() {
           <NavLink to="/logs" className={({ isActive }) => (isActive ? "active" : "")}>
             Logs
           </NavLink>
+          <NavLink to="/terminal" className={({ isActive }) => (isActive ? "active" : "")}>
+            Terminal
+          </NavLink>
           <NavLink to="/redis" className={({ isActive }) => (isActive ? "active" : "")}>
             Redis
           </NavLink>

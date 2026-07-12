@@ -59,6 +59,7 @@ func NewRouter(cfg Config) http.Handler {
 			r.Post("/auth/password", changePasswordHandler(cfg))
 			r.Get("/logs", listLogsHandler(cfg))
 			r.Get("/logs/stream", streamLogsHandler(cfg))
+			r.Get("/terminal", streamTerminalHandler(cfg))
 			r.Get("/services", listServicesHandler(cfg))
 			r.Post("/services/{id}/{action}", serviceActionHandler(cfg))
 			r.Get("/supervisord/programs", listSupervisordProgramsHandler(cfg))
