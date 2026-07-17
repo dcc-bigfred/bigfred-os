@@ -30,6 +30,9 @@ export default function AppShell() {
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>
             Account
           </NavLink>
+          <NavLink to="/update" className={({ isActive }) => (isActive ? "active" : "")}>
+            Update
+          </NavLink>
         </nav>
         <div className="app-user">
           <span>{user?.username}</span>

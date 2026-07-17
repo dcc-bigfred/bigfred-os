@@ -10,6 +10,7 @@ import RedisPage from "./pages/RedisPage";
 import ConfigPage from "./pages/ConfigPage";
 import AccountPage from "./pages/AccountPage";
 import TerminalPage from "./pages/TerminalPage";
+import UpdatePage from "./pages/UpdatePage";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="account" element={<AccountPage />} />
               <Route path="logs" element={<LogsPage />} />
               <Route path="terminal" element={<TerminalPage />} />
+              <Route path="update" element={<UpdatePage />} />
             </Route>
           </Route>
         </Routes>

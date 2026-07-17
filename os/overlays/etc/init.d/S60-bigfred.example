@@ -1,13 +1,13 @@
 #!/bin/sh
-# Example only — enable after installing BigFred binaries.
-# Rename to S60-bigfred when loco-server and dcc-bus are on the image.
+# Example only — enable after BigFred is on the image (BR2_PACKAGE_BIGFRED).
+# Rename to S60-bigfred. /usr/bin/bigfred resolves /data/opt then /opt.
 #
-# taskset -c 2,3 /usr/bin/loco-server … &
-# taskset -c 2,3 /usr/bin/dcc-bus … &
+# taskset -c 2,3 /usr/bin/bigfred --http 0.0.0.0:8080 &
+# (dcc-bus is spawned by loco-server via supervisord as: bigfred dcc-bus …)
 
 case "$1" in
 start)
-	echo "S60-bigfred: install BigFred and rename this script to S60-bigfred"
+	echo "S60-bigfred: rename this script to S60-bigfred and start /usr/bin/bigfred"
 	;;
 stop) ;;
 esac

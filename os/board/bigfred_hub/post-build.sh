@@ -16,6 +16,8 @@ mkdir -p "${TARGET_DIR}/data/opt/grafana/data"
 mkdir -p "${TARGET_DIR}/data/opt/grafana/log"
 mkdir -p "${TARGET_DIR}/data/opt/grafana/plugins"
 mkdir -p "${TARGET_DIR}/data/opt/victoriametrics"
+# Override path for BigFred binary (/usr/bin/bigfred prefers this over /opt)
+mkdir -p "${TARGET_DIR}/data/opt/bigfred/bin"
 mkdir -p "${TARGET_DIR}/data/logs/bigfred"
 mkdir -p "${TARGET_DIR}/data/logs/redis"
 mkdir -p "${TARGET_DIR}/data/logs/alloy"

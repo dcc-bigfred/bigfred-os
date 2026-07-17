@@ -755,6 +755,171 @@ button {
   cursor: not-allowed;
 }
 
+.update-page h2 {
+  margin: 0;
+}
+
+.update-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.update-hint {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 52rem;
+  line-height: 1.45;
+}
+
+.update-hint a,
+.update-success a,
+.update-modal-body a {
+  color: var(--accent);
+}
+
+.update-hint a:hover,
+.update-success a:hover,
+.update-modal-body a:hover {
+  color: var(--accent-hover);
+}
+
+.update-error {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(240, 113, 120, 0.35);
+  background: rgba(240, 113, 120, 0.1);
+  color: var(--danger);
+}
+
+.update-success {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 217, 154, 0.35);
+  background: rgba(127, 217, 154, 0.1);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.update-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 40rem;
+}
+
+.update-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(26, 35, 50, 0.55);
+}
+
+.update-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.update-select-label {
+  flex: 0 0 100%;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.update-select {
+  flex: 1 1 14rem;
+  min-width: 12rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--log-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.update-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.update-refresh {
+  flex: 0 0 auto;
+}
+
+.update-row-error {
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.update-btn {
+  align-self: flex-start;
+  min-width: 11rem;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.95rem;
+}
+
+.update-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.update-modal {
+  width: min(100%, 480px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.update-modal-header {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.update-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.update-modal-body {
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.update-modal-body p {
+  margin: 0 0 0.75rem;
+}
+
+.update-modal-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.update-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
 .etc-layout {
   display: grid;
   grid-template-columns: 280px 1fr;

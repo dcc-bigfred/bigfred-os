@@ -14,8 +14,8 @@ partycji `/` w trybie RW lub przez własny pakiet Buildroot).
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Jądro** | Raspberry Pi `linux` 6.6 (`bcm2712`) + fragmenty RT i USB-ACM |
 | **Rootfs** | BusyBox init, musl, RO `/`, RW `/data` |
-| **Usługi** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, opcjonalnie Alloy |
-| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`; bez `S60-bigfred`) |
+| **Usługi** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), opcjonalnie Alloy |
+| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`; `S60-bigfred.example` do włączenia) |
 
 ## Wymagania hosta
 
@@ -102,13 +102,18 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 5. **Grafana Alloy** — `make menuconfig` → włącz `BR2_PACKAGE_ALLOY` i umieść
    binarkę `package/alloy/alloy-linux-arm64`.
 
-## Instalacja BigFred (poza tym repo)
+## BigFred (loco-server)
 
-Po flashu, z innego builda Go (`GOOS=linux GOARCH=arm64`):
+Pakiet Buildroot `package/bigfred` pobiera archiwum z GitHuba
+([dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred)), buduje i instaluje:
 
-- `/usr/bin/loco-server`, `/usr/bin/dcc-bus`
-- `/usr/share/bigfred/web`
-- skrypt init `S60-bigfred` (wzorzec w dokumentacji §8.3) z `taskset -c 2,3`
+- `/opt/bigfred/bin/bigfred` — binarka (`dcc-bus` to subcommand tej samej binarki)
+- `/usr/bin/bigfred` — wrapper: najpierw `/data/opt/bigfred`, potem `/opt/bigfred`
+
+Ref (branch/tag) w menuconfig: `BR2_PACKAGE_BIGFRED_VERSION` (domyślnie `master`).
+Szczegóły: `package/bigfred/README.md`.
+
+Init: skrypt `S60-bigfred` (wzorzec `S60-bigfred.example`) z `taskset -c 2,3`.
 
 Bazy: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, domyślnie RDB `save 60 100`).
 
@@ -126,7 +131,7 @@ os/
 ├── board/bigfred_hub/ # cmdline, config.txt, genimage, post-*.sh
 ├── overlays/          # fstab, init.d, redis, crontab, udev
 ├── kernel/            # (fragmenty w configs/linux-hub.fragment)
-├── package/           # alloy, grafana, victoriametrics (Go apps: ../apps/)
+├── package/           # bigfred, alloy, grafana, victoriametrics (hub apps: ../apps/)
 ├── scripts/           # flash-nvme.sh
 ../apps/                 # Go apps → apps/.bin/ → /usr/sbin/ on image
 ├── Makefile
