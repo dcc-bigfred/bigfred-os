@@ -23,6 +23,7 @@ import (
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
 )
 
 //go:embed all:web/dist
@@ -47,6 +48,8 @@ func run() int {
 		supervisordConf string
 		redisAddr       string
 		etcDir          string
+		updateDir       string
+		githubToken     string
 	)
 
 	flag.StringVar(&configPath, "config", config.DefaultPath,
@@ -63,11 +66,16 @@ func run() int {
 	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
 	flag.StringVar(&redisAddr, "redis-addr", redis.DefaultAddr, "Redis server address")
 	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
+	flag.StringVar(&updateDir, "update-dir", update.DefaultInstallDir, "directory for GitHub release binary installs")
+	flag.StringVar(&githubToken, "github-token", "", "optional GitHub token for private release downloads (or GITHUB_TOKEN)")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir, &updateDir, &githubToken); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
+	}
+	if githubToken == "" {
+		githubToken = os.Getenv("GITHUB_TOKEN")
 	}
 
 	authSvc, err := auth.New(auth.Config{
@@ -94,8 +102,12 @@ func run() int {
 		SupervisordConf: supervisordConf,
 		RedisAddr:       redisAddr,
 		EtcDir:          etcDir,
-		StaticFS:        staticFS,
-		SecureCookie:    secureCookie,
+		Updater: update.New(update.Config{
+			InstallDir:  updateDir,
+			GitHubToken: githubToken,
+		}),
+		StaticFS:     staticFS,
+		SecureCookie: secureCookie,
 		DevOrigins: []string{
 			"http://localhost:5174",
 			"http://127.0.0.1:5174",
@@ -126,7 +138,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir *string) error {
+func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir, updateDir, githubToken *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -166,6 +178,12 @@ func mergeConfigFile(path string, httpAddr, pamService, username, password, logR
 	}
 	if !flagPassed("etc-dir") && fc.EtcDir != "" {
 		*etcDir = fc.EtcDir
+	}
+	if !flagPassed("update-dir") && fc.UpdateDir != "" {
+		*updateDir = fc.UpdateDir
+	}
+	if !flagPassed("github-token") && fc.GitHubToken != "" {
+		*githubToken = fc.GitHubToken
 	}
 	return nil
 }

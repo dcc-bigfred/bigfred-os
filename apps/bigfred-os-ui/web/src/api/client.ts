@@ -219,3 +219,33 @@ export function saveEtcFile(path: string, content: string): Promise<EtcFileConte
     body: JSON.stringify({ content }),
   });
 }
+
+export type UpdateTarget = "bigfred" | "bigfred-ui";
+
+export interface UpdateRelease {
+  tag: string;
+  name?: string;
+  published_at?: string;
+  prerelease: boolean;
+  asset: string;
+}
+
+export interface UpdateResult {
+  target: UpdateTarget;
+  tag: string;
+  asset: string;
+  path: string;
+  size: number;
+  restart: string;
+}
+
+export function fetchUpdateReleases(target: UpdateTarget): Promise<UpdateRelease[]> {
+  return apiFetch<UpdateRelease[]>(`/api/v1/update/${encodeURIComponent(target)}/releases`);
+}
+
+export function runUpdate(target: UpdateTarget, tag: string): Promise<UpdateResult> {
+  return apiFetch<UpdateResult>(`/api/v1/update/${encodeURIComponent(target)}`, {
+    method: "POST",
+    body: JSON.stringify({ tag }),
+  });
+}

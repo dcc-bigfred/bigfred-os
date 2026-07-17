@@ -14,6 +14,7 @@ import (
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
 )
 
 // Config holds runtime dependencies for the HTTP server.
@@ -24,6 +25,7 @@ type Config struct {
 	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
+	Updater         *update.Updater
 	StaticFS        fs.FS
 	SecureCookie    bool
 	DevOrigins      []string
@@ -71,6 +73,8 @@ func NewRouter(cfg Config) http.Handler {
 			r.Get("/etc/files", listEtcFilesHandler(cfg))
 			r.Get("/etc/file", readEtcFileHandler(cfg))
 			r.Put("/etc/file", writeEtcFileHandler(cfg))
+			r.Get("/update/{target}/releases", listUpdateReleasesHandler(cfg))
+			r.Post("/update/{target}", runUpdateHandler(cfg))
 		})
 	})
 

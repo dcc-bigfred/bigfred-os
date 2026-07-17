@@ -6,6 +6,31 @@ config BR2_PACKAGE_ALLOY
 	  package/alloy/alloy-linux-arm64. Enable when you ship the binary;
 	  otherwise install Alloy manually under /usr/bin on the device.
 
+config BR2_PACKAGE_BIGFRED
+	bool "BigFred (loco-server)"
+	default y
+	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_GO
+	help
+	  Download dcc-bigfred/bigfred from GitHub (branch or tag),
+	  cross-compile loco-server as /opt/bigfred/bin/bigfred, and
+	  install /usr/bin/bigfred wrapper that prefers
+	  /data/opt/bigfred over /opt/bigfred.
+
+	  https://github.com/dcc-bigfred/bigfred
+
+if BR2_PACKAGE_BIGFRED
+
+config BR2_PACKAGE_BIGFRED_VERSION
+	string "Git ref (branch or tag)"
+	default "master"
+	help
+	  Branch or tag name used for the GitHub archive download.
+	  Default is the main branch (master). After changing this,
+	  remove dl/bigfred and rebuild so the new archive is fetched.
+
+endif
+
 config BR2_PACKAGE_GRAFANA
 	bool "Grafana OSS (prebuilt binary)"
 	default y

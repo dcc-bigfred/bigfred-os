@@ -21,6 +21,8 @@ type File struct {
 	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
+	UpdateDir       string
+	GitHubToken     string
 	SecureCookie    *bool
 }
 
@@ -76,6 +78,10 @@ func Parse(text string) *File {
 			f.RedisAddr = value
 		case "ETC_DIR", "ETCDIR":
 			f.EtcDir = value
+		case "UPDATE_DIR", "UPDATEDIR":
+			f.UpdateDir = value
+		case "GITHUB_TOKEN", "GITHUBTOKEN":
+			f.GitHubToken = value
 		case "SECURE_COOKIE", "SECURECOOKIE":
 			v := parseBool(value)
 			f.SecureCookie = &v

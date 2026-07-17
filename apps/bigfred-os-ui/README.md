@@ -45,6 +45,8 @@ Hub production binary is built with `-tags pam` and links `libpam` (see `Makefil
 | `--log-root` | *(deprecated)* | Single log directory |
 | `--init-dir` | `/etc/init.d` | SysV init scripts directory |
 | `--supervisord-conf` | `/data/etc/supervisord/supervisord.conf` | supervisord configuration file |
+| `--update-dir` | `/data/opt/bigfred/bin` | Install dir for Update tab downloads |
+| `--github-token` | *(env `GITHUB_TOKEN`)* | Token for private GitHub release downloads |
 | `--secure-cookie` | `false` | Set `Secure` on session cookie (HTTPS) |
 | `--static-dir` | *(embedded)* | Serve frontend from disk (dev) |
 
@@ -58,7 +60,23 @@ HTTP=0.0.0.0:8090
 PAM_SERVICE=bigfred-os-ui
 LOG_ROOTS=/data/logs,/var/log
 SECURE_COOKIE=false
+# Optional: UPDATE_DIR=/data/opt/bigfred/bin
+# Optional: GITHUB_TOKEN=…
 ```
+
+### Update tab
+
+Authenticated operators can download the latest GitHub release assets into
+`/data/opt/bigfred/bin`:
+
+| Button | Repo | Asset (arm64) | Installed as |
+|--------|------|---------------|--------------|
+| Update BigFred | `dcc-bigfred/bigfred` | `loco-server-linux-arm64` | `bigfred` |
+| Update BigFred UI | `dcc-bigfred/bigfred-os` | `bigfred-os-ui-linux-arm64` | `bigfred-os-ui` |
+
+After install, restart the matching SysV service from **Services**
+(`bigfred` / `bigfred-os-ui`). `S48-bigfred-os-ui` and `/usr/bin/bigfred`
+prefer the `/data/opt/bigfred/bin` copies.
 
 Seed template ships as `/etc/bigfred/bigfred-os-ui.conf` and is copied to
 `/data/etc/` on first boot (see `S10-mount`).
@@ -87,6 +105,7 @@ Open http://localhost:5174
 | **Terminal** | Interactive shell over WebSocket (`/api/v1/terminal`, PTY + xterm.js; requires login) |
 | **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
+| **Update** | Download latest GitHub release binaries into `/data/opt/bigfred/bin` |
 
 ## API
 
@@ -98,6 +117,8 @@ Open http://localhost:5174
 - `POST /api/v1/services/{id}/{action}` — `start`, `stop`, or `restart`
 - `GET /api/v1/supervisord/programs` — list supervisord programs (config + status)
 - `POST /api/v1/supervisord/programs/{name}/{action}` — `start`, `stop`, or `restart`
+- `POST /api/v1/update/{target}` — `bigfred` or `bigfred-ui` with body `{"tag":"v1.2.3"}` → `/data/opt/bigfred/bin`
+- `GET /api/v1/update/{target}/releases` — list GitHub releases that include the target asset
 - `GET /api/v1/logs` — list log files from configured roots
 - `GET /api/v1/logs/stream?id=<root-id:path>` — WebSocket stream
 - `GET /api/v1/terminal` — WebSocket interactive shell (PTY)

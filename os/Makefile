@@ -37,7 +37,7 @@ help:
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
 	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
-	@echo "BigFred binaries are NOT built here — install separately."
+	@echo "BigFred (loco-server): BR2_PACKAGE_BIGFRED / package/bigfred"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
