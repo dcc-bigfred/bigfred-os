@@ -50,7 +50,7 @@ $(BUILDROOT_TAR):
 
 buildroot: $(BUILDROOT_DIR)/Makefile
 
-defconfig: buildroot
+defconfig: buildroot $(CURDIR)/configs/$(DEFCONFIG)
 	$(BR2_MAKE) $(DEFCONFIG)
 
 menuconfig: buildroot

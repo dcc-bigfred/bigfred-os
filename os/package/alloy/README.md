@@ -1,10 +1,6 @@
-# Grafana Alloy (optional)
+# Grafana Alloy
 
-Enable `BR2_PACKAGE_ALLOY` in menuconfig and place a static binary here:
+Prebuilt binary from [Grafana Alloy releases](https://github.com/grafana/alloy/releases)
+(`alloy-linux-arm64.zip` on aarch64). Version is pinned in `alloy.mk`.
 
-```text
-package/alloy/alloy-linux-arm64
-```
-
-Download from [Grafana Alloy releases](https://github.com/grafana/alloy/releases)
-(`alloy-linux-arm64.zip`).
+Enable with `BR2_PACKAGE_ALLOY=y` in defconfig or menuconfig.

@@ -2,9 +2,8 @@ config BR2_PACKAGE_ALLOY
 	bool "Grafana Alloy (prebuilt binary)"
 	default n
 	help
-	  Install a prebuilt Grafana Alloy binary from the overlay path
-	  package/alloy/alloy-linux-arm64. Enable when you ship the binary;
-	  otherwise install Alloy manually under /usr/bin on the device.
+	  Install Grafana Alloy from the official GitHub release zip
+	  matching the target CPU (arm64). Runtime state: /data/alloy.
 
 config BR2_PACKAGE_BIGFRED
 	bool "BigFred (loco-server)"
