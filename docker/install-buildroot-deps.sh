@@ -33,9 +33,12 @@ apt-get install -y --no-install-recommends \
 	file \
 	bc \
 	ca-certificates \
+	git \
 	libncurses-dev \
 	libssl-dev \
 	debianutils \
 	flex \
 	libfl2 \
-	bison
+	bison \
+	nodejs \
+	npm

@@ -3,10 +3,12 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY install-buildroot-deps.sh /usr/local/bin/install-buildroot-deps.sh
-RUN chmod +x /usr/local/bin/install-buildroot-deps.sh \
+COPY docker/install-buildroot-deps.sh docker/install-go.sh /usr/local/bin/
+COPY go.mod /usr/local/share/bigfred-os-go.mod
+ENV GO_MOD=/usr/local/share/bigfred-os-go.mod
+RUN chmod +x /usr/local/bin/install-buildroot-deps.sh /usr/local/bin/install-go.sh \
 	&& /usr/local/bin/install-buildroot-deps.sh \
-	&& apt-get install -y --no-install-recommends golang-go \
+	&& /usr/local/bin/install-go.sh \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& mkdir -p /work \
 	&& if getent passwd 1000 >/dev/null; then \
@@ -17,4 +19,6 @@ RUN chmod +x /usr/local/bin/install-buildroot-deps.sh \
 	&& chown 1000:1000 /work
 
 WORKDIR /work
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOTOOLCHAIN=local
 USER 1000:1000
