@@ -13,9 +13,9 @@ HOST_ARCH := $(shell go env GOHOSTARCH)
 OUT_HOST   := $(BIN_DIR)/$(BIN_BASE)-$(HOST_OS)-$(HOST_ARCH)
 OUT_TARGET := $(BIN_DIR)/$(BIN_BASE)-$(GOOS)-$(GOARCH)
 
-HOST_DIR    ?= $(ROOT)/os/output/host
-STAGING_DIR ?= $(ROOT)/os/output/staging
-HOST_CC     := $(HOST_DIR)/bin/aarch64-buildroot-linux-musl-gcc
+HOST_DIR          ?= $(ROOT)/os/output/host
+TOOLCHAIN_SYSROOT := $(HOST_DIR)/aarch64-buildroot-linux-musl/sysroot
+HOST_CC           := $(HOST_DIR)/bin/aarch64-buildroot-linux-musl-gcc
 
 HTTP_ADDR ?= 0.0.0.0:8090
 LOG_ROOTS ?= /data/logs,/var/log
@@ -35,12 +35,16 @@ CROSS_CGO_LDFLAGS :=
 ifeq ($(CGO_ENABLED),1)
 ifneq ($(wildcard $(HOST_CC)),)
   CROSS_CC := $(HOST_CC)
-  CROSS_CGO_CFLAGS := --sysroot=$(STAGING_DIR)
-  CROSS_CGO_LDFLAGS := --sysroot=$(STAGING_DIR) -L$(STAGING_DIR)/usr/lib -Wl,-rpath-link,$(STAGING_DIR)/usr/lib -lpam
+  # libc + linux-pam install into the toolchain sysroot (not os/output/staging).
+  CROSS_CGO_CFLAGS := --sysroot=$(TOOLCHAIN_SYSROOT)
+  CROSS_CGO_LDFLAGS := --sysroot=$(TOOLCHAIN_SYSROOT) \
+	-L$(TOOLCHAIN_SYSROOT)/lib -L$(TOOLCHAIN_SYSROOT)/usr/lib \
+	-Wl,-rpath-link,$(TOOLCHAIN_SYSROOT)/lib -Wl,-rpath-link,$(TOOLCHAIN_SYSROOT)/usr/lib \
+	-lpam
 else
   ifeq ($(GOOS)/$(GOARCH),linux/arm64)
     $(warning bigfred-os-ui: Buildroot toolchain not found at $(HOST_CC))
-    $(warning Run: make -C os defconfig && make -C os/output linux-pam)
+    $(warning Run: make -C os defconfig && make -C os image  # builds linux-pam first)
   endif
   CROSS_CGO_LDFLAGS := -lpam
 endif
@@ -54,10 +58,13 @@ web-build:
 	cd "$(WEB_DIR)" && npm ci && npm run build
 
 ifeq ($(HOST_OS)/$(HOST_ARCH),$(GOOS)/$(GOARCH))
-build: web-build build-target
+build: build-target
 else
-build: web-build build-host build-target
+build: build-host build-target
 endif
+
+# web/dist must exist before go embed; order-only so -j does not race web-build vs go build.
+build-host build-target: | web-build
 
 build-host:
 	@mkdir -p "$(BIN_DIR)"
