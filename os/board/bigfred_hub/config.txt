@@ -1,9 +1,12 @@
-# Raspberry Pi 5 — boot firmware (derived from Buildroot board/raspberrypi5/config_5.txt)
-# Hub: NVMe boot via M.2 HAT+ when firmware supports it.
+# Raspberry Pi 5 — boot firmware (BigFred hub)
+# Pi 5 boots from EEPROM; start*.elf / fixup*.dat are not used.
 
-start_file=start4.elf
-fixup_file=fixup4.dat
 kernel=Image
+
+# Pi 5 Rev 1.1 (BCM2712 D0) — required. Using the C0 DTB on D0 silicon
+# panics in bcm2712_pull_config_set during UART/pinctrl probe (SError).
+# For older Rev 1.0 (C0) boards, change to: bcm2712-rpi-5-b.dtb
+device_tree=bcm2712d0-rpi-5-b.dtb
 
 # Pi 5: enable PCIe Gen3 for NVMe HAT+
 dtparam=pciex1_gen=3

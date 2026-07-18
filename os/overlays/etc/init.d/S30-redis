@@ -32,6 +32,8 @@ case "$1" in
 start)
 	ensure_redis_conf
 	[ -f "$REDIS_CONF" ] || exit 1
+	# bind 127.0.0.1 requires loopback (S15 normally brings it up).
+	ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
 	printf "Starting redis: "
 	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x /usr/bin/redis-server -- \
 		"$REDIS_CONF"

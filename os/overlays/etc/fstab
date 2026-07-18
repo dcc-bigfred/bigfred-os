@@ -1,7 +1,14 @@
-# Hub NVMe layout — §8.4 (edit device if booting from SD rescue media)
-/dev/nvme0n1p2  /       ext4  ro,noatime           0  1
-/dev/nvme0n1p3  /data   ext4  rw,noatime           0  2
+# Virtual filesystems (must be present for BusyBox / biginit / mount)
+proc            /proc     proc   defaults            0  0
+sysfs           /sys      sysfs  defaults            0  0
+devpts          /dev/pts  devpts defaults,gid=5,mode=620  0  0
+
+# Hub microSD layout: boot (p1 FAT) + root (p2 ext4) + /data (p3 ext4)
+# For NVMe boot instead, use /dev/nvme0n1p2 and /dev/nvme0n1p3.
+/dev/mmcblk0p2  /         ext4   ro,noatime          0  1
+/dev/mmcblk0p3  /data     ext4   rw,noatime          0  2
 
 tmpfs           /tmp      tmpfs  defaults,size=64m   0  0
 tmpfs           /var/log  tmpfs  defaults,size=64m   0  0
 tmpfs           /var/run  tmpfs  defaults,size=16m   0  0
+tmpfs           /run      tmpfs  defaults,size=16m   0  0
