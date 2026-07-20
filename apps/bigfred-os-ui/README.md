@@ -105,7 +105,7 @@ Open http://localhost:5174
 | **Terminal** | Interactive shell over WebSocket (`/api/v1/terminal`, PTY + xterm.js; requires login) |
 | **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
-| **Update** | Download latest GitHub release binaries into `/data/opt/bigfred/bin` |
+| **Update** | Download latest GitHub release binaries into `/data/opt/bigfred/bin` (`bigfred`, `bigfred-remote-icmp`, `bigfred-os-ui`). After installing `bigfred-remote-icmp`, `cap_net_raw+ep` is applied via `setcap`. |
 
 ## API
 
@@ -117,7 +117,7 @@ Open http://localhost:5174
 - `POST /api/v1/services/{id}/{action}` — `start`, `stop`, or `restart`
 - `GET /api/v1/supervisord/programs` — list supervisord programs (config + status)
 - `POST /api/v1/supervisord/programs/{name}/{action}` — `start`, `stop`, or `restart`
-- `POST /api/v1/update/{target}` — `bigfred` or `bigfred-ui` with body `{"tag":"v1.2.3"}` → `/data/opt/bigfred/bin`
+- `POST /api/v1/update/{target}` — `bigfred`, `bigfred-remote-icmp`, or `bigfred-ui` with body `{"tag":"v1.2.3"}` → `/data/opt/bigfred/bin`
 - `GET /api/v1/update/{target}/releases` — list GitHub releases that include the target asset
 - `GET /api/v1/logs` — list log files from configured roots
 - `GET /api/v1/logs/stream?id=<root-id:path>` — WebSocket stream

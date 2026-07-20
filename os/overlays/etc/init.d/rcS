@@ -1,2 +1,4 @@
 #!/bin/sh
+# Virtual FS (/proc, /sys, …) come from /etc/fstab via mount -a.
+mount -a || true
 exec /usr/sbin/biginit

@@ -17,30 +17,26 @@ OUTPUT_IMG="${BINARIES_DIR}/hub-nvme.img"
 
 # --- boot partition contents (FAT) ---
 rm -rf "${BOOT_DIR}"
-mkdir -p "${BOOT_DIR}"
+mkdir -p "${BOOT_DIR}/overlays"
 
 cp -v "${BINARIES_DIR}/Image" "${BOOT_DIR}/"
 for dtb in "${BINARIES_DIR}"/*.dtb; do
 	[ -f "$dtb" ] && cp -v "$dtb" "${BOOT_DIR}/"
 done
 
-RPI_FW="$(ls -d "${BUILD_DIR}"/build/rpi-firmware-* 2>/dev/null | head -1)"
-if [ -n "${RPI_FW}" ] && [ -d "${RPI_FW}" ]; then
-	cp -v "${RPI_FW}/bootcode.bin" "${BOOT_DIR}/" 2>/dev/null || true
-	cp -v "${RPI_FW}"/start*.elf "${RPI_FW}"/fixup*.dat "${BOOT_DIR}/" 2>/dev/null || true
-fi
+# Boot config from board (source of truth; includes D0 device_tree=).
+cp -v "${BOARD_DIR}/config.txt" "${BOOT_DIR}/config.txt"
+cp -v "${BOARD_DIR}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
 
-# rpi-firmware installs these under BINARIES_DIR (not target/boot/).
+# Optional: firmware DT overlays (bcm2712d0.dtbo etc.) from rpi-firmware package.
 RPI_FW_IMG="${BINARIES_DIR}/rpi-firmware"
-if [ -f "${RPI_FW_IMG}/config.txt" ]; then
-	cp -v "${RPI_FW_IMG}/config.txt" "${BOOT_DIR}/config.txt"
-else
-	cp -v "${BOARD_DIR}/config.txt" "${BOOT_DIR}/config.txt"
+if [ -d "${RPI_FW_IMG}/overlays" ]; then
+	cp -a "${RPI_FW_IMG}/overlays/." "${BOOT_DIR}/overlays/"
 fi
-if [ -f "${RPI_FW_IMG}/cmdline.txt" ]; then
-	cp -v "${RPI_FW_IMG}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
-else
-	cp -v "${BOARD_DIR}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
+# Ensure bcm2712d0 overlay from the kernel tree is present even without firmware overlays.
+KERNEL_OVLAY="$(ls -d "${BUILD_DIR}"/build/linux-custom/arch/arm/boot/dts/overlays 2>/dev/null | head -1)"
+if [ -f "${KERNEL_OVLAY}/bcm2712d0.dtbo" ]; then
+	cp -v "${KERNEL_OVLAY}/bcm2712d0.dtbo" "${BOOT_DIR}/overlays/"
 fi
 
 # mtools image for genimage
@@ -50,7 +46,15 @@ rm -f "${BOOT_MBR}"
 "${HOST_DIR}/sbin/mkdosfs" -n BOOT -C "${BOOT_MBR}" $((64 * 1024))
 for f in "${BOOT_DIR}"/*; do
 	[ -e "$f" ] || continue
-	"${HOST_DIR}/bin/mcopy" -i "${BOOT_MBR}" "$f" ::/
+	if [ -d "$f" ]; then
+		"${HOST_DIR}/bin/mmd" -i "${BOOT_MBR}" "::/$(basename "$f")" 2>/dev/null || true
+		for sf in "$f"/*; do
+			[ -f "$sf" ] || continue
+			"${HOST_DIR}/bin/mcopy" -i "${BOOT_MBR}" "$sf" "::/$(basename "$f")/"
+		done
+	else
+		"${HOST_DIR}/bin/mcopy" -i "${BOOT_MBR}" "$f" ::/
+	fi
 done
 
 # --- empty /data ext4 ---

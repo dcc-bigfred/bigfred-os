@@ -1,17 +1,26 @@
 #!/bin/sh
-# Mount fstab entries; ensure /data exists; keep / read-only
+# Ensure fstab mounts (incl. /data); keep / read-only
 
 case "$1" in
 start)
-	# Root may already be mounted ro via kernel cmdline
+	# rcS already ran mount -a; repeat for safety if scripts are reordered.
 	mount -a 2>/dev/null || true
 
+	# Prefer fstab (/dev/mmcblk0p3). Fallbacks: label, then NVMe.
 	if ! grep -q ' /data ' /proc/mounts; then
-		if [ -b /dev/nvme0n1p3 ]; then
-			if ! blkid /dev/nvme0n1p3 >/dev/null 2>&1; then
-				mkfs.ext4 -L bigfred-data /dev/nvme0n1p3
+		data_dev=""
+		if [ -b /dev/mmcblk0p3 ]; then
+			data_dev=/dev/mmcblk0p3
+		elif [ -b /dev/disk/by-label/bigfred-data ]; then
+			data_dev=/dev/disk/by-label/bigfred-data
+		elif [ -b /dev/nvme0n1p3 ]; then
+			data_dev=/dev/nvme0n1p3
+		fi
+		if [ -n "$data_dev" ]; then
+			if ! blkid "$data_dev" >/dev/null 2>&1; then
+				mkfs.ext4 -L bigfred-data "$data_dev"
 			fi
-			mount /dev/nvme0n1p3 /data
+			mount "$data_dev" /data
 		fi
 	fi
 

@@ -1,6 +1,6 @@
 module github.com/keskad/bigfred-os
 
-go 1.24
+go 1.25
 
 require (
 	github.com/coder/websocket v1.8.15

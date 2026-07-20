@@ -93,11 +93,73 @@ func TestApplyBigFred(t *testing.T) {
 	}
 }
 
+func TestApplyRemoteICMPSetsCap(t *testing.T) {
+	payload := []byte("#!/bin/sh\necho icmp\n")
+	mux := http.NewServeMux()
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	mux.HandleFunc("/repos/dcc-bigfred/bigfred/releases/latest", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, `{
+			"tag_name": "v2.0.0",
+			"assets": [
+				{"name": "bigfred-remote-icmp-linux-arm64", "browser_download_url": %q, "size": 8}
+			]
+		}`, srv.URL+"/download/icmp")
+	})
+	mux.HandleFunc("/download/icmp", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		_, _ = w.Write(payload)
+	})
+
+	client := srv.Client()
+	origTransport := client.Transport
+	if origTransport == nil {
+		origTransport = http.DefaultTransport
+	}
+	client.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if strings.HasPrefix(req.URL.String(), "https://api.github.com/repos/") {
+			req = req.Clone(req.Context())
+			req.URL.Scheme = "http"
+			req.URL.Host = strings.TrimPrefix(srv.URL, "http://")
+			req.URL.Path = "/repos/dcc-bigfred/bigfred/releases/latest"
+			req.Host = req.URL.Host
+		}
+		return origTransport.RoundTrip(req)
+	})
+
+	dir := t.TempDir()
+	var setCapPath string
+	u := update.New(update.Config{
+		InstallDir: dir,
+		Arch:       "arm64",
+		HTTPClient: client,
+		SetCap: func(path string) error {
+			setCapPath = path
+			return nil
+		},
+	})
+
+	res, err := u.Apply(context.Background(), update.TargetRemoteICMP, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Restart != "remote-icmp" {
+		t.Fatalf("restart=%q", res.Restart)
+	}
+	if setCapPath != res.Path {
+		t.Fatalf("setcap path=%q want %q", setCapPath, res.Path)
+	}
+}
+
 func TestParseTarget(t *testing.T) {
 	cases := map[string]update.Target{
-		"bigfred":       update.TargetBigFred,
-		"bigfred-ui":    update.TargetBigFredUI,
-		"bigfred-os-ui": update.TargetBigFredUI,
+		"bigfred":             update.TargetBigFred,
+		"bigfred-ui":          update.TargetBigFredUI,
+		"bigfred-os-ui":       update.TargetBigFredUI,
+		"bigfred-remote-icmp": update.TargetRemoteICMP,
+		"remote-icmp":         update.TargetRemoteICMP,
 	}
 	for in, want := range cases {
 		got, err := update.ParseTarget(in)

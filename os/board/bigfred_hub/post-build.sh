@@ -5,7 +5,7 @@ set -e
 
 HUB="${BR2_EXTERNAL_BIGFRED_HUB_PATH:-$(dirname "$0")/../..}"
 
-# Mount point for RW data partition (ext4 on nvme0n1p3)
+# Mount point for RW data partition (ext4 LABEL=bigfred-data on SD or NVMe)
 mkdir -p "${TARGET_DIR}/data"
 
 # Persistent log and application state directories (on /data at runtime)

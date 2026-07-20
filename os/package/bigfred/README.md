@@ -42,6 +42,12 @@ The image binary is built like `make server-build` (no embedded SPA). For a
 `/data/opt/bigfred/bin/bigfred`, or use `BIGFRED_OVERRIDE_SRCDIR` with a tree
 that already has `web/dist` and set `BIGFRED_TAGS=prod` in a local override.
 
+## Build host
+
+`bigfred` requires **Go 1.25+** (`go.mod` in the upstream repo). Buildroot's
+`host-go` is older; the image build uses `/usr/local/go` from `docker/install-go.sh`
+(or any Go 1.25+ on `PATH` ahead of `output/host/bin`).
+
 ## Local source (no download)
 
 ```bash

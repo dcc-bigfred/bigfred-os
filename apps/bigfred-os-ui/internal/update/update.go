@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -35,8 +36,9 @@ var (
 type Target string
 
 const (
-	TargetBigFred   Target = "bigfred"
-	TargetBigFredUI Target = "bigfred-ui"
+	TargetBigFred     Target = "bigfred"
+	TargetBigFredUI   Target = "bigfred-ui"
+	TargetRemoteICMP  Target = "bigfred-remote-icmp"
 )
 
 // Result is returned after a successful install.
@@ -66,6 +68,8 @@ type Config struct {
 	Arch          string // GOARCH; empty → runtime.GOARCH
 	HTTPClient    *http.Client
 	GitHubToken   string
+	// SetCap applies Linux capabilities after install. Nil uses setcap(8).
+	SetCap func(path string) error
 }
 
 // Updater installs release assets into InstallDir.
@@ -109,6 +113,13 @@ func (u *Updater) spec(t Target) (targetSpec, error) {
 			destName:  "bigfred",
 			restart:   "bigfred",
 		}, nil
+	case TargetRemoteICMP:
+		return targetSpec{
+			repo:      u.cfg.BigFredRepo,
+			assetName: "bigfred-remote-icmp-linux-" + arch,
+			destName:  "bigfred-remote-icmp",
+			restart:   "remote-icmp",
+		}, nil
 	case TargetBigFredUI:
 		return targetSpec{
 			repo:      u.cfg.BigFredOSRepo,
@@ -126,6 +137,8 @@ func ParseTarget(s string) (Target, error) {
 	switch strings.TrimSpace(s) {
 	case string(TargetBigFred), "loco-server":
 		return TargetBigFred, nil
+	case string(TargetRemoteICMP), "remote-icmp":
+		return TargetRemoteICMP, nil
 	case string(TargetBigFredUI), "bigfred-os-ui", "ui":
 		return TargetBigFredUI, nil
 	default:
@@ -199,6 +212,15 @@ func (u *Updater) Apply(ctx context.Context, t Target, tag string) (*Result, err
 	if err != nil {
 		return nil, err
 	}
+	if t == TargetRemoteICMP {
+		setCap := u.cfg.SetCap
+		if setCap == nil {
+			setCap = applyNetRawCap
+		}
+		if err := setCap(dest); err != nil {
+			return nil, fmt.Errorf("setcap cap_net_raw on %s: %w", dest, err)
+		}
+	}
 
 	return &Result{
 		Target:  t,
@@ -208,6 +230,17 @@ func (u *Updater) Apply(ctx context.Context, t Target, tag string) (*Result, err
 		Size:    size,
 		Restart: spec.restart,
 	}, nil
+}
+
+// applyNetRawCap grants CAP_NET_RAW so ICMP probes work when the binary is
+// loaded from /data/opt (image setcap on /opt does not apply after upgrade).
+func applyNetRawCap(path string) error {
+	cmd := exec.Command("setcap", "cap_net_raw+ep", path)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 type ghRelease struct {

@@ -5,6 +5,9 @@ CONFIGURE=/usr/sbin/configure-ethernet
 
 case "$1" in
 start)
+	# Redis and local services bind 127.0.0.1 — loopback must be up first.
+	ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
+
 	if [ -x "$CONFIGURE" ]; then
 		"$CONFIGURE"
 	else

@@ -1,2 +1,6 @@
 apps/.bin/
+go/
 os/.cache/
+.cache/
+.npm/
+.wget-hsts

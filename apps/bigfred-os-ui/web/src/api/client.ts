@@ -220,7 +220,7 @@ export function saveEtcFile(path: string, content: string): Promise<EtcFileConte
   });
 }
 
-export type UpdateTarget = "bigfred" | "bigfred-ui";
+export type UpdateTarget = "bigfred" | "bigfred-ui" | "bigfred-remote-icmp";
 
 export interface UpdateRelease {
   tag: string;

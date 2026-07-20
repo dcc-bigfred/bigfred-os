@@ -1,6 +1,9 @@
 # BigFred OS — top-level build entrypoints
 
-.PHONY: image image-using-docker docker-image check-docker-rpath
+.PHONY: image image-using-docker docker-image check-docker-rpath relocate-br-host
+
+relocate-br-host:
+	@bash "$(REPO_ROOT)/scripts/relocate-br-host.sh"
 
 REPO_ROOT    := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DOCKER_IMAGE ?= bigfred-hub-os-build
@@ -13,7 +16,7 @@ image:
 	$(MAKE) -C os image
 
 docker-image:
-	docker build -t $(DOCKER_IMAGE) -f $(DOCKER_DIR)/Dockerfile $(DOCKER_DIR)
+	docker build -t $(DOCKER_IMAGE) -f $(DOCKER_DIR)/Dockerfile $(REPO_ROOT)
 
 # Fail only when host tools embed a stale absolute HOST_DIR (host vs Docker path).
 # $ORIGIN/../lib is valid and portable — do not treat it as an error.
@@ -33,7 +36,7 @@ check-docker-rpath:
 		fi; \
 	fi
 
-image-using-docker: docker-image check-docker-rpath
+image-using-docker: docker-image check-docker-rpath relocate-br-host
 	docker run --rm \
 		-u $(DOCKER_UID):$(DOCKER_GID) \
 		-v "$(REPO_ROOT):$(REPO_ROOT)" \
