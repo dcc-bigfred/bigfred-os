@@ -24,6 +24,11 @@ const LABELS: Record<UpdateTarget, { title: string; button: string; service: str
     button: "Update BigFred",
     service: "BigFred",
   },
+  "bigfred-remote-icmp": {
+    title: "Update remote-icmp?",
+    button: "Update remote-icmp",
+    service: "remote-icmp",
+  },
   "bigfred-ui": {
     title: "Update BigFred UI?",
     button: "Update BigFred UI",
@@ -143,7 +148,9 @@ export default function UpdatePage() {
     const dest =
       target === "bigfred"
         ? "/data/opt/bigfred/bin/bigfred"
-        : "/data/opt/bigfred/bin/bigfred-os-ui";
+        : target === "bigfred-remote-icmp"
+          ? "/data/opt/bigfred/bin/bigfred-remote-icmp"
+          : "/data/opt/bigfred/bin/bigfred-os-ui";
     setError(null);
     setConfirm({
       target,
@@ -192,6 +199,7 @@ export default function UpdatePage() {
 
       <div className="update-actions">
         <TargetRow target="bigfred" pending={pending} onConfirm={openConfirm} />
+        <TargetRow target="bigfred-remote-icmp" pending={pending} onConfirm={openConfirm} />
         <TargetRow target="bigfred-ui" pending={pending} onConfirm={openConfirm} />
       </div>
 

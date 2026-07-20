@@ -1,6 +1,7 @@
 ################################################################################
 #
-# bigfred — loco-server (and dcc-bus subcommand) from dcc-bigfred/bigfred
+# bigfred — loco-server (and dcc-bus subcommand) + bigfred-remote-icmp from
+# dcc-bigfred/bigfred
 #
 ################################################################################
 
@@ -11,10 +12,9 @@ endif
 
 BIGFRED_SITE = $(call github,dcc-bigfred,bigfred,$(BIGFRED_VERSION))
 BIGFRED_LICENSE = proprietary
+BIGFRED_DEPENDENCIES = host-libcap
 
 BIGFRED_GOMOD = github.com/keskad/loco
-BIGFRED_BUILD_TARGETS = pkgs/bigfred/server
-BIGFRED_BIN_NAME = bigfred
 BIGFRED_LDFLAGS = -s -w
 
 # bigfred requires Go >= 1.25; Buildroot host-go is 1.23. Prefer docker/install-go.sh
@@ -47,22 +47,32 @@ BIGFRED_BUILD_GO_ENV = \
 BIGFRED_GO_ENV = $(BIGFRED_VENDOR_GO_ENV)
 
 define BIGFRED_BUILD_CMDS
-	$(foreach d,$(BIGFRED_BUILD_TARGETS),\
-		cd $(@D); \
-		$(BIGFRED_BUILD_GO_ENV) \
-			GOOS=linux GOARCH=arm64 \
-			$(BIGFRED_GO_BIN) build -v $(BIGFRED_BUILD_OPTS) \
-				-o $(@D)/bin/$(BIGFRED_BIN_NAME) \
-				$(BIGFRED_GOMOD)/$(d); \
-	)
+	cd $(@D); \
+	$(BIGFRED_BUILD_GO_ENV) \
+		GOOS=linux GOARCH=arm64 \
+		$(BIGFRED_GO_BIN) build -v $(BIGFRED_BUILD_OPTS) \
+			-o $(@D)/bin/bigfred \
+			$(BIGFRED_GOMOD)/pkgs/bigfred/server
+	cd $(@D); \
+	$(BIGFRED_BUILD_GO_ENV) \
+		GOOS=linux GOARCH=arm64 \
+		$(BIGFRED_GO_BIN) build -v $(BIGFRED_BUILD_OPTS) \
+			-o $(@D)/bin/bigfred-remote-icmp \
+			$(BIGFRED_GOMOD)/pkgs/bigfred/remote-icmp
 endef
 
 define BIGFRED_INSTALL_TARGET_CMDS
 	$(INSTALL) -d -m 0755 $(TARGET_DIR)/opt/bigfred/bin
 	$(INSTALL) -D -m 0755 $(@D)/bin/bigfred \
 		$(TARGET_DIR)/opt/bigfred/bin/bigfred
+	$(INSTALL) -D -m 0755 $(@D)/bin/bigfred-remote-icmp \
+		$(TARGET_DIR)/opt/bigfred/bin/bigfred-remote-icmp
 	$(INSTALL) -D -m 0755 $(BIGFRED_PKGDIR)/bigfred.wrapper \
 		$(TARGET_DIR)/usr/bin/bigfred
+	$(INSTALL) -D -m 0755 $(BIGFRED_PKGDIR)/bigfred-remote-icmp.wrapper \
+		$(TARGET_DIR)/usr/bin/bigfred-remote-icmp
+	# ICMP Echo probes from bigfred-remote-icmp (also covered by ping_group_range).
+	$(HOST_DIR)/sbin/setcap cap_net_raw+ep $(TARGET_DIR)/opt/bigfred/bin/bigfred-remote-icmp
 endef
 
 $(eval $(golang-package))

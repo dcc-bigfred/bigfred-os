@@ -1,0 +1,42 @@
+#!/bin/sh
+# bigfred-remote-icmp — Wi-Fi path RTT probes for handset IPs
+
+BIN=/usr/bin/bigfred-remote-icmp
+CONF=/data/etc/loco-server.conf
+PIDFILE=/var/run/remote-icmp.pid
+
+resolve_bin() {
+	if [ -x /data/opt/bigfred/bin/bigfred-remote-icmp ]; then
+		BIN=/data/opt/bigfred/bin/bigfred-remote-icmp
+	elif [ -x /opt/bigfred/bin/bigfred-remote-icmp ]; then
+		BIN=/opt/bigfred/bin/bigfred-remote-icmp
+	elif [ -x /usr/bin/bigfred-remote-icmp ]; then
+		BIN=/usr/bin/bigfred-remote-icmp
+	fi
+}
+
+case "$1" in
+start)
+	resolve_bin
+	[ -x "$BIN" ] || exit 0
+	# Conf may be missing until first loco-server start — binary still starts
+	# with built-in defaults (127.0.0.1:6379, interval 30).
+	printf "Starting remote-icmp: "
+	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$BIN" -- \
+		--config "$CONF"
+	echo "OK"
+	;;
+stop)
+	printf "Stopping remote-icmp: "
+	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
+	echo "OK"
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

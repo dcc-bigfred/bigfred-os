@@ -1,0 +1,11 @@
+#!/bin/sh
+# Prefer a writable override on the data partition, then the image copy.
+for root in /data/opt/bigfred /opt/bigfred; do
+	bin="${root}/bin/bigfred-remote-icmp"
+	if [ -x "${bin}" ]; then
+		exec "${bin}" "$@"
+	fi
+done
+
+echo "bigfred-remote-icmp: no binary found under /data/opt/bigfred/bin or /opt/bigfred/bin" >&2
+exit 127
