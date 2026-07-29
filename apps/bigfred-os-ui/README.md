@@ -103,7 +103,7 @@ Open http://localhost:5174
 |-----|--------|
 | **Logs** | Live tail over WebSocket (`/api/v1/logs/stream`) |
 | **Terminal** | Interactive shell over WebSocket (`/api/v1/terminal`, PTY + xterm.js; requires login) |
-| **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
+| **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` over HTTP ctl (`http://127.0.0.1:9001`, see conf `[inet_http_server]` / `serverurl`) |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
 | **Update** | Download latest GitHub release binaries into `/data/opt/bigfred/bin` (`bigfred`, `bigfred-remote-icmp`, `bigfred-os-ui`). After installing `bigfred-remote-icmp`, `cap_net_raw+ep` is applied via `setcap`. |
 

@@ -94,7 +94,7 @@ export default function SupervisordPage() {
       </div>
       <p className="services-hint">
         Programs from <code>/data/etc/supervisord/supervisord.conf</code> — controlled via{" "}
-        <code>supervisorctl</code>.
+        <code>supervisorctl</code> over HTTP (<code>http://127.0.0.1:9001</code>).
       </p>
 
       {actionError ? <div className="services-error">{actionError}</div> : null}
