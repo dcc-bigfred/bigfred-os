@@ -12,7 +12,7 @@ project defconfig). You can also install or override binaries under
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + RT and USB-ACM fragments |
 | **Rootfs** | BusyBox init, musl, RO `/`, RW `/data` |
-| **Services** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
+| **Services** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), ochinchina supervisord (`BR2_PACKAGE_SUPERVISORD` → `/usr/bin/supervisord` + `supervisorctl` shim), optional Alloy |
 | **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`; enable `S60-bigfred.example` when ready) |
 
 ## Host requirements

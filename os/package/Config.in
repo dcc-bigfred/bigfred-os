@@ -5,11 +5,34 @@ config BR2_PACKAGE_ALLOY
 	  Install Grafana Alloy from the official GitHub release zip
 	  matching the target CPU (arm64). Runtime state: /data/alloy.
 
+config BR2_PACKAGE_SUPERVISORD
+	bool "ochinchina supervisord (+ supervisorctl shim)"
+	default y
+	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_GO
+	help
+	  Cross-build ochinchina/supervisord and a Python-compatible
+	  supervisorctl shim as /usr/bin/supervisord and
+	  /usr/bin/supervisorctl for loco-server / bigfred-os-ui.
+
+	  https://github.com/ochinchina/supervisord
+
+if BR2_PACKAGE_SUPERVISORD
+
+config BR2_PACKAGE_SUPERVISORD_VERSION
+	string "ochinchina version (no leading v)"
+	default "0.7.3"
+	help
+	  Upstream ochinchina/supervisord git tag without the leading v.
+
+endif
+
 config BR2_PACKAGE_BIGFRED
 	bool "BigFred (loco-server)"
 	default y
 	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
 	select BR2_PACKAGE_HOST_GO
+	select BR2_PACKAGE_SUPERVISORD
 	help
 	  Download dcc-bigfred/bigfred from GitHub (branch or tag),
 	  cross-compile loco-server as /opt/bigfred/bin/bigfred, and
