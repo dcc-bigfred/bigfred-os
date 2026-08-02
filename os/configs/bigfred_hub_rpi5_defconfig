@@ -74,6 +74,7 @@ BR2_PACKAGE_WATCHDOG=y
 
 BR2_PACKAGE_HOST_LIBCAP=y
 BR2_PACKAGE_LIBCAP=y
+BR2_PACKAGE_LIBCAP_TOOLS=y
 
 # fanctl: built from apps/fanctl → apps/.bin/ (see post-build.sh)
 BR2_PACKAGE_ALLOY=y
