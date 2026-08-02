@@ -15,10 +15,22 @@ resolve_bin() {
 	fi
 }
 
+# Image binary gets cap_net_raw via BIGFRED_PERMISSIONS (fakeroot). Overrides
+# on /data need setcap at boot (RW partition; Update tab also setcaps).
+ensure_cap() {
+	case "$BIN" in
+	/data/*)
+		command -v setcap >/dev/null 2>&1 || return 0
+		setcap cap_net_raw+ep "$BIN" 2>/dev/null || true
+		;;
+	esac
+}
+
 case "$1" in
 start)
 	resolve_bin
 	[ -x "$BIN" ] || exit 0
+	ensure_cap
 	# Conf may be missing until first loco-server start — binary still starts
 	# with built-in defaults (127.0.0.1:6379, interval 30).
 	printf "Starting remote-icmp: "

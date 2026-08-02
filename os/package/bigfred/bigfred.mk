@@ -54,8 +54,13 @@ define BIGFRED_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/bin/bigfred
 	$(INSTALL) -D -m 0755 $(BIGFRED_PKGDIR)/bigfred-remote-icmp.wrapper \
 		$(TARGET_DIR)/usr/bin/bigfred-remote-icmp
-	# ICMP Echo probes from bigfred-remote-icmp (also covered by ping_group_range).
-	$(HOST_DIR)/sbin/setcap cap_net_raw+ep $(TARGET_DIR)/opt/bigfred/bin/bigfred-remote-icmp
+endef
+
+# Applied under fakeroot when assembling the rootfs (works in Docker uid 1000
+# builds). Do not setcap in INSTALL_TARGET_CMDS — that runs outside fakeroot.
+define BIGFRED_PERMISSIONS
+	/opt/bigfred/bin/bigfred-remote-icmp f 755 0 0 - - - - -
+	|xattr cap_net_raw+ep
 endef
 
 $(eval $(generic-package))
