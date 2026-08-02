@@ -28,6 +28,20 @@ done
 cp -v "${BOARD_DIR}/config.txt" "${BOOT_DIR}/config.txt"
 cp -v "${BOARD_DIR}/cmdline.txt" "${BOOT_DIR}/cmdline.txt"
 
+# Official RPi fullscreen_logo: tiny initramfs with /lib/firmware/logo.tga
+LOGO_TGA="${BOARD_DIR}/logo.tga"
+if [ ! -f "${LOGO_TGA}" ]; then
+	echo "ERROR: missing splash ${LOGO_TGA}" >&2
+	exit 1
+fi
+LOGO_STAGING="$(mktemp -d)"
+mkdir -p "${LOGO_STAGING}/lib/firmware"
+cp -v "${LOGO_TGA}" "${LOGO_STAGING}/lib/firmware/logo.tga"
+LOGO_CPIO="${BINARIES_DIR}/logo.cpio"
+( cd "${LOGO_STAGING}" && find . -print0 | cpio --null -H newc -o --quiet > "${LOGO_CPIO}" )
+cp -v "${LOGO_CPIO}" "${BOOT_DIR}/logo.cpio"
+rm -rf "${LOGO_STAGING}"
+
 # Optional: firmware DT overlays (bcm2712d0.dtbo etc.) from rpi-firmware package.
 RPI_FW_IMG="${BINARIES_DIR}/rpi-firmware"
 if [ -d "${RPI_FW_IMG}/overlays" ]; then
