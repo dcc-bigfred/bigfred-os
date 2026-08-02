@@ -15,8 +15,7 @@ APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
 BIGFRED_OCI_TAG   ?= latest-release
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
-BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL) \
-			BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
+BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
 .PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash apps-build apps-clean
 
@@ -62,7 +61,7 @@ menuconfig: buildroot
 image: defconfig
 	$(BR2_MAKE) linux-pam
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

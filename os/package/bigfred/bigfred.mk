@@ -18,9 +18,12 @@ endif
 BIGFRED_VERSION_SAFE = $(subst /,_,$(BIGFRED_VERSION))
 
 BIGFRED_SOURCE = bigfred-hub-linux-arm64-$(BIGFRED_VERSION_SAFE).tar
-BIGFRED_SITE =
+# SITE is unused (DOWNLOAD_CMDS pulls via oras); keep non-empty for BR validation.
+BIGFRED_SITE = https://ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64
 BIGFRED_LICENSE = proprietary
 BIGFRED_DEPENDENCIES = host-libcap
+# Custom DOWNLOAD_CMDS bypasses the default DOWNLOAD helper, so
+# BR2_DOWNLOAD_FORCE_CHECK_HASHES does not apply (no bigfred.hash).
 
 # Floating tags change under the same name — always re-pull.
 define BIGFRED_DOWNLOAD_CMDS

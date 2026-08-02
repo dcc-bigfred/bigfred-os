@@ -61,5 +61,3 @@ curl -fsSL \
 	| tar -xz -C "${tmp_oras}"
 install -m 0755 "${tmp_oras}/oras" /usr/local/bin/oras
 oras version
-trap - EXIT
-rm -rf "${tmp_oras}"
