@@ -35,7 +35,8 @@ Host requirement: `oras` on `PATH` (installed by `docker/install-buildroot-deps.
 For private GHCR packages, export `GITHUB_TOKEN` (or `GH_TOKEN`).
 
 Floating tags (`master`, `latest-release`, `sha-*`) are re-pulled on every package
-download. After changing a pinned `v*` tag, clear the cache if needed:
+download via a Buildroot `PRE_DOWNLOAD` hook (`oras`). After changing a pinned
+`v*` tag, clear the cache if needed:
 
 ```bash
 rm -rf os/output/build/bigfred-* os/dl/bigfred

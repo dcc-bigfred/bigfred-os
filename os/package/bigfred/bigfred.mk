@@ -18,15 +18,19 @@ endif
 BIGFRED_VERSION_SAFE = $(subst /,_,$(BIGFRED_VERSION))
 
 BIGFRED_SOURCE = bigfred-hub-linux-arm64-$(BIGFRED_VERSION_SAFE).tar
-# SITE is unused (DOWNLOAD_CMDS pulls via oras); keep non-empty for BR validation.
+# SITE is unused for content (PRE_DOWNLOAD fills DL_DIR); keep non-empty so
+# Buildroot still registers a MAIN_DOWNLOAD. After the hook creates the
+# tarball, dl-wrapper finds it and skips network fetch.
 BIGFRED_SITE = https://ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64
 BIGFRED_LICENSE = proprietary
 BIGFRED_DEPENDENCIES = host-libcap
-# Custom DOWNLOAD_CMDS bypasses the default DOWNLOAD helper, so
-# BR2_DOWNLOAD_FORCE_CHECK_HASHES does not apply (no bigfred.hash).
+# No bigfred.hash: floating OCI tags change under the same filename.
+# dl-wrapper allows an existing DL file when no .hash is present.
 
-# Floating tags change under the same name — always re-pull.
-define BIGFRED_DOWNLOAD_CMDS
+# Buildroot 2025.x dropped *_DOWNLOAD_CMDS; use PRE_DOWNLOAD instead of
+# wget/SITE. Floating tags are re-pulled every package download.
+define BIGFRED_FETCH_OCI
+	mkdir -p $(BIGFRED_DL_DIR)
 	case "$(BIGFRED_VERSION)" in \
 		master|latest-release|sha-*) \
 			rm -f "$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)" ;; \
@@ -34,6 +38,7 @@ define BIGFRED_DOWNLOAD_CMDS
 	$(BIGFRED_PKGDIR)/fetch-oci.sh "$(BIGFRED_VERSION)" \
 		"$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)"
 endef
+BIGFRED_PRE_DOWNLOAD_HOOKS += BIGFRED_FETCH_OCI
 
 define BIGFRED_EXTRACT_CMDS
 	$(TAR) -C $(@D) -xf $(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)
