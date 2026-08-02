@@ -3,6 +3,10 @@
 
 kernel=Image
 
+# Hide firmware rainbow splash; early BigFred logo via fullscreen_logo + logo.cpio
+disable_splash=1
+initramfs logo.cpio followkernel
+
 # Pi 5 Rev 1.1 (BCM2712 D0) — required. Using the C0 DTB on D0 silicon
 # panics in bcm2712_pull_config_set during UART/pinctrl probe (SError).
 # For older Rev 1.0 (C0) boards, change to: bcm2712-rpi-5-b.dtb
