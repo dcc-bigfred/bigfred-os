@@ -60,6 +60,18 @@ menuconfig: buildroot
 
 image: defconfig
 	$(BR2_MAKE) linux-pam
+	# BIGFRED_PERMISSIONS uses |xattr; host-makedevs must be built with
+	# -DEXTENDED_ATTRIBUTES. Rebuild when the binary still lacks that support
+	# (stale from before BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y).
+	@if grep -q '^BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y' \
+		"$(OUTPUT_DIR)/.config" 2>/dev/null; then \
+		if [ ! -x "$(OUTPUT_DIR)/host/bin/makedevs" ] || \
+		   strings "$(OUTPUT_DIR)/host/bin/makedevs" 2>/dev/null | \
+			grep -q 'Did you forget to enable BR2_ROOTFS_DEVICE_TABLE'; then \
+			echo "Rebuilding host-makedevs with extended attribute support…"; \
+			$(BR2_MAKE) host-makedevs-rebuild; \
+		fi; \
+	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
 	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
 	@echo ""
