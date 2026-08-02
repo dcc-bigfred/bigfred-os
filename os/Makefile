@@ -11,9 +11,12 @@ BUILDROOT_DIR     ?= $(CURDIR)/buildroot
 OUTPUT_DIR        ?= $(CURDIR)/output
 DEFCONFIG         ?= bigfred_hub_rpi5_defconfig
 APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
+# Hub OCI tag override (also: BR2_PACKAGE_BIGFRED_OCI_TAG in menuconfig)
+BIGFRED_OCI_TAG   ?= latest-release
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
-BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
+BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL) \
+			BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
 
 .PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash apps-build apps-clean
 
@@ -37,7 +40,7 @@ help:
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
 	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
-	@echo "BigFred (loco-server): BR2_PACKAGE_BIGFRED / package/bigfred"
+	@echo "BigFred OCI tag: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)

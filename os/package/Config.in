@@ -8,25 +8,23 @@ config BR2_PACKAGE_ALLOY
 config BR2_PACKAGE_BIGFRED
 	bool "BigFred (loco-server)"
 	default y
-	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
-	select BR2_PACKAGE_HOST_GO
 	help
-	  Download dcc-bigfred/bigfred from GitHub (branch or tag),
-	  cross-compile loco-server as /opt/bigfred/bin/bigfred, and
-	  install /usr/bin/bigfred wrapper that prefers
-	  /data/opt/bigfred over /opt/bigfred.
+	  Pull the hub OCI bundle from GHCR
+	  (ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64) via oras and
+	  install /opt/bigfred/bin/{bigfred,bigfred-remote-icmp} plus
+	  /usr/bin wrappers that prefer /data/opt/bigfred over /opt.
 
 	  https://github.com/dcc-bigfred/bigfred
 
 if BR2_PACKAGE_BIGFRED
 
-config BR2_PACKAGE_BIGFRED_VERSION
-	string "Git ref (branch or tag)"
-	default "master"
+config BR2_PACKAGE_BIGFRED_OCI_TAG
+	string "OCI tag (master | latest-release | v*)"
+	default "latest-release"
 	help
-	  Branch or tag name used for the GitHub archive download.
-	  Default is the main branch (master). After changing this,
-	  remove dl/bigfred and rebuild so the new archive is fetched.
+	  Tag of ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64.
+	  Override at build time with: make image BIGFRED_OCI_TAG=master
+	  Floating tags (master, latest-release) are re-pulled each download.
 
 endif
 

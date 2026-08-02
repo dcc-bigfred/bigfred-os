@@ -1,9 +1,9 @@
 # BigFred hub OS (Buildroot)
 
 This directory is the **BR2_EXTERNAL** tree. BigFred (`loco-server`, `dcc-bus` as a
-subcommand) can be built into the image via `package/bigfred` (enabled in the
-project defconfig). You can also install or override binaries under
-`/data/opt/bigfred` after flash.
+subcommand) is installed into the image via `package/bigfred`, which pulls the
+hub OCI bundle from GHCR (`BIGFRED_OCI_TAG`, default `latest-release`). You can
+also install or override binaries under `/data/opt/bigfred` after flash.
 
 ## Image contents
 
@@ -13,7 +13,7 @@ project defconfig). You can also install or override binaries under
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + RT and USB-ACM fragments |
 | **Rootfs** | BusyBox init, musl, RO `/`, RW `/data` |
 | **Services** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
-| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`; enable `S60-bigfred.example` when ready) |
+| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`, BigFred `S60`) |
 
 ## Host requirements
 
@@ -117,16 +117,19 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 
 ## BigFred (loco-server)
 
-Buildroot package `package/bigfred` downloads an archive from GitHub
-([dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred)), builds, and installs:
+Buildroot package `package/bigfred` pulls
+`ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64` (ORAS) and installs:
 
 - `/opt/bigfred/bin/bigfred` — binary (`dcc-bus` is a subcommand of the same binary)
+- `/opt/bigfred/bin/bigfred-remote-icmp`
 - `/usr/bin/bigfred` — wrapper: prefers `/data/opt/bigfred`, then `/opt/bigfred`
 
-Git ref (branch/tag) in menuconfig: `BR2_PACKAGE_BIGFRED_VERSION` (default `master`).
-Details: `package/bigfred/README.md`.
+OCI tag: `make image BIGFRED_OCI_TAG=master` (or `latest-release`, `v1.2.3`).
+Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires host `oras` (see
+`docker/install-buildroot-deps.sh`). Details: `package/bigfred/README.md`.
 
-Init: `S60-bigfred` script (template `S60-bigfred.example`) with `taskset -c 2,3`.
+Init: `S60-bigfred` with `taskset` on cores 2,3. `S41-remote-icmp` starts the
+ICMP helper.
 
 Databases: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, default RDB `save 60 100`).
 

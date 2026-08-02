@@ -1,6 +1,7 @@
 # BigFred hub OS — Raspberry Pi 5 (based on upstream raspberrypi5_defconfig)
 # Documentation: modelarstwo/rb/docs/loconet-adapter/08-hub-os-image.md
-# BigFred (loco-server): package/bigfred — ref via BR2_PACKAGE_BIGFRED_VERSION.
+# BigFred (loco-server): package/bigfred — OCI tag via BR2_PACKAGE_BIGFRED_OCI_TAG
+# or make image BIGFRED_OCI_TAG=master|latest-release|v*.
 
 BR2_aarch64=y
 BR2_cortex_a76=y
@@ -75,7 +76,7 @@ BR2_PACKAGE_LIBCAP=y
 # fanctl: built from apps/fanctl → apps/.bin/ (see post-build.sh)
 BR2_PACKAGE_ALLOY=y
 BR2_PACKAGE_BIGFRED=y
-BR2_PACKAGE_BIGFRED_VERSION="master"
+BR2_PACKAGE_BIGFRED_OCI_TAG="latest-release"
 BR2_PACKAGE_GRAFANA=y
 BR2_PACKAGE_VICTORIAMETRICS=y
 

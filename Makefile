@@ -11,9 +11,11 @@ DOCKER_DIR   := $(abspath docker)
 # Match host ownership of os/output/ (override: make image-using-docker DOCKER_UID=$(id -u))
 DOCKER_UID   ?= 1000
 DOCKER_GID   ?= 1000
+# Hub OCI tag: master | latest-release | v* | sha-<7>
+BIGFRED_OCI_TAG ?= latest-release
 
 image:
-	$(MAKE) -C os image
+	$(MAKE) -C os image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
 
 docker-image:
 	docker build -t $(DOCKER_IMAGE) -f $(DOCKER_DIR)/Dockerfile $(REPO_ROOT)
@@ -43,5 +45,10 @@ image-using-docker: docker-image check-docker-rpath relocate-br-host
 		-w "$(REPO_ROOT)" \
 		-e HOME="$(REPO_ROOT)" \
 		-e MAKEFLAGS="-j$$(nproc 2>/dev/null || echo 4)" \
+		-e BIGFRED_OCI_TAG="$(BIGFRED_OCI_TAG)" \
+		-e GITHUB_TOKEN \
+		-e GH_TOKEN \
+		-e BIGFRED_NATIVE_TOKEN \
+		-e GITHUB_ACTOR \
 		$(DOCKER_IMAGE) \
-		make image
+		make image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG)
