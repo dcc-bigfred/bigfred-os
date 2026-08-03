@@ -4,31 +4,46 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 )
 
-func TestServicesAPI(t *testing.T) {
-	initDir := t.TempDir()
-	script := filepath.Join(initDir, "S30-redis")
-	if err := os.WriteFile(script, []byte("#!/bin/sh\ncase \"$1\" in start) exit 0;; esac\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
+type fakeMicroinit struct{}
 
+func (fakeMicroinit) List() ([]microinit.ServiceStatus, error) {
+	pid := int32(1)
+	return []microinit.ServiceStatus{{
+		Name: "redis", State: "running", PID: &pid, Enabled: true,
+	}}, nil
+}
+
+func (fakeMicroinit) Control(name, action string) error {
+	if name != "redis" {
+		return services.ErrNotFound
+	}
+	switch action {
+	case "start", "stop", "restart":
+		return nil
+	default:
+		return services.ErrInvalidAction
+	}
+}
+
+func TestServicesAPI(t *testing.T) {
 	authSvc, err := auth.NewStatic("admin", "secret", time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	h := NewRouter(Config{
-		Auth:     authSvc,
-		InitDir:  initDir,
-		LogRoots: []string{t.TempDir()},
+		Auth:      authSvc,
+		Microinit: fakeMicroinit{},
+		LogRoots:  []string{t.TempDir()},
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(`{"username":"admin","password":"secret"}`))
@@ -41,15 +56,17 @@ func TestServicesAPI(t *testing.T) {
 	rec = httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("list status: %d", rec.Code)
+		t.Fatalf("list status: %d body=%s", rec.Code, rec.Body.String())
 	}
 	var list []struct {
-		ID string `json:"id"`
+		ID      string `json:"id"`
+		State   string `json:"state"`
+		Running bool   `json:"running"`
 	}
 	if err := json.NewDecoder(rec.Body).Decode(&list); err != nil {
 		t.Fatal(err)
 	}
-	if len(list) != 1 || list[0].ID != "redis" {
+	if len(list) != 1 || list[0].ID != "redis" || !list[0].Running {
 		t.Fatalf("list: %+v", list)
 	}
 

@@ -3,9 +3,10 @@
 
 kernel=Image
 
-# Hide firmware rainbow splash; early BigFred logo via fullscreen_logo + logo.cpio
+# Hide firmware rainbow splash. Graphical BigFred logo (fullscreen_logo + logo.cpio)
+# is disabled so boot shows a plain text console (microinit / kernel messages).
 disable_splash=1
-initramfs logo.cpio followkernel
+# initramfs logo.cpio followkernel
 
 # Pi 5 Rev 1.1 (BCM2712 D0) — required. Using the C0 DTB on D0 silicon
 # panics in bcm2712_pull_config_set during UART/pinctrl probe (SError).

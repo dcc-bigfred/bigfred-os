@@ -1,4 +1,4 @@
-# Virtual filesystems (must be present for BusyBox / biginit / mount)
+# Virtual filesystems (must be present for BusyBox / microinit / mount)
 proc            /proc     proc   defaults            0  0
 sysfs           /sys      sysfs  defaults            0  0
 devpts          /dev/pts  devpts defaults,gid=5,mode=620  0  0

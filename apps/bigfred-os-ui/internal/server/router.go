@@ -13,7 +13,9 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
 )
 
@@ -21,7 +23,8 @@ import (
 type Config struct {
 	Auth            *auth.Service
 	LogRoots        []string
-	InitDir         string
+	Microinit       services.Client
+	MicroinitClient *microinit.Client
 	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
@@ -64,6 +67,7 @@ func NewRouter(cfg Config) http.Handler {
 			r.Get("/terminal", streamTerminalHandler(cfg))
 			r.Get("/services", listServicesHandler(cfg))
 			r.Post("/services/{id}/{action}", serviceActionHandler(cfg))
+			r.Get("/services/{id}/logs/stream", streamServiceLogsHandler(cfg))
 			r.Get("/supervisord/programs", listSupervisordProgramsHandler(cfg))
 			r.Post("/supervisord/programs/{name}/{action}", supervisordProgramActionHandler(cfg))
 			r.Get("/redis/keys", listRedisKeysHandler(redisClient))

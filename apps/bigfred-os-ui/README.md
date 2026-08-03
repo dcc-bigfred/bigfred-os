@@ -43,7 +43,7 @@ Hub production binary is built with `-tags pam` and links `libpam` (see `Makefil
 | `--password` | *(PAM)* | Static password (dev, `-tags '!pam'` only) |
 | `--log-roots` | `/data/logs,/var/log` | Comma-separated log directories |
 | `--log-root` | *(deprecated)* | Single log directory |
-| `--init-dir` | `/etc/init.d` | SysV init scripts directory |
+| `--microinit-socket` | `/run/microinit.sock` | microinit control Unix socket |
 | `--supervisord-conf` | `/data/etc/supervisord/supervisord.conf` | supervisord configuration file |
 | `--update-dir` | `/data/opt/bigfred/bin` | Install dir for Update tab downloads |
 | `--github-token` | *(env `GITHUB_TOKEN`)* | Token for private GitHub release downloads |
@@ -59,6 +59,7 @@ starts the binary with `--config /data/etc/bigfred-os-ui.conf`.
 HTTP=0.0.0.0:8090
 PAM_SERVICE=bigfred-os-ui
 LOG_ROOTS=/data/logs,/var/log
+MICROINIT_SOCKET=/run/microinit.sock
 SECURE_COOKIE=false
 # Optional: UPDATE_DIR=/data/opt/bigfred/bin
 # Optional: GITHUB_TOKEN=…
@@ -74,12 +75,12 @@ Authenticated operators can download the latest GitHub release assets into
 | Update BigFred | `dcc-bigfred/bigfred` | `loco-server-linux-arm64` | `bigfred` |
 | Update BigFred UI | `dcc-bigfred/bigfred-os` | `bigfred-os-ui-linux-arm64` | `bigfred-os-ui` |
 
-After install, restart the matching SysV service from **Services**
-(`bigfred` / `bigfred-os-ui`). `S48-bigfred-os-ui` and `/usr/bin/bigfred`
+After install, restart the matching service from **Services**
+(`bigfred` / `bigfred-os-ui`) via microinit. `S48-bigfred-os-ui` and `/usr/bin/bigfred`
 prefer the `/data/opt/bigfred/bin` copies.
 
 Seed template ships as `/etc/bigfred/bigfred-os-ui.conf` and is copied to
-`/data/etc/` on first boot (see `S10-mount`).
+`/data/etc/` on first boot (see `/etc/microinit/early-boot.sh`).
 
 ## Development
 

@@ -19,9 +19,9 @@ import (
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/config"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/etcdir"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
 )
@@ -44,7 +44,7 @@ func run() int {
 		legacyLogRoot   string
 		secureCookie    bool
 		staticDir       string
-		initDir         string
+		microinitSock   string
 		supervisordConf string
 		redisAddr       string
 		etcDir          string
@@ -62,7 +62,7 @@ func run() int {
 	flag.StringVar(&legacyLogRoot, "log-root", "", "deprecated: single log directory (use --log-roots)")
 	flag.BoolVar(&secureCookie, "secure-cookie", false, "set Secure flag on session cookie")
 	flag.StringVar(&staticDir, "static-dir", "", "serve frontend from disk instead of embedded bundle (dev)")
-	flag.StringVar(&initDir, "init-dir", services.DefaultInitDir, "SysV init scripts directory")
+	flag.StringVar(&microinitSock, "microinit-socket", microinit.DefaultSocket, "microinit control Unix socket")
 	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
 	flag.StringVar(&redisAddr, "redis-addr", redis.DefaultAddr, "Redis server address")
 	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
@@ -70,7 +70,7 @@ func run() int {
 	flag.StringVar(&githubToken, "github-token", "", "optional GitHub token for private release downloads (or GITHUB_TOKEN)")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &initDir, &supervisordConf, &redisAddr, &etcDir, &updateDir, &githubToken); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &microinitSock, &supervisordConf, &redisAddr, &etcDir, &updateDir, &githubToken); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
 	}
@@ -95,10 +95,12 @@ func run() int {
 		return 1
 	}
 
+	mi := &microinit.Client{Socket: microinitSock}
 	handler := server.NewRouter(server.Config{
 		Auth:            authSvc,
 		LogRoots:        logs.ParseRoots(logRoots, legacyLogRoot),
-		InitDir:         initDir,
+		Microinit:       mi,
+		MicroinitClient: mi,
 		SupervisordConf: supervisordConf,
 		RedisAddr:       redisAddr,
 		EtcDir:          etcDir,
@@ -138,7 +140,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, initDir, supervisordConf, redisAddr, etcDir, updateDir, githubToken *string) error {
+func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, microinitSock, supervisordConf, redisAddr, etcDir, updateDir, githubToken *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -167,8 +169,8 @@ func mergeConfigFile(path string, httpAddr, pamService, username, password, logR
 	if !flagPassed("secure-cookie") && fc.SecureCookie != nil {
 		*secureCookie = *fc.SecureCookie
 	}
-	if !flagPassed("init-dir") && fc.InitDir != "" {
-		*initDir = fc.InitDir
+	if !flagPassed("microinit-socket") && fc.MicroinitSocket != "" {
+		*microinitSock = fc.MicroinitSocket
 	}
 	if !flagPassed("supervisord-conf") && fc.SupervisordConf != "" {
 		*supervisordConf = fc.SupervisordConf

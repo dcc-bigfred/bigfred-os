@@ -11,9 +11,9 @@ also install or override binaries under `/data/opt/bigfred` after flash.
 |-------|-------------|
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + RT and USB-ACM fragments |
-| **Rootfs** | BusyBox init, musl, RO `/`, RW `/data` |
+| **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` |
 | **Services** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
-| **Init** | `S05`…`S95` (VictoriaMetrics `S35`, Grafana `S42`, bigfred-os-ui `S48`, BigFred `S60`) |
+| **Init** | **microinit** as `/sbin/init` (OCI); SysV `S??-*` scripts as backends; early-boot mounts `/data` |
 
 ## Host requirements
 
@@ -27,6 +27,8 @@ From the repository root (recommended):
 ```bash
 make image                  # on host (requires Buildroot dependencies)
 make image-using-docker     # Ubuntu 24.04 in Docker (uid/gid 1000:1000)
+# Optional OCI pins:
+# make image BIGFRED_OCI_TAG=master MICROINIT_OCI_TAG=main
 ```
 
 Docker mounts the repo at the **same absolute path** as on the host. Host tools with
@@ -128,7 +130,23 @@ OCI tag: `make image BIGFRED_OCI_TAG=master` (or `latest-release`, `v1.2.3`).
 Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires host `oras` (see
 `docker/install-buildroot-deps.sh`). Details: `package/bigfred/README.md`.
 
-Init: `S60-bigfred` with `taskset` on cores 2,3. `S41-remote-icmp` starts the
+## microinit (PID 1)
+
+Buildroot package `package/microinit` pulls
+`ghcr.io/dcc-bigfred/microinit-linux-arm64` (ORAS) and installs `/sbin/init`
+plus `/usr/sbin/microinit`. Init system is `BR2_INIT_NONE` (BusyBox stays for
+utilities; it does not own `/sbin/init`).
+
+- Early-boot: `overlays/etc/microinit/early-boot.sh` (mounts `/data`, seeds configs)
+- Service list seed: `overlays/etc/microinit/microinit.json` → `/data/etc/microinit.json`
+- SysV scripts under `overlays/etc/init.d/S??-*` remain as `cmd` backends
+
+OCI tag: `make image MICROINIT_OCI_TAG=main` (or `sha-<7>`).
+Menuconfig: `BR2_PACKAGE_MICROINIT_OCI_TAG`. Details: `package/microinit/README.md`.
+
+CLI on device: `microinit list`, `microinit start redis`, `microinit logs --follow`.
+
+Init scripts: `S60-bigfred` with `taskset` on cores 2,3. `S41-remote-icmp` starts the
 ICMP helper.
 
 Databases: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, default RDB `save 60 100`).

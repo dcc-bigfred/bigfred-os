@@ -2,6 +2,7 @@
 # Documentation: modelarstwo/rb/docs/loconet-adapter/08-hub-os-image.md
 # BigFred (loco-server): package/bigfred — OCI tag via BR2_PACKAGE_BIGFRED_OCI_TAG
 # or make image BIGFRED_OCI_TAG=master|latest-release|v*.
+# microinit (PID 1): package/microinit — MICROINIT_OCI_TAG=main|sha-*.
 
 BR2_aarch64=y
 BR2_cortex_a76=y
@@ -16,13 +17,13 @@ BR2_DOWNLOAD_FORCE_CHECK_HASHES=y
 # Static IP via S15-network overlay (not DHCP)
 # BR2_SYSTEM_DHCP is not set
 
-BR2_INIT_BUSYBOX=y
+BR2_INIT_NONE=y
 BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_EUDEV=y
 # Needed for BIGFRED_PERMISSIONS |xattr cap_net_raw (applied under fakeroot).
 BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y
 BR2_PACKAGE_EUDEV=y
 
-# Console via overlays/etc/inittab (ttyAMA10 + tty1)
+# Console getty is respawned by microinit (PID 1) on --console (tty1).
 # BR2_TARGET_GENERIC_GETTY is not set
 
 BR2_TARGET_GENERIC_HOSTNAME="bigfred-hub"
@@ -80,6 +81,8 @@ BR2_PACKAGE_LIBCAP_TOOLS=y
 BR2_PACKAGE_ALLOY=y
 BR2_PACKAGE_BIGFRED=y
 BR2_PACKAGE_BIGFRED_OCI_TAG="latest-release"
+BR2_PACKAGE_MICROINIT=y
+BR2_PACKAGE_MICROINIT_OCI_TAG="main"
 BR2_PACKAGE_GRAFANA=y
 BR2_PACKAGE_VICTORIAMETRICS=y
 

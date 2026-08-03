@@ -25,7 +25,7 @@ fanctl stop     # fan off
 ```
 
 Configuration is read from `/data/etc/fanctl.conf` (created on first run if missing).
-On first boot the image seeds the file from `/etc/bigfred/fanctl.conf` via `S10-mount`.
+On first boot the image seeds the file from `/etc/bigfred/fanctl.conf` via early-boot (`/etc/microinit/early-boot.sh`).
 
 ### Config format (`/data/etc/fanctl.conf`)
 

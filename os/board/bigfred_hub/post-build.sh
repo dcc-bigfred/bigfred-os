@@ -37,6 +37,10 @@ if [ -d "${APPS_BIN}" ]; then
 				# Installed below as /usr/sbin/bigfred-os-ui
 				continue
 				;;
+			biginit)
+				# Replaced by microinit (package/microinit)
+				continue
+				;;
 		esac
 		[ -x "$bin" ] || chmod 755 "$bin"
 		name=$(basename "$bin")
@@ -63,18 +67,21 @@ if [ -f "${HUB}/board/bigfred_hub/network.conf" ] && \
 		"${TARGET_DIR}/etc/bigfred/network.conf"
 fi
 
-# bigfred-os-ui seed (copied to /data/etc on first boot by S10-mount)
+# bigfred-os-ui seed (copied to /data/etc on first boot by early-boot.sh)
 if [ -f "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" ]; then
 	mkdir -p "${TARGET_DIR}/etc/bigfred"
 	install -m 0644 "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" \
 		"${TARGET_DIR}/etc/bigfred/bigfred-os-ui.conf"
 fi
 
-# fanctl seed (copied to /data/etc on first boot by S10-mount)
+# fanctl seed (copied to /data/etc on first boot by early-boot.sh)
 if [ -f "${HUB}/board/bigfred_hub/fanctl.conf" ]; then
 	mkdir -p "${TARGET_DIR}/etc/bigfred"
 	install -m 0644 "${HUB}/board/bigfred_hub/fanctl.conf" \
 		"${TARGET_DIR}/etc/bigfred/fanctl.conf"
 fi
+
+# Skip leftover biginit binary if present in apps/.bin from older trees
+rm -f "${TARGET_DIR}/usr/sbin/biginit"
 
 exit 0
