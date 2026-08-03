@@ -20,7 +20,7 @@ Installed to `/usr/sbin/fanctl` on the hub image (`S50-fanctl`).
 ## Usage
 
 ```bash
-fanctl daemon   # foreground loop (init runs via start-stop-daemon)
+fanctl daemon   # foreground loop (microinit tracks the PID via S50-fanctl exec)
 fanctl stop     # fan off
 ```
 

@@ -2,14 +2,12 @@
 
 case "$1" in
 start)
-	printf "Starting dropbear: "
-	/usr/sbin/dropbear -R
-	echo "OK"
+	# -F: stay in foreground so microinit can track the PID
+	# -R: create host keys as needed
+	exec /usr/sbin/dropbear -F -R
 	;;
 stop)
-	printf "Stopping dropbear: "
 	killall dropbear 2>/dev/null
-	echo "OK"
 	;;
 restart)
 	$0 stop

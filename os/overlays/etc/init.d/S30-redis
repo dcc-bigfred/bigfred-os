@@ -2,7 +2,6 @@
 
 REDIS_CONF=/data/etc/redis.conf
 DEFAULT_REDIS_CONF=/etc/redis/redis.conf
-PIDFILE=/var/run/redis.pid
 
 ensure_redis_conf() {
 	mkdir -p /data/etc /data/redis /data/logs/redis
@@ -34,16 +33,11 @@ start)
 	[ -f "$REDIS_CONF" ] || exit 1
 	# bind 127.0.0.1 requires loopback (S15 normally brings it up).
 	/sbin/ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
-	printf "Starting redis: "
-	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x /usr/bin/redis-server -- \
-		"$REDIS_CONF"
-	taskset -cp 0,1 "$(cat "$PIDFILE")" 2>/dev/null || true
-	echo "OK"
+	# Foreground under microinit; force daemonize no even if /data conf says otherwise.
+	exec taskset -c 0,1 /usr/bin/redis-server "$REDIS_CONF" --daemonize no
 	;;
 stop)
-	printf "Stopping redis: "
-	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
-	echo "OK"
+	killall redis-server 2>/dev/null
 	;;
 restart)
 	$0 stop

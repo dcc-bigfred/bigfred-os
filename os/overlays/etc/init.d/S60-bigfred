@@ -3,20 +3,14 @@
 # /usr/bin/bigfred resolves /data/opt then /opt.
 
 BIN=/usr/bin/bigfred
-PIDFILE=/var/run/bigfred.pid
 
 case "$1" in
 start)
 	[ -x "$BIN" ] || exit 0
-	printf "Starting bigfred: "
-	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$BIN" --
-	taskset -cp 2,3 "$(cat "$PIDFILE")" 2>/dev/null || true
-	echo "OK"
+	exec taskset -c 2,3 "$BIN"
 	;;
 stop)
-	printf "Stopping bigfred: "
-	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
-	echo "OK"
+	killall bigfred 2>/dev/null
 	;;
 restart)
 	$0 stop

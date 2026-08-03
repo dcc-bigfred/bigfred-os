@@ -1,20 +1,16 @@
 #!/bin/sh
 
 DAEMON=/usr/sbin/fanctl
-PIDFILE=/var/run/fanctl.pid
 
 case "$1" in
 start)
 	[ -x "$DAEMON" ] || exit 0
-	printf "Starting fanctl: "
-	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$DAEMON" -- daemon
-	echo "OK"
+	# Foreground loop — microinit tracks this PID (restart on crash / killall).
+	exec "$DAEMON" daemon
 	;;
 stop)
-	printf "Stopping fanctl: "
-	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
-	$DAEMON stop 2>/dev/null
-	echo "OK"
+	killall fanctl 2>/dev/null
+	"$DAEMON" stop 2>/dev/null
 	;;
 restart)
 	$0 stop

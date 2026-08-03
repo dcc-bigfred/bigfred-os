@@ -4,9 +4,8 @@
 case "$1" in
 start)
 	[ -c /dev/watchdog ] || exit 0
-	printf "Starting watchdog: "
-	start-stop-daemon -S -b -x /usr/sbin/watchdog -- -F -f /dev/watchdog
-	echo "OK"
+	# -F: foreground (do not daemonize)
+	exec /usr/sbin/watchdog -F -f /dev/watchdog
 	;;
 stop)
 	killall watchdog 2>/dev/null

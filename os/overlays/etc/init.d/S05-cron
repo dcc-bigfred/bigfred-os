@@ -3,7 +3,8 @@
 case "$1" in
 start)
 	mkdir -p /etc/crontabs
-	crond -c /etc/crontabs
+	# -f: stay in foreground so microinit can track the PID
+	exec crond -f -c /etc/crontabs
 	;;
 stop)
 	killall crond 2>/dev/null

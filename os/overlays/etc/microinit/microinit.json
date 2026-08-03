@@ -23,6 +23,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S05-cron",
       "dependsOn": []
     },
@@ -69,6 +70,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S40-alloy",
       "dependsOn": ["network"]
     },
@@ -78,6 +80,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 5,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S41-remote-icmp",
       "dependsOn": ["network"]
     },
@@ -97,6 +100,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S48-bigfred-os-ui",
       "dependsOn": ["network"]
     },
@@ -106,6 +110,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S50-fanctl",
       "dependsOn": []
     },
@@ -125,6 +130,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S90-dropbear",
       "dependsOn": ["network"]
     },
@@ -134,6 +140,7 @@
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S95-watchdog",
       "dependsOn": []
     }

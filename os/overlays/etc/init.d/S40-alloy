@@ -3,23 +3,16 @@
 
 ALLOY_BIN=/usr/bin/alloy
 ALLOY_CFG=/etc/alloy/config.alloy
-PIDFILE=/var/run/alloy.pid
 
 case "$1" in
 start)
 	[ -x "$ALLOY_BIN" ] || exit 0
 	[ -f "$ALLOY_CFG" ] || exit 0
 	mkdir -p /data/alloy /data/logs/alloy
-	printf "Starting alloy: "
-	start-stop-daemon -S -q -b -m -p "$PIDFILE" -x "$ALLOY_BIN" -- run "$ALLOY_CFG"
-	taskset -cp 0,1 "$(cat "$PIDFILE")" 2>/dev/null || true
-	echo "OK"
+	exec taskset -c 0,1 "$ALLOY_BIN" run "$ALLOY_CFG"
 	;;
 stop)
-	[ -x "$ALLOY_BIN" ] || exit 0
-	printf "Stopping alloy: "
-	start-stop-daemon -K -q -p "$PIDFILE" 2>/dev/null
-	echo "OK"
+	killall alloy 2>/dev/null
 	;;
 restart)
 	$0 stop
