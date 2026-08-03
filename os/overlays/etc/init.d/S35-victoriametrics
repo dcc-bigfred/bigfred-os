@@ -16,7 +16,7 @@ start)
 	INMEMORY_DATA_FLUSH_INTERVAL="${INMEMORY_DATA_FLUSH_INTERVAL:-5m}"
 
 	mkdir -p "$STORAGE_DATA_PATH"
-	exec taskset -c 0,1 "$VM_BIN" \
+	exec "$VM_BIN" \
 		-storageDataPath="$STORAGE_DATA_PATH" \
 		-httpListenAddr="$HTTP_LISTEN_ADDR" \
 		-retentionPeriod="$RETENTION_PERIOD" \

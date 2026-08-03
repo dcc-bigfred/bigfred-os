@@ -9,7 +9,7 @@ start)
 	[ -x "$ALLOY_BIN" ] || exit 0
 	[ -f "$ALLOY_CFG" ] || exit 0
 	mkdir -p /data/alloy /data/logs/alloy
-	exec taskset -c 0,1 "$ALLOY_BIN" run "$ALLOY_CFG"
+	exec "$ALLOY_BIN" run "$ALLOY_CFG"
 	;;
 stop)
 	killall alloy 2>/dev/null

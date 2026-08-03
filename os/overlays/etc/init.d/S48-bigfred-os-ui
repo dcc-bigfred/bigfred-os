@@ -16,7 +16,7 @@ start)
 		echo "S48-bigfred-os-ui: missing $UI_CONF" >&2
 		exit 0
 	}
-	exec taskset -c 0,1 "$UI_BIN" --config "$UI_CONF"
+	exec "$UI_BIN" --config "$UI_CONF"
 	;;
 stop)
 	killall bigfred-os-ui 2>/dev/null

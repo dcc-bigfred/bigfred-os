@@ -10,7 +10,7 @@ start)
 	[ -x "$GRAFANA_BIN" ] || exit 0
 	[ -f "$GRAFANA_CFG" ] || exit 0
 	mkdir -p /data/opt/grafana/data /data/opt/grafana/log /data/opt/grafana/plugins
-	exec taskset -c 0,1 "$GRAFANA_BIN" \
+	exec "$GRAFANA_BIN" \
 		--homepath="$GRAFANA_HOME" \
 		--config="$GRAFANA_CFG"
 	;;

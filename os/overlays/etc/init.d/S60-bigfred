@@ -7,7 +7,7 @@ BIN=/usr/bin/bigfred
 case "$1" in
 start)
 	[ -x "$BIN" ] || exit 0
-	exec taskset -c 2,3 "$BIN"
+	exec "$BIN"
 	;;
 stop)
 	killall bigfred 2>/dev/null
