@@ -1,23 +1,19 @@
 //go:build linux
 
 // configure-ethernet brings up the first Ethernet interface with a static
-// address on common club subnets, or falls back to DHCP. It then stays running
-// and re-runs the same bring-up logic when the link/address is lost.
+// address on common club subnets, or falls back to DHCP.
+// Subcommand "check" reports whether the link still looks connected (cheap).
 package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"net"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -26,8 +22,6 @@ const (
 	defaultPrimaryAddr   = "192.168.0.120"
 	defaultSecondaryAddr = "192.168.1.120"
 	defaultPrefixLen     = 24
-	defaultConnTimeout   = 10 // seconds — health-check interval while up
-	defaultBackoffTime   = 30 // seconds — wait between failed bring-up attempts
 	pingCount            = 1
 	pingTimeoutSec       = 2
 	dhcpWait             = 5 * time.Second
@@ -40,77 +34,66 @@ const (
 )
 
 type settings struct {
-	primaryAddr          string
-	secondaryAddr        string
-	connectionTimeoutSec int
-	backoffTimeSec       int
+	primaryAddr   string
+	secondaryAddr string
 }
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
+	cmd := "up"
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
+	}
 
-	if err := runDaemon(ctx, defaultConfigPath); err != nil {
-		fmt.Fprintf(os.Stderr, "configure-ethernet: %v\n", err)
+	switch cmd {
+	case "up", "configure", "start":
+		if err := runConfigure(defaultConfigPath); err != nil {
+			fmt.Fprintf(os.Stderr, "configure-ethernet: %v\n", err)
+			os.Exit(1)
+		}
+	case "check":
+		if checkConnected() {
+			os.Exit(0)
+		}
 		os.Exit(1)
+	case "-h", "--help", "help":
+		usage()
+	default:
+		fmt.Fprintf(os.Stderr, "configure-ethernet: unknown command %q\n", cmd)
+		usage()
+		os.Exit(2)
 	}
 }
 
-func runDaemon(ctx context.Context, configPath string) error {
-	cfg, err := loadOrCreateConfig(configPath, defaultPrimaryAddr, defaultSecondaryAddr, defaultConnTimeout, defaultBackoffTime)
+func usage() {
+	fmt.Fprintf(os.Stderr, "usage: %s [up|check]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  up     bring up Ethernet (static / DHCP) and exit\n")
+	fmt.Fprintf(os.Stderr, "  check  exit 0 if link+IPv4 look OK, else 1 (cheap)\n")
+}
+
+func runConfigure(configPath string) error {
+	cfg, err := loadOrCreateConfig(configPath, defaultPrimaryAddr, defaultSecondaryAddr)
 	if err != nil {
 		return err
 	}
 
 	_ = runCmd(ipBin, "link", "set", "lo", "up")
 
-	fmt.Printf(
-		"configure-ethernet: daemon starting (CONNECTION_TIMEOUT=%ds BACKOFF_TIME=%ds)\n",
-		cfg.connectionTimeoutSec,
-		cfg.backoffTimeSec,
-	)
-
-	connTimeout := time.Duration(cfg.connectionTimeoutSec) * time.Second
-	backoff := time.Duration(cfg.backoffTimeSec) * time.Second
-
-	for {
-		if ctx.Err() != nil {
-			fmt.Println("configure-ethernet: shutting down")
-			return nil
-		}
-
-		// Bring-up loop: same logic as the original oneshot start.
-		for {
-			if ctx.Err() != nil {
-				fmt.Println("configure-ethernet: shutting down")
-				return nil
-			}
-			if connect(cfg) {
-				break
-			}
-			fmt.Printf("configure-ethernet: bring-up failed; retry in %ds\n", cfg.backoffTimeSec)
-			if !sleepCtx(ctx, backoff) {
-				fmt.Println("configure-ethernet: shutting down")
-				return nil
-			}
-		}
-
-		// Monitor until the connection is lost, then reconnect.
-		for {
-			if !sleepCtx(ctx, connTimeout) {
-				fmt.Println("configure-ethernet: shutting down")
-				return nil
-			}
-			iface, err := firstEthernetInterface()
-			if err != nil || !connectionHealthy(iface) {
-				fmt.Println("configure-ethernet: connection lost; reconnecting")
-				break
-			}
-		}
+	if connect(cfg) {
+		return nil
 	}
+	return fmt.Errorf("failed to configure ethernet (static and DHCP)")
 }
 
-// connect tries PRIMARY, SECONDARY, then DHCP on the first Ethernet interface.
+// checkConnected is a cheap liveness probe: ethernet iface is UP and has IPv4.
+// No ping (that would be slower and flaky on quiet networks).
+func checkConnected() bool {
+	iface, err := firstEthernetInterface()
+	if err != nil {
+		return false
+	}
+	return ifaceLinkUp(iface) && ifaceHasIPv4(iface)
+}
+
 func connect(cfg settings) bool {
 	iface, err := firstEthernetInterface()
 	if err != nil {
@@ -140,16 +123,6 @@ func connect(cfg settings) bool {
 	return false
 }
 
-func connectionHealthy(iface string) bool {
-	if !ifaceLinkUp(iface) || !ifaceHasIPv4(iface) {
-		return false
-	}
-	if gw, ok := defaultGateway(); ok {
-		return pingHost(gw)
-	}
-	return true
-}
-
 func ifaceLinkUp(iface string) bool {
 	out, err := exec.Command(ipBin, "link", "show", "dev", iface).Output()
 	if err != nil {
@@ -158,12 +131,10 @@ func ifaceLinkUp(iface string) bool {
 	return strings.Contains(string(out), "state UP") || strings.Contains(string(out), ",UP")
 }
 
-func loadOrCreateConfig(path, defaultPrimary, defaultSecondary string, defaultTimeout, defaultBackoff int) (settings, error) {
+func loadOrCreateConfig(path, defaultPrimary, defaultSecondary string) (settings, error) {
 	defaults := settings{
-		primaryAddr:          defaultPrimary,
-		secondaryAddr:        defaultSecondary,
-		connectionTimeoutSec: defaultTimeout,
-		backoffTimeSec:       defaultBackoff,
+		primaryAddr:   defaultPrimary,
+		secondaryAddr: defaultSecondary,
 	}
 
 	data, err := os.ReadFile(path)
@@ -207,14 +178,6 @@ func parseConfig(text string, defaults settings) settings {
 			if net.ParseIP(value) != nil {
 				cfg.secondaryAddr = value
 			}
-		case "CONNECTION_TIMEOUT":
-			if n, err := strconv.Atoi(value); err == nil && n > 0 {
-				cfg.connectionTimeoutSec = n
-			}
-		case "BACKOFF_TIME":
-			if n, err := strconv.Atoi(value); err == nil && n > 0 {
-				cfg.backoffTimeSec = n
-			}
 		}
 	}
 	return cfg
@@ -229,11 +192,7 @@ func writeConfig(path string, cfg settings) error {
 	content := fmt.Sprintf(`# configure-ethernet static addresses (edit to match club subnet)
 PRIMARY=%s
 SECONDARY=%s
-# Seconds between health checks while connected
-CONNECTION_TIMEOUT=%d
-# Seconds to wait after a failed bring-up before retrying
-BACKOFF_TIME=%d
-`, cfg.primaryAddr, cfg.secondaryAddr, cfg.connectionTimeoutSec, cfg.backoffTimeSec)
+`, cfg.primaryAddr, cfg.secondaryAddr)
 
 	return os.WriteFile(path, []byte(content), 0o644)
 }
@@ -324,7 +283,6 @@ func tryDHCP(iface string) bool {
 		return true
 	}
 
-	// Lease without a pingable default route is still usable on some networks.
 	return ifaceHasIPv4(iface)
 }
 
@@ -370,15 +328,4 @@ func runCmd(name string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
-}
-
-func sleepCtx(ctx context.Context, d time.Duration) bool {
-	t := time.NewTimer(d)
-	defer t.Stop()
-	select {
-	case <-ctx.Done():
-		return false
-	case <-t.C:
-		return true
-	}
 }

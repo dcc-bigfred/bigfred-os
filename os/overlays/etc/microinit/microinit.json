@@ -30,12 +30,14 @@
     {
       "name": "network",
       "enabled": true,
-      "daemon": true,
-      "restart": true,
-      "restartBackoff": 2,
-      "startWaitSecs": 1,
+      "daemon": false,
       "cmd": "/etc/init.d/S15-network",
-      "dependsOn": []
+      "dependsOn": [],
+      "livenessProbe": {
+        "cmd": "/usr/sbin/configure-ethernet check",
+        "successExitCodes": [0],
+        "interval": 30
+      }
     },
     {
       "name": "sysctl",
@@ -52,7 +54,11 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/S30-redis",
-      "dependsOn": ["network"]
+      "dependsOn": ["network"],
+      "livenessProbe": {
+        "tcpAddr": "127.0.0.1:6379",
+        "interval": 10
+      }
     },
     {
       "name": "victoriametrics",
@@ -72,7 +78,12 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/S40-alloy",
-      "dependsOn": ["network"]
+      "dependsOn": ["network"],
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:12345/-/ready",
+        "httpAcceptedCodes": [200],
+        "interval": 300
+      }
     },
     {
       "name": "remote-icmp",
@@ -92,7 +103,12 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/S42-grafana",
-      "dependsOn": ["victoriametrics"]
+      "dependsOn": ["victoriametrics"],
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:3000/api/health",
+        "httpAcceptedCodes": [200],
+        "interval": 300
+      }
     },
     {
       "name": "bigfred-os-ui",
@@ -122,7 +138,12 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/S60-bigfred",
-      "dependsOn": ["network", "redis"]
+      "dependsOn": ["network", "redis"],
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:8080/health",
+        "httpAcceptedCodes": [200],
+        "interval": 60
+      }
     },
     {
       "name": "dropbear",
@@ -132,7 +153,11 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/S90-dropbear",
-      "dependsOn": ["network"]
+      "dependsOn": ["network"],
+      "livenessProbe": {
+        "tcpAddr": "127.0.0.1:22",
+        "interval": 30
+      }
     },
     {
       "name": "watchdog",
