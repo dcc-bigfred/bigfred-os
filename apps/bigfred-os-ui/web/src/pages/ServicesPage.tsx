@@ -15,7 +15,15 @@ function badgeClass(state: string, running: boolean): string {
   const s = state.toLowerCase();
   if (s === "failed") return "fatal";
   if (s === "disabled" || s === "stopped" || s === "succeeded") return "stopped";
-  if (running || s === "running" || s === "starting" || s === "restarting") return "running";
+  if (
+    running ||
+    s === "running" ||
+    s === "starting" ||
+    s === "restarting" ||
+    s === "waiting_for_dependency"
+  ) {
+    return "running";
+  }
   return "unknown";
 }
 

@@ -75,7 +75,7 @@ func fromStatus(s microinit.ServiceStatus) Service {
 
 func isRunningState(state string) bool {
 	switch strings.ToLower(state) {
-	case "running", "starting", "restarting":
+	case "running", "starting", "restarting", "waiting_for_dependency":
 		return true
 	default:
 		return false

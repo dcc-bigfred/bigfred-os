@@ -10,9 +10,18 @@ import (
 )
 
 func TestParseConfig_defaults(t *testing.T) {
-	primary, secondary := parseConfig("", "192.168.0.120", "192.168.1.120")
-	if primary != "192.168.0.120" || secondary != "192.168.1.120" {
-		t.Fatalf("got primary=%q secondary=%q", primary, secondary)
+	defaults := settings{
+		primaryAddr:          "192.168.0.120",
+		secondaryAddr:        "192.168.1.120",
+		connectionTimeoutSec: 10,
+		backoffTimeSec:       30,
+	}
+	cfg := parseConfig("", defaults)
+	if cfg.primaryAddr != "192.168.0.120" || cfg.secondaryAddr != "192.168.1.120" {
+		t.Fatalf("got primary=%q secondary=%q", cfg.primaryAddr, cfg.secondaryAddr)
+	}
+	if cfg.connectionTimeoutSec != 10 || cfg.backoffTimeSec != 30 {
+		t.Fatalf("got timeout=%d backoff=%d", cfg.connectionTimeoutSec, cfg.backoffTimeSec)
 	}
 }
 
@@ -20,18 +29,38 @@ func TestParseConfig_overrides(t *testing.T) {
 	text := `# club subnet
 PRIMARY=10.0.0.50
 SECONDARY=10.0.1.50
+CONNECTION_TIMEOUT=5
+BACKOFF_TIME=60
 `
-	primary, secondary := parseConfig(text, "192.168.0.120", "192.168.1.120")
-	if primary != "10.0.0.50" || secondary != "10.0.1.50" {
-		t.Fatalf("got primary=%q secondary=%q", primary, secondary)
+	defaults := settings{
+		primaryAddr:          "192.168.0.120",
+		secondaryAddr:        "192.168.1.120",
+		connectionTimeoutSec: 10,
+		backoffTimeSec:       30,
+	}
+	cfg := parseConfig(text, defaults)
+	if cfg.primaryAddr != "10.0.0.50" || cfg.secondaryAddr != "10.0.1.50" {
+		t.Fatalf("got primary=%q secondary=%q", cfg.primaryAddr, cfg.secondaryAddr)
+	}
+	if cfg.connectionTimeoutSec != 5 || cfg.backoffTimeSec != 60 {
+		t.Fatalf("got timeout=%d backoff=%d", cfg.connectionTimeoutSec, cfg.backoffTimeSec)
 	}
 }
 
 func TestParseConfig_ignoresInvalidIP(t *testing.T) {
-	text := "PRIMARY=not-an-ip\nSECONDARY=192.168.1.99\n"
-	primary, secondary := parseConfig(text, "192.168.0.120", "192.168.1.120")
-	if primary != "192.168.0.120" || secondary != "192.168.1.99" {
-		t.Fatalf("got primary=%q secondary=%q", primary, secondary)
+	text := "PRIMARY=not-an-ip\nSECONDARY=192.168.1.99\nCONNECTION_TIMEOUT=0\nBACKOFF_TIME=-1\n"
+	defaults := settings{
+		primaryAddr:          "192.168.0.120",
+		secondaryAddr:        "192.168.1.120",
+		connectionTimeoutSec: 10,
+		backoffTimeSec:       30,
+	}
+	cfg := parseConfig(text, defaults)
+	if cfg.primaryAddr != "192.168.0.120" || cfg.secondaryAddr != "192.168.1.99" {
+		t.Fatalf("got primary=%q secondary=%q", cfg.primaryAddr, cfg.secondaryAddr)
+	}
+	if cfg.connectionTimeoutSec != 10 || cfg.backoffTimeSec != 30 {
+		t.Fatalf("got timeout=%d backoff=%d", cfg.connectionTimeoutSec, cfg.backoffTimeSec)
 	}
 }
 
@@ -55,12 +84,15 @@ func TestLoadOrCreateConfig_createsFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "configure-ethernet.conf")
 
-	primary, secondary, err := loadOrCreateConfig(path, "192.168.0.120", "192.168.1.120")
+	cfg, err := loadOrCreateConfig(path, "192.168.0.120", "192.168.1.120", 10, 30)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if primary != "192.168.0.120" || secondary != "192.168.1.120" {
-		t.Fatalf("got primary=%q secondary=%q", primary, secondary)
+	if cfg.primaryAddr != "192.168.0.120" || cfg.secondaryAddr != "192.168.1.120" {
+		t.Fatalf("got primary=%q secondary=%q", cfg.primaryAddr, cfg.secondaryAddr)
+	}
+	if cfg.connectionTimeoutSec != 10 || cfg.backoffTimeSec != 30 {
+		t.Fatalf("got timeout=%d backoff=%d", cfg.connectionTimeoutSec, cfg.backoffTimeSec)
 	}
 
 	data, err := os.ReadFile(path)
@@ -68,24 +100,35 @@ func TestLoadOrCreateConfig_createsFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	body := string(data)
-	if !strings.Contains(body, "PRIMARY=192.168.0.120") || !strings.Contains(body, "SECONDARY=192.168.1.120") {
-		t.Fatalf("unexpected config file:\n%s", data)
+	for _, want := range []string{
+		"PRIMARY=192.168.0.120",
+		"SECONDARY=192.168.1.120",
+		"CONNECTION_TIMEOUT=10",
+		"BACKOFF_TIME=30",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %q in:\n%s", want, data)
+		}
 	}
 }
 
 func TestLoadOrCreateConfig_readsExisting(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "configure-ethernet.conf")
-	if err := os.WriteFile(path, []byte("PRIMARY=172.16.0.8\nSECONDARY=172.16.1.8\n"), 0o644); err != nil {
+	content := "PRIMARY=172.16.0.8\nSECONDARY=172.16.1.8\nCONNECTION_TIMEOUT=7\nBACKOFF_TIME=15\n"
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	primary, secondary, err := loadOrCreateConfig(path, "192.168.0.120", "192.168.1.120")
+	cfg, err := loadOrCreateConfig(path, "192.168.0.120", "192.168.1.120", 10, 30)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if primary != "172.16.0.8" || secondary != "172.16.1.8" {
-		t.Fatalf("got primary=%q secondary=%q", primary, secondary)
+	if cfg.primaryAddr != "172.16.0.8" || cfg.secondaryAddr != "172.16.1.8" {
+		t.Fatalf("got primary=%q secondary=%q", cfg.primaryAddr, cfg.secondaryAddr)
+	}
+	if cfg.connectionTimeoutSec != 7 || cfg.backoffTimeSec != 15 {
+		t.Fatalf("got timeout=%d backoff=%d", cfg.connectionTimeoutSec, cfg.backoffTimeSec)
 	}
 }
 

@@ -1,28 +1,30 @@
 #!/bin/sh
-# Ethernet: auto-detect subnet or DHCP via configure-ethernet
+# Ethernet: configure-ethernet daemon (static / DHCP + reconnect)
 
-CONFIGURE=/usr/sbin/configure-ethernet
+DAEMON=/usr/sbin/configure-ethernet
+IP=/sbin/ip
 
 case "$1" in
 start)
 	# Redis and local services bind 127.0.0.1 — loopback must be up first.
-	ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
+	"$IP" link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
 
-	if [ -x "$CONFIGURE" ]; then
-		"$CONFIGURE"
-	else
-		echo "S15-network: $CONFIGURE missing" >&2
+	if [ ! -x "$DAEMON" ]; then
+		echo "S15-network: $DAEMON missing" >&2
 		exit 1
 	fi
+	# Foreground: microinit tracks this PID as the network daemon.
+	exec "$DAEMON"
 	;;
 stop)
+	killall configure-ethernet 2>/dev/null
 	killall dhclient 2>/dev/null
 	for iface in /sys/class/net/*; do
 		[ -d "$iface" ] || continue
 		name=$(basename "$iface")
 		[ "$name" = "lo" ] && continue
 		[ -d "$iface/wireless" ] && continue
-		ip addr flush dev "$name" 2>/dev/null || true
+		"$IP" addr flush dev "$name" 2>/dev/null || true
 	done
 	;;
 restart)

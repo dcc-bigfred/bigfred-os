@@ -29,7 +29,7 @@ make -C apps test
 | `bigfred-os-ui` | Hub admin web UI (logs, services, supervisord) |
 | `rotate-hub-logs` | Log rotation under `/data/logs` |
 | `fanctl` | Pi 5 active cooler (§8.8) |
-| `configure-ethernet` | Ethernet bring-up helper used by `S15-network` |
+| `configure-ethernet` | Ethernet bring-up daemon (static/DHCP + reconnect) used by `S15-network` |
 
 Init/PID 1 is **microinit** (OCI package), not a Go app under `apps/`.
 

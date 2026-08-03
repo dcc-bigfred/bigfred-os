@@ -29,7 +29,10 @@
     {
       "name": "network",
       "enabled": true,
-      "daemon": false,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
       "cmd": "/etc/init.d/S15-network",
       "dependsOn": []
     },
