@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "logs": {
+    "tty": "/dev/tty2",
+    "initTty": "/dev/tty3",
+    "lines": 300,
+    "dir": "/data/logs",
+    "logToFiles": false
+  },
+  "socket": "/run/microinit.sock",
+  "console": "/dev/tty1",
+  "openTelemetry": {
+    "enable": false,
+    "endpoint": "http://127.0.0.1:4318",
+    "protocol": "http",
+    "serviceName": "microinit",
+    "exportIntervalSecs": 15
+  },
+  "services": [
+    {
+      "name": "cron",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S05-cron",
+      "dependsOn": []
+    },
+    {
+      "name": "network",
+      "enabled": true,
+      "daemon": false,
+      "cmd": "/etc/init.d/S15-network",
+      "dependsOn": []
+    },
+    {
+      "name": "sysctl",
+      "enabled": true,
+      "daemon": false,
+      "cmd": "/etc/init.d/S20-sysctl",
+      "dependsOn": []
+    },
+    {
+      "name": "redis",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/S30-redis",
+      "dependsOn": ["network"]
+    },
+    {
+      "name": "victoriametrics",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/S35-victoriametrics",
+      "dependsOn": []
+    },
+    {
+      "name": "alloy",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S40-alloy",
+      "dependsOn": ["network"]
+    },
+    {
+      "name": "remote-icmp",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 5,
+      "cmd": "/etc/init.d/S41-remote-icmp",
+      "dependsOn": ["network"]
+    },
+    {
+      "name": "grafana",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/S42-grafana",
+      "dependsOn": ["victoriametrics"]
+    },
+    {
+      "name": "bigfred-os-ui",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S48-bigfred-os-ui",
+      "dependsOn": ["network"]
+    },
+    {
+      "name": "fanctl",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S50-fanctl",
+      "dependsOn": []
+    },
+    {
+      "name": "bigfred",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/S60-bigfred",
+      "dependsOn": ["network", "redis"]
+    },
+    {
+      "name": "dropbear",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S90-dropbear",
+      "dependsOn": ["network"]
+    },
+    {
+      "name": "watchdog",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "cmd": "/etc/init.d/S95-watchdog",
+      "dependsOn": []
+    }
+  ]
+}
