@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultSocket  = "/run/microinit.sock"
+	DefaultSocket = "/data/run/microinit.sock"
 	maxFrameBytes  = 16 * 1024 * 1024
 	defaultTimeout = 10 * time.Second
 )

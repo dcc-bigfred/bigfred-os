@@ -43,7 +43,7 @@ Hub production binary is built with `-tags pam` and links `libpam` (see `Makefil
 | `--password` | *(PAM)* | Static password (dev, `-tags '!pam'` only) |
 | `--log-roots` | `/data/logs,/var/log` | Comma-separated log directories |
 | `--log-root` | *(deprecated)* | Single log directory |
-| `--microinit-socket` | `/run/microinit.sock` | microinit control Unix socket |
+| `--microinit-socket` | `/data/run/microinit.sock` | microinit control Unix socket |
 | `--supervisord-conf` | `/data/etc/supervisord/supervisord.conf` | supervisord configuration file |
 | `--update-dir` | `/data/opt/bigfred/bin` | Install dir for Update tab downloads |
 | `--github-token` | *(env `GITHUB_TOKEN`)* | Token for private GitHub release downloads |
@@ -59,7 +59,7 @@ starts the binary with `--config /data/etc/bigfred-os-ui.conf`.
 HTTP=0.0.0.0:8090
 PAM_SERVICE=bigfred-os-ui
 LOG_ROOTS=/data/logs,/var/log
-MICROINIT_SOCKET=/run/microinit.sock
+MICROINIT_SOCKET=/data/run/microinit.sock
 SECURE_COOKIE=false
 # Optional: UPDATE_DIR=/data/opt/bigfred/bin
 # Optional: GITHUB_TOKEN=…
