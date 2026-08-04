@@ -321,7 +321,7 @@ fi
 
 # --- directories ---
 mkdir -p "$DATA_ROOT/etc" "$DATA_ROOT/logs" "$DATA_ROOT/sqlite" \
-	"$DATA_ROOT/redis" "$DATA_ROOT/alloy"
+	"$DATA_ROOT/redis" "$DATA_ROOT/alloy" "$DATA_ROOT/run"
 mkdir -p "$DATA_ROOT/opt/bigfred/bin" "$DATA_ROOT/opt/grafana/data" \
 	"$DATA_ROOT/opt/grafana/log" "$DATA_ROOT/opt/grafana/plugins" \
 	"$DATA_ROOT/opt/victoriametrics"
