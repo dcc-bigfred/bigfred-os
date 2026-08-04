@@ -11,6 +11,7 @@ import ConfigPage from "./pages/ConfigPage";
 import AccountPage from "./pages/AccountPage";
 import TerminalPage from "./pages/TerminalPage";
 import UpdatePage from "./pages/UpdatePage";
+import TimePage from "./pages/TimePage";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="services" element={<ServicesPage />} />
               <Route path="redis" element={<RedisPage />} />
               <Route path="config" element={<ConfigPage />} />
+              <Route path="time" element={<TimePage />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="logs" element={<LogsPage />} />
               <Route path="terminal" element={<TerminalPage />} />

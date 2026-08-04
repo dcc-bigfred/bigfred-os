@@ -229,6 +229,39 @@ button {
   font-size: 0.85rem;
 }
 
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 400px));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.time-card-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.time-now {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.account-card select {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.account-lead code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
 .placeholder-page h2 {
   margin-top: 0;
 }

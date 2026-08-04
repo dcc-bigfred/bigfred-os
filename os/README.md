@@ -108,17 +108,22 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 2. **Root password** — default `root` in defconfig; change via `make menuconfig`
    → *System configuration* → *Root password*, or on device: `passwd root`
    (password in `/data/etc/shadow`, **Account** panel in `bigfred-os-ui`).
-3. **LocoNet USB** — kernel drivers in `configs/linux-hub.fragment`
+3. **Time & timezone** — no RTC/NTP. Wall clock persists in `/data/etc/fake-hwclock`
+   (restored in `early-boot.sh`, refreshed by cron every 10 min). Timezone via
+   `/data/etc/timezone` + bind of `/data/etc/localtime` over RO `/etc/localtime`
+   (default `Europe/Warsaw`). UI: **Time** tab; CLI: `bigfred-set-time`,
+   `bigfred-set-timezone`.
+4. **LocoNet USB** — kernel drivers in `configs/linux-hub.fragment`
    (`cp210x`, `ftdi_sio`, `ch341`, `pl2303`, `cdc_acm`); **udevd** microinit
    service applies `overlays/etc/udev/rules.d/99-loconet-usb.rules`
    (symlinks `/dev/loconet-63120`, `loconet-lb-usb`, `loconet-ch340`).
    Centrals stub: `99-loconet-centrals.rules`. See §USB / udev below.
-4. **PREEMPT_RT** — `configs/linux-hub.fragment`; if the kernel build fails, use an
+5. **PREEMPT_RT** — `configs/linux-hub.fragment`; if the kernel build fails, use an
    RT tag/branch from `raspberrypi/linux` or temporarily remove `CONFIG_PREEMPT_RT=y`.
-5. **Grafana Alloy** — enabled in defconfig (`BR2_PACKAGE_ALLOY`); built from
+6. **Grafana Alloy** — enabled in defconfig (`BR2_PACKAGE_ALLOY`); built from
    source as a static musl-compatible binary (official release zips are
    glibc-only). Config: `overlays/etc/alloy/config.alloy`.
-6. **Pi 5 Rev 1.1 (BCM2712 D0)** — `board/bigfred_hub/config.txt` sets
+7. **Pi 5 Rev 1.1 (BCM2712 D0)** — `board/bigfred_hub/config.txt` sets
    `device_tree=bcm2712d0-rpi-5-b.dtb`. Without it, D0 boards panic in
    `bcm2712_pull_config_set` / `brcmuart_init`. For older Rev 1.0 (C0) use
    `bcm2712-rpi-5-b.dtb` instead.

@@ -1,0 +1,30 @@
+#!/bin/sh
+# Set timezone for RO root: persist under /data and bind over /etc/localtime.
+# Usage: bigfred-set-timezone Europe/Warsaw
+
+set -eu
+
+if [ $# -lt 1 ] || [ -z "$1" ]; then
+	echo "Usage: $0 <Area/Location>" >&2
+	echo "  Example: $0 Europe/Warsaw" >&2
+	exit 1
+fi
+
+TZ_NAME=$1
+ZONE="/usr/share/zoneinfo/$TZ_NAME"
+
+if [ ! -e "$ZONE" ] || [ -d "$ZONE" ]; then
+	echo "unknown timezone: $TZ_NAME" >&2
+	exit 1
+fi
+
+mkdir -p /data/etc
+printf '%s\n' "$TZ_NAME" > /data/etc/timezone
+cp -f "$ZONE" /data/etc/localtime
+
+# Refresh bind over RO /etc/localtime (ignore if not yet a mount).
+umount /etc/localtime 2>/dev/null || true
+mount --bind /data/etc/localtime /etc/localtime
+
+echo "timezone set to: $TZ_NAME"
+date

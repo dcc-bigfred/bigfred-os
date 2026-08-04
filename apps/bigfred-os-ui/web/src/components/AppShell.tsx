@@ -27,6 +27,9 @@ export default function AppShell() {
           <NavLink to="/config" className={({ isActive }) => (isActive ? "active" : "")}>
             Config
           </NavLink>
+          <NavLink to="/time" className={({ isActive }) => (isActive ? "active" : "")}>
+            Time
+          </NavLink>
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>
             Account
           </NavLink>

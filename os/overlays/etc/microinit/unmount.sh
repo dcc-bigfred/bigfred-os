@@ -43,7 +43,16 @@ try_umount() {
 
 sync || true
 
-# --- 1) shadow bind must go before /data ---
+# --- 0) save wall clock before any unbind that needs /data ---
+if command -v date >/dev/null 2>&1 && [ -d "$DATA_ROOT/etc" ]; then
+	date -u +%s > "$DATA_ROOT/etc/fake-hwclock" 2>/dev/null || true
+fi
+
+# --- 1) binds that hold /data busy must go first ---
+if is_mounted /etc/localtime; then
+	log "umount /etc/localtime"
+	try_umount /etc/localtime || log "WARNING: could not umount /etc/localtime"
+fi
 if is_mounted /etc/shadow; then
 	log "umount /etc/shadow"
 	try_umount /etc/shadow || log "WARNING: could not umount /etc/shadow"

@@ -28,6 +28,8 @@ type Config struct {
 	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
+	ZoneinfoDir     string // default /usr/share/zoneinfo
+	LocaltimePath   string // default /etc/localtime
 	Updater         *update.Updater
 	StaticFS        fs.FS
 	SecureCookie    bool
@@ -77,6 +79,10 @@ func NewRouter(cfg Config) http.Handler {
 			r.Get("/etc/files", listEtcFilesHandler(cfg))
 			r.Get("/etc/file", readEtcFileHandler(cfg))
 			r.Put("/etc/file", writeEtcFileHandler(cfg))
+			r.Get("/time", getTimeHandler(cfg))
+			r.Post("/time", setTimeHandler(cfg))
+			r.Get("/timezone", getTimezoneHandler(cfg))
+			r.Post("/timezone", setTimezoneHandler(cfg))
 			r.Get("/update/{target}/releases", listUpdateReleasesHandler(cfg))
 			r.Post("/update/{target}", runUpdateHandler(cfg))
 		})

@@ -75,6 +75,9 @@ BR2_PACKAGE_DHCP=y
 BR2_PACKAGE_DHCP_CLIENT=y
 BR2_PACKAGE_WATCHDOG=y
 
+# Timezone database for /etc/localtime (operator choice persisted on /data)
+BR2_PACKAGE_TZDATA=y
+
 BR2_PACKAGE_HOST_LIBCAP=y
 BR2_PACKAGE_LIBCAP=y
 BR2_PACKAGE_LIBCAP_TOOLS=y

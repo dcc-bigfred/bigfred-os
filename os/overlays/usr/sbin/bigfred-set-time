@@ -1,0 +1,18 @@
+#!/bin/sh
+# Set system time and persist to /data/etc/fake-hwclock (no RTC on hub).
+# Usage: bigfred-set-time "2026-08-04 21:30:00"
+#        bigfred-set-time @1722800000
+
+set -eu
+
+if [ $# -lt 1 ] || [ -z "$1" ]; then
+	echo "Usage: $0 <datetime|@epoch>" >&2
+	echo "  Examples: $0 '2026-08-04 21:30:00'" >&2
+	echo "            $0 @1722800000" >&2
+	exit 1
+fi
+
+date -s "$1"
+mkdir -p /data/etc
+date -u +%s > /data/etc/fake-hwclock
+echo "time set to: $(date)"

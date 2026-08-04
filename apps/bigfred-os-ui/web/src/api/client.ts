@@ -257,3 +257,36 @@ export function runUpdate(target: UpdateTarget, tag: string): Promise<UpdateResu
     body: JSON.stringify({ tag }),
   });
 }
+
+export interface HubTime {
+  epoch: number;
+  iso: string;
+  utc: string;
+}
+
+export interface HubTimezone {
+  timezone: string;
+  available: string[];
+}
+
+export function fetchTime(): Promise<HubTime> {
+  return apiFetch<HubTime>("/api/v1/time");
+}
+
+export function setTime(body: { epoch?: number; iso?: string }): Promise<HubTime> {
+  return apiFetch<HubTime>("/api/v1/time", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchTimezone(): Promise<HubTimezone> {
+  return apiFetch<HubTimezone>("/api/v1/timezone");
+}
+
+export function setTimezone(timezone: string): Promise<HubTimezone> {
+  return apiFetch<HubTimezone>("/api/v1/timezone", {
+    method: "POST",
+    body: JSON.stringify({ timezone }),
+  });
+}
