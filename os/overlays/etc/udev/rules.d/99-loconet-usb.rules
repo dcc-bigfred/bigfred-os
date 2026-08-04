@@ -1,0 +1,22 @@
+# BigFred OS — LocoNet USB bridges (stable symlinks + dialout).
+# Requires: udevd microinit service + kernel cp210x/ftdi_sio/ch341/pl2303/cdc_acm.
+# Keep symlink names in sync with bigfred pkgs/loco/commandstation knownSerialSymlinks.
+
+# --- permissions for all USB serial / ACM TTYs ---
+KERNEL=="ttyUSB[0-9]*", GROUP="dialout", MODE="0660"
+KERNEL=="ttyACM[0-9]*", GROUP="dialout", MODE="0660"
+
+# --- Uhlenbrock 63120 (Silicon Labs CP210x) ---
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", \
+  SYMLINK+="loconet-63120", GROUP="dialout", MODE="0660"
+
+# --- RR-CirKits LocoBuffer-USB (FTDI PID in ftdi_sio) ---
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="c7d0", \
+  SYMLINK+="loconet-lb-usb", GROUP="dialout", MODE="0660"
+
+# --- DIY CH340 (WCH; common clone PID) ---
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", \
+  SYMLINK+="loconet-ch340", GROUP="dialout", MODE="0660"
+
+# DIY Prolific PL2303: covered by ttyUSB* dialout rule above (no unique LocoNet symlink).
+# RB1110 USB-C 28e9:018a is Lenz LI100F — do NOT symlink as loconet-*; use z21 UDP.

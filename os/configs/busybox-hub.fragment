@@ -6,3 +6,6 @@ CONFIG_FEATURE_CROND_DIR="/etc/crontabs"
 CONFIG_PS=y
 CONFIG_FEATURE_PS_LONG=y
 CONFIG_FEATURE_PS_WIDE=y
+
+# findfs LABEL=… for early-boot /data mount (replaces removed e2fsprogs findfs)
+CONFIG_FINDFS=y

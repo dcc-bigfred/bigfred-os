@@ -3,12 +3,17 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY docker/install-buildroot-deps.sh docker/install-go.sh /usr/local/bin/
+COPY docker/install-buildroot-deps.sh docker/install-go.sh docker/install-rust.sh /usr/local/bin/
 COPY go.mod /usr/local/share/bigfred-os-go.mod
 ENV GO_MOD=/usr/local/share/bigfred-os-go.mod
-RUN chmod +x /usr/local/bin/install-buildroot-deps.sh /usr/local/bin/install-go.sh \
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+RUN chmod +x /usr/local/bin/install-buildroot-deps.sh \
+		/usr/local/bin/install-go.sh \
+		/usr/local/bin/install-rust.sh \
 	&& /usr/local/bin/install-buildroot-deps.sh \
 	&& /usr/local/bin/install-go.sh \
+	&& /usr/local/bin/install-rust.sh \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& mkdir -p /work \
 	&& if getent passwd 1000 >/dev/null; then \
@@ -19,6 +24,6 @@ RUN chmod +x /usr/local/bin/install-buildroot-deps.sh /usr/local/bin/install-go.
 	&& chown 1000:1000 /work
 
 WORKDIR /work
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH="/usr/local/cargo/bin:/usr/local/go/bin:${PATH}"
 ENV GOTOOLCHAIN=local
 USER 1000:1000

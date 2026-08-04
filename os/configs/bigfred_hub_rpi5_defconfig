@@ -1,6 +1,8 @@
 # BigFred hub OS — Raspberry Pi 5 (based on upstream raspberrypi5_defconfig)
 # Documentation: modelarstwo/rb/docs/loconet-adapter/08-hub-os-image.md
-# BigFred (loco-server): package/bigfred — ref via BR2_PACKAGE_BIGFRED_VERSION.
+# BigFred (loco-server): package/bigfred — OCI tag via BR2_PACKAGE_BIGFRED_OCI_TAG
+# or make image BIGFRED_OCI_TAG=master|latest-release|v*.
+# microinit (PID 1): package/microinit — MICROINIT_OCI_TAG=main|sha-*.
 
 BR2_aarch64=y
 BR2_cortex_a76=y
@@ -12,14 +14,16 @@ BR2_TOOLCHAIN_BUILDROOT_MUSL=y
 BR2_GLOBAL_PATCH_DIR="board/raspberrypi/patches"
 BR2_DOWNLOAD_FORCE_CHECK_HASHES=y
 
-# Static IP via S15-network overlay (not DHCP)
+# Static IP via network overlay (not DHCP)
 # BR2_SYSTEM_DHCP is not set
 
-BR2_INIT_BUSYBOX=y
+BR2_INIT_NONE=y
 BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_EUDEV=y
+# Needed for BIGFRED_PERMISSIONS |xattr cap_net_raw (applied under fakeroot).
+BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y
 BR2_PACKAGE_EUDEV=y
 
-# Console via overlays/etc/inittab (ttyAMA10 + tty1)
+# Console getty is respawned by microinit (PID 1) on --console (tty1).
 # BR2_TARGET_GENERIC_GETTY is not set
 
 BR2_TARGET_GENERIC_HOSTNAME="bigfred-hub"
@@ -60,22 +64,32 @@ BR2_PACKAGE_DROPBEAR_CLIENT=y
 BR2_PACKAGE_SQLITE=y
 BR2_PACKAGE_REDIS=y
 BR2_PACKAGE_HTOP=y
+# Full `ip` from iproute2 (also used by network / configure-ethernet)
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_ETHTOOL=y
 BR2_PACKAGE_LIBCURL=y
 BR2_PACKAGE_LIBCURL_CURL=y
 BR2_PACKAGE_NMAP_NCAT=y
+# ISC dhclient (correct symbol is DHCP_CLIENT, not DHCP_DHCLIENT)
 BR2_PACKAGE_DHCP=y
-BR2_PACKAGE_DHCP_DHCLIENT=y
+BR2_PACKAGE_DHCP_CLIENT=y
 BR2_PACKAGE_WATCHDOG=y
 
 BR2_PACKAGE_HOST_LIBCAP=y
 BR2_PACKAGE_LIBCAP=y
+BR2_PACKAGE_LIBCAP_TOOLS=y
+
+# mkfs.ext4 for early-boot and prepare-nvme (uses util-linux libuuid/libblkid)
+BR2_PACKAGE_E2FSPROGS=y
+BR2_PACKAGE_UTIL_LINUX_LIBUUID=y
+BR2_PACKAGE_UTIL_LINUX_LIBBLKID=y
 
 # fanctl: built from apps/fanctl → apps/.bin/ (see post-build.sh)
 BR2_PACKAGE_ALLOY=y
 BR2_PACKAGE_BIGFRED=y
-BR2_PACKAGE_BIGFRED_VERSION="master"
+BR2_PACKAGE_BIGFRED_OCI_TAG="latest-release"
+BR2_PACKAGE_MICROINIT=y
+BR2_PACKAGE_MICROINIT_OCI_TAG="main"
 BR2_PACKAGE_GRAFANA=y
 BR2_PACKAGE_VICTORIAMETRICS=y
 
@@ -86,7 +100,8 @@ BR2_PACKAGE_KMOD_TOOLS=y
 # Root filesystem image (post-image builds NVMe layout)
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="1G"
+# Grafana unified binary (~330M) + Alloy (~380M) need headroom beyond 1G.
+BR2_TARGET_ROOTFS_EXT2_SIZE="2G"
 
 BR2_PACKAGE_HOST_DOSFSTOOLS=y
 BR2_PACKAGE_HOST_GENIMAGE=y

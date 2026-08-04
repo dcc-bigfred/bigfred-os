@@ -2,54 +2,49 @@ package services
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 )
 
-func TestListInitScripts(t *testing.T) {
-	dir := t.TempDir()
-	writeExec(t, filepath.Join(dir, "S30-redis"), "#!/bin/sh\n")
-	writeExec(t, filepath.Join(dir, "S35-victoriametrics"), "#!/bin/sh\n")
-	if err := os.WriteFile(filepath.Join(dir, "rcS"), []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "S99-bad"), []byte("x\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+type fakeClient struct {
+	list []microinit.ServiceStatus
+	err  error
+}
 
-	list, err := List(dir)
+func (f *fakeClient) List() ([]microinit.ServiceStatus, error) {
+	return f.list, f.err
+}
+
+func (f *fakeClient) Control(name, action string) error {
+	if action == "pause" {
+		return ErrInvalidAction
+	}
+	if name == "missing" {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func TestListMapsMicroinitStatus(t *testing.T) {
+	pid := int32(9)
+	list, err := List(&fakeClient{list: []microinit.ServiceStatus{{
+		Name: "bigfred-os-ui", State: "running", PID: &pid, Restarts: 2, Enabled: true,
+	}}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list) != 2 {
-		t.Fatalf("got %d services: %+v", len(list), list)
+	if len(list) != 1 {
+		t.Fatalf("len=%d", len(list))
 	}
-	if list[0].ID != "redis" || list[1].ID != "victoriametrics" {
-		t.Fatalf("order/ids: %+v", list)
+	s := list[0]
+	if s.ID != "bigfred-os-ui" || s.Name != "bigfred os ui" || !s.Running || s.Restarts != 2 {
+		t.Fatalf("%+v", s)
 	}
 }
 
 func TestControlRejectsInvalidAction(t *testing.T) {
-	dir := t.TempDir()
-	writeExec(t, filepath.Join(dir, "S10-demo"), "#!/bin/sh\necho ok\n")
-	if err := Control(dir, "demo", "pause"); !errors.Is(err, ErrInvalidAction) {
-		t.Fatalf("expected ErrInvalidAction, got %v", err)
-	}
-}
-
-func TestValidateID(t *testing.T) {
-	if err := validateID("../etc"); err == nil {
-		t.Fatal("expected rejection")
-	}
-	if err := validateID("redis"); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeExec(t *testing.T, path, content string) {
-	t.Helper()
-	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
-		t.Fatal(err)
+	if err := Control(&fakeClient{}, "demo", "pause"); !errors.Is(err, ErrInvalidAction) {
+		t.Fatalf("got %v", err)
 	}
 }

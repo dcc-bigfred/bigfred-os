@@ -1,0 +1,31 @@
+#!/bin/sh
+# Grafana Alloy (BR2_PACKAGE_ALLOY)
+
+ALLOY_BIN=/usr/bin/alloy
+ALLOY_CFG=/etc/alloy/config.alloy
+
+case "$1" in
+start)
+	if [ ! -x "$ALLOY_BIN" ]; then
+		echo "alloy: $ALLOY_BIN missing" >&2
+		exit 1
+	fi
+	if [ ! -f "$ALLOY_CFG" ]; then
+		echo "alloy: $ALLOY_CFG missing" >&2
+		exit 1
+	fi
+	mkdir -p /data/alloy /data/logs/alloy
+	exec "$ALLOY_BIN" run "$ALLOY_CFG"
+	;;
+stop)
+	killall alloy 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

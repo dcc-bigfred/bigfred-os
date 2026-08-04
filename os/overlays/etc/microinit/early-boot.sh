@@ -1,0 +1,375 @@
+#!/bin/sh
+# BigFred OS early-boot for microinit (PID 1).
+# Installed as /etc/microinit/early-boot.sh via rootfs overlay.
+# Override on device: $DATA_DIR/etc/microinit/early-boot.sh
+# Env: DATA_DIR, MICROINIT_LOGS_TTY, MICROINIT_INIT_LOGS_TTY, MICROINIT_CONSOLE
+#
+# Portable base (pseudo-FS + fsck -y + fstab) plus BigFred data root, seeding,
+# shadow bind. Replaces the former SysV mount init script for the microinit
+# boot path.
+#
+# Exit 0 on success. Non-zero aborts microinit boot when required.
+
+set -eu
+
+log() {
+	echo "early-boot: $*" >&2
+}
+
+# Absolute DATA_DIR only; default /data.
+case "${DATA_DIR:-}" in
+/*) DATA_ROOT=$DATA_DIR ;;
+*) DATA_ROOT=/data ;;
+esac
+
+is_mounted() {
+	grep -q " $1 " /proc/mounts 2>/dev/null
+}
+
+mount_one() {
+	_type=$1
+	_dev=$2
+	_dir=$3
+	_opts=${4:-}
+	if [ -r /proc/mounts ] && is_mounted "$_dir"; then
+		return 0
+	fi
+	if command -v mountpoint >/dev/null 2>&1; then
+		mountpoint -q "$_dir" 2>/dev/null && return 0
+	fi
+	mkdir -p "$_dir"
+	if [ -n "$_opts" ]; then
+		mount -t "$_type" -o "$_opts" "$_dev" "$_dir" || return 1
+	else
+		mount -t "$_type" "$_dev" "$_dir" || return 1
+	fi
+}
+
+# True if $1 (block device path or symlink) is a source in /proc/mounts.
+dev_is_mounted() {
+	_want=$1
+	_real=$(readlink -f "$_want" 2>/dev/null || echo "$_want")
+	[ -r /proc/mounts ] || return 1
+	while read -r _src _mp _fstype _opts _rest; do
+		case "$_src" in
+		\#* | '') continue ;;
+		esac
+		_sreal=$(readlink -f "$_src" 2>/dev/null || echo "$_src")
+		if [ "$_src" = "$_want" ] || [ "$_src" = "$_real" ] || \
+			[ "$_sreal" = "$_real" ] || [ "$_sreal" = "$_want" ]; then
+			return 0
+		fi
+	done < /proc/mounts
+	return 1
+}
+
+# Auto-repair one block device. Never aborts boot (fsck exit codes are noisy).
+# Skips missing/non-block devices, unknown/empty TYPE, and already-mounted sources.
+fsck_one() {
+	_dev=$1
+	[ -n "$_dev" ] || return 0
+	case "$_dev" in
+	LABEL=* | UUID=* | PARTUUID=* | PARTLABEL=*)
+		if command -v findfs >/dev/null 2>&1; then
+			_resolved=$(findfs "$_dev" 2>/dev/null || true)
+			[ -n "${_resolved:-}" ] && _dev=$_resolved
+		fi
+		;;
+	esac
+	[ -b "$_dev" ] || return 0
+
+	if dev_is_mounted "$_dev"; then
+		log "fsck skip $_dev (already mounted)"
+		return 0
+	fi
+
+	_fstype=
+	if command -v blkid >/dev/null 2>&1; then
+		_fstype=$(blkid -o value -s TYPE "$_dev" 2>/dev/null || true)
+	fi
+	case "$_fstype" in
+	'' | swap | crypto_LUKS)
+		return 0
+		;;
+	esac
+
+	_rc=0
+	if command -v fsck >/dev/null 2>&1; then
+		log "fsck -y $_dev (TYPE=${_fstype:-unknown})"
+		fsck -y -T "$_dev" || _rc=$?
+	elif command -v e2fsck >/dev/null 2>&1; then
+		case "$_fstype" in
+		ext2 | ext3 | ext4)
+			log "e2fsck -y $_dev"
+			e2fsck -y "$_dev" || _rc=$?
+			;;
+		*)
+			log "fsck skip $_dev (no fsck binary for TYPE=$_fstype)"
+			return 0
+			;;
+		esac
+	else
+		log "fsck skip $_dev (no fsck/e2fsck on PATH)"
+		return 0
+	fi
+
+	case $_rc in
+	0) ;;
+	1) log "fsck $_dev: errors corrected" ;;
+	*) log "WARNING: fsck $_dev exited $_rc (continuing boot)" ;;
+	esac
+	return 0
+}
+
+fsck_before_mount() {
+	# Kernel already mounted / — remount RO so e2fsck/fsck will accept it.
+	_rootdev=
+	if is_mounted /; then
+		log "remount,ro / for fsck"
+		mount -o remount,ro / 2>/dev/null || true
+		_rootdev=$(awk '$2 == "/" { print $1; exit }' /proc/mounts 2>/dev/null || true)
+	fi
+
+	if [ -r /etc/fstab ]; then
+		if command -v fsck >/dev/null 2>&1; then
+			_rc=0
+			log "fsck -A -y (fstab pass numbers)"
+			fsck -A -y -T || _rc=$?
+			case $_rc in
+			0) ;;
+			1) log "fsck -A: errors corrected" ;;
+			*) log "WARNING: fsck -A exited $_rc (continuing boot)" ;;
+			esac
+		fi
+		while read -r _fsck_dev _fsck_mp _fsck_type _fsck_opts _fsck_dump _fsck_pass _rest; do
+			case "$_fsck_dev" in
+			'' | \#*) continue ;;
+			esac
+			case "$_fsck_type" in
+			proc | sysfs | devtmpfs | devpts | tmpfs | ramfs | cgroup* | \
+			overlay | squashfs | nfs* | cifs | autofs | debugfs | \
+			securityfs | pstore | bpf | tracefs | hugetlbfs | mqueue | \
+			configfs | fusectl | swap)
+				continue
+				;;
+			esac
+			fsck_one "$_fsck_dev"
+		done < /etc/fstab
+	fi
+
+	# Explicit root check: fsck_one skips mounted devices, and BusyBox
+	# fsck -A may be a stub. Root is RO now, so force-repair is safe.
+	if [ -n "${_rootdev:-}" ]; then
+		_rc=0
+		if command -v fsck >/dev/null 2>&1; then
+			log "fsck -y $_rootdev (root, remounted ro)"
+			fsck -y -T "$_rootdev" || _rc=$?
+		elif command -v e2fsck >/dev/null 2>&1; then
+			log "e2fsck -y $_rootdev (root, remounted ro)"
+			e2fsck -y "$_rootdev" || _rc=$?
+		else
+			return 0
+		fi
+		case $_rc in
+		0) ;;
+		1) log "fsck $_rootdev: errors corrected" ;;
+		*) log "WARNING: fsck $_rootdev exited $_rc (continuing boot)" ;;
+		esac
+	fi
+}
+
+# fsck hub /data candidates (not in fstab) before any probe/mount.
+fsck_data_candidates() {
+	for _dev in /dev/mmcblk0p3 /dev/disk/by-label/bigfred-data; do
+		fsck_one "$_dev"
+	done
+	if command -v findfs >/dev/null 2>&1; then
+		_lab=$(findfs LABEL=bigfred-data 2>/dev/null || true)
+		[ -n "${_lab:-}" ] && fsck_one "$_lab"
+	fi
+	# Any NVMe partition that already has a filesystem (migrated or raw).
+	for _d in /dev/nvme*n*; do
+		[ -e "$_d" ] || continue
+		_base=$(basename "$_d")
+		for _p in /dev/${_base}p*; do
+			[ -b "$_p" ] || continue
+			fsck_one "$_p"
+		done
+	done
+}
+
+# --- essential pseudo filesystems (needed before fstab / fsck) ---
+if ! [ -r /proc/mounts ]; then
+	mkdir -p /proc
+	mount -t proc proc /proc || true
+fi
+
+mount_one sysfs sysfs /sys || true
+mount_one devtmpfs devtmpfs /dev "mode=0755,nosuid" || true
+mkdir -p /dev/pts
+mount_one devpts devpts /dev/pts "mode=0620,gid=5" || true
+mount_one tmpfs tmpfs /run "mode=0755,nosuid,nodev" || true
+mount_one tmpfs tmpfs /tmp "mode=1777,nosuid,nodev" || true
+
+# --- fsck real filesystems before any block mount ---
+fsck_before_mount
+fsck_data_candidates
+
+# --- fstab (root + tmpfs; /data is mounted below) ---
+if [ -r /etc/fstab ]; then
+	log "mount -a"
+	mount -a || true
+else
+	log "no /etc/fstab; skipping mount -a"
+fi
+
+mkdir -p /var/log /var/run /run "$DATA_ROOT"
+
+# --- /data partition (hub default root only) ---
+# Prefer NVMe p1 if it was already migrated (ext4 + marker file); otherwise
+# fall back to the microSD data partition. prepare-nvme creates the marker
+# after a successful copy, so subsequent boots mount NVMe directly without
+# going through the SD.
+NVME_MARKER=".bigfred-nvme"
+
+nvme_data_part() {
+	# Echoes the first NVMe partition that is ext4 and carries the migration
+	# marker, or empty if none.
+	for _d in /dev/nvme*n*; do
+		[ -e "$_d" ] || continue
+		_base=$(basename "$_d")
+		for _p in /dev/${_base}p*; do
+			[ -b "$_p" ] || continue
+			_fstype=$(blkid -o value -s TYPE "$_p" 2>/dev/null || true)
+			[ "$_fstype" = "ext4" ] || continue
+			# Probe marker without leaving the mount in place.
+			_tmp=$(mktemp -d "${TMPDIR:-/tmp}/nvme-probe.XXXXXX")
+			if mount -t ext4 -o ro "$_p" "$_tmp" 2>/dev/null; then
+				_ok=0
+				[ -e "$_tmp/$NVME_MARKER" ] && _ok=1
+				umount "$_tmp" 2>/dev/null || umount -l "$_tmp" 2>/dev/null || true
+				rmdir "$_tmp" 2>/dev/null || true
+				[ "$_ok" = "1" ] && echo "$_p" && return 0
+			else
+				rmdir "$_tmp" 2>/dev/null || true
+			fi
+		done
+	done
+	return 1
+}
+
+mount_data() {
+	if is_mounted /data; then
+		return 0
+	fi
+	# 1) NVMe p1 (ext4 + marker) — migrated data lives here.
+	_nvme=$(nvme_data_part || true)
+	if [ -n "$_nvme" ] && [ -b "$_nvme" ]; then
+		log "mounting NVMe data partition: $_nvme"
+		mount -t ext4 -o rw,noatime "$_nvme" /data && return 0
+		log "WARNING: NVMe marker present but mount failed — trying SD"
+	fi
+	# 2) microSD data partition by label, then by device.
+	if command -v findfs >/dev/null 2>&1; then
+		_dev=$(findfs LABEL=bigfred-data 2>/dev/null || true)
+		if [ -n "${_dev:-}" ] && [ -b "$_dev" ]; then
+			mount -t ext4 "$_dev" /data && return 0
+		fi
+	fi
+	for _dev in /dev/disk/by-label/bigfred-data /dev/mmcblk0p3; do
+		if [ -b "$_dev" ] || [ -e "$_dev" ]; then
+			if mount -t ext4 "$_dev" /data 2>/dev/null; then
+				return 0
+			fi
+		fi
+	done
+	# 3) Unformatted microSD data partition — create once (empty TYPE only).
+	for _dev in /dev/mmcblk0p3; do
+		if [ -b "$_dev" ]; then
+			_fstype=$(blkid -o value -s TYPE "$_dev" 2>/dev/null || true)
+			if [ -z "$_fstype" ]; then
+				log "formatting $_dev as ext4 (LABEL=bigfred-data)"
+				mkfs.ext4 -F -L bigfred-data "$_dev"
+				mount -t ext4 "$_dev" /data && return 0
+			fi
+		fi
+	done
+	return 1
+}
+
+if [ "$DATA_ROOT" = /data ]; then
+	if ! mount_data; then
+		log "WARNING: could not mount /data — continuing with local directory"
+		mkdir -p /data
+	fi
+	# If /data is on the microSD and NVMe is present but not yet migrated,
+	# prepare-nvme will create/format the NVMe partition, copy /data onto
+	# it, and switch the mount. On later boots mount_data() above picks
+	# the NVMe directly and prepare-nvme is a no-op.
+	if [ -x /usr/sbin/prepare-nvme ]; then
+		log "prepare-nvme"
+		_rc=0
+		/usr/sbin/prepare-nvme || _rc=$?
+		if [ "$_rc" -ne 0 ]; then
+			log "WARNING: prepare-nvme failed (exit $_rc) — keeping current /data"
+		fi
+	fi
+else
+	log "using custom data root $DATA_ROOT (skip partition mount)"
+	mkdir -p "$DATA_ROOT"
+fi
+
+# --- directories ---
+mkdir -p "$DATA_ROOT/etc" "$DATA_ROOT/logs" "$DATA_ROOT/sqlite" \
+	"$DATA_ROOT/redis" "$DATA_ROOT/alloy"
+mkdir -p "$DATA_ROOT/opt/bigfred/bin" "$DATA_ROOT/opt/grafana/data" \
+	"$DATA_ROOT/opt/grafana/log" "$DATA_ROOT/opt/grafana/plugins" \
+	"$DATA_ROOT/opt/victoriametrics"
+mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy"
+mkdir -p "$DATA_ROOT/etc/microinit"
+
+# --- seed configs from image if missing ---
+seed() {
+	_src=$1
+	_dst=$2
+	_mode=${3:-}
+	if [ -e "$_src" ] && [ ! -e "$_dst" ]; then
+		mkdir -p "$(dirname "$_dst")"
+		cp -a "$_src" "$_dst"
+		if [ -n "$_mode" ]; then
+			chmod "$_mode" "$_dst"
+		fi
+	fi
+}
+
+if [ -d /etc/bigfred ]; then
+	for f in /etc/bigfred/*; do
+		[ -e "$f" ] || continue
+		seed "$f" "$DATA_ROOT/etc/$(basename "$f")" 640
+	done
+fi
+seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
+# Service list for microinit (PID 1); only seed if operator has not customized yet.
+seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json" 644
+seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json.example" 644
+
+# --- persistent root password via bind-mounted shadow ---
+if [ ! -f "$DATA_ROOT/etc/shadow" ] && [ -f /etc/shadow ]; then
+	cp -a /etc/shadow "$DATA_ROOT/etc/shadow"
+	chmod 600 "$DATA_ROOT/etc/shadow"
+fi
+if [ -f "$DATA_ROOT/etc/shadow" ]; then
+	if [ "$DATA_ROOT" = /data ]; then
+		if is_mounted /data && ! is_mounted /etc/shadow; then
+			mount --bind "$DATA_ROOT/etc/shadow" /etc/shadow 2>/dev/null || true
+		fi
+	elif ! is_mounted /etc/shadow; then
+		mount --bind "$DATA_ROOT/etc/shadow" /etc/shadow 2>/dev/null || true
+	fi
+fi
+
+# Enforce read-only root (hub policy; ignore failure on RW systems)
+mount -o remount,ro / 2>/dev/null || true
+
+log "done (DATA_ROOT=$DATA_ROOT)"
+exit 0

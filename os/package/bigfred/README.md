@@ -1,30 +1,47 @@
 # BigFred (`loco-server`)
 
-Builds [dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred) from a
-GitHub archive (branch or tag; Buildroot fetches `.tar.gz`, same tree as the
-zip) and installs:
+Fetches the hub OCI bundle from GHCR
+([`ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64`](https://github.com/dcc-bigfred/bigfred))
+via `oras` and installs:
 
 | Path | Role |
 |------|------|
-| `/opt/bigfred/bin/bigfred` | Cross-compiled `loco-server` binary (`dcc-bus` is a subcommand) |
+| `/opt/bigfred/bin/bigfred` | `loco-server` (`dcc-bus` is a subcommand) |
+| `/opt/bigfred/bin/bigfred-remote-icmp` | Wi-Fi RTT probe helper |
 | `/usr/bin/bigfred` | Wrapper: prefers `/data/opt/bigfred`, then `/opt/bigfred` |
+
+Bundle tags (from the `bigfred` CI):
+
+| Tag | Meaning |
+|-----|---------|
+| `latest-release` | Latest `v*` release (default) |
+| `master` | Tip of `master` |
+| `v1.2.3` | Pinned release |
+| `sha-<7>` | Immutable commit from a `master` push |
 
 ## Configuration
 
-In `make menuconfig` → *BigFred hub*:
-
-- **BigFred (loco-server)** — enable the package
-- **Git ref (branch or tag)** — default `master`
-
-Examples: `master`, `v1.2.3`, `feat/my-branch`.
-
-After changing the ref, clear the download cache for this package so Buildroot
-does not reuse a stale archive:
+Makefile (preferred):
 
 ```bash
-rm -rf output/build/bigfred-* dl/bigfred
-make bigfred-dirclean   # if the package was already built
-make image
+make image BIGFRED_OCI_TAG=latest-release
+make image BIGFRED_OCI_TAG=master
+make image-using-docker BIGFRED_OCI_TAG=v1.2.3
+```
+
+Or in `make menuconfig` → *BigFred hub* → **OCI tag**.
+
+Host requirement: `oras` on `PATH` (installed by `docker/install-buildroot-deps.sh`).
+For private GHCR packages, export `GITHUB_TOKEN` (or `GH_TOKEN`).
+
+Floating tags (`master`, `latest-release`, `sha-*`) are re-pulled on every package
+download via a Buildroot `PRE_DOWNLOAD` hook (`oras`). After changing a pinned
+`v*` tag, clear the cache if needed:
+
+```bash
+rm -rf os/output/build/bigfred-* os/dl/bigfred
+make -C os bigfred-dirclean   # if already built
+make image BIGFRED_OCI_TAG=v1.2.3
 ```
 
 ## Runtime override
@@ -35,23 +52,9 @@ Drop an updated binary on the RW data partition without reflashing:
 /data/opt/bigfred/bin/bigfred
 ```
 
-`/usr/bin/bigfred` will pick it up before `/opt/bigfred/bin/bigfred`.
+`/usr/bin/bigfred` (and `bigfred` / Update tab) prefer `/data/opt` over `/opt`.
 
-The image binary is built like `make server-build` (no embedded SPA). For a
-`-tags prod` binary with `web/dist` embedded, build locally and install to
-`/data/opt/bigfred/bin/bigfred`, or use `BIGFRED_OVERRIDE_SRCDIR` with a tree
-that already has `web/dist` and set `BIGFRED_TAGS=prod` in a local override.
+## Init
 
-## Build host
-
-`bigfred` requires **Go 1.25+** (`go.mod` in the upstream repo). Buildroot's
-`host-go` is older; the image build uses `/usr/local/go` from `docker/install-go.sh`
-(or any Go 1.25+ on `PATH` ahead of `output/host/bin`).
-
-## Local source (no download)
-
-```bash
-make bigfred-override BIGFRED_OVERRIDE_SRCDIR=/path/to/bigfred
-# or:
-make BIGFRED_OVERRIDE_SRCDIR=/path/to/bigfred bigfred-rebuild
-```
+`overlays/etc/init.d/bigfred` starts loco-server with CPU affinity on cores 2,3.
+`remote-icmp` starts the ICMP helper separately.

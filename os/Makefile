@@ -11,6 +11,10 @@ BUILDROOT_DIR     ?= $(CURDIR)/buildroot
 OUTPUT_DIR        ?= $(CURDIR)/output
 DEFCONFIG         ?= bigfred_hub_rpi5_defconfig
 APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
+# Hub OCI tag override (also: BR2_PACKAGE_BIGFRED_OCI_TAG in menuconfig)
+BIGFRED_OCI_TAG   ?= latest-release
+# microinit PID 1 OCI tag (also: BR2_PACKAGE_MICROINIT_OCI_TAG)
+MICROINIT_OCI_TAG ?= main
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
@@ -31,13 +35,14 @@ help:
 	@echo "  make buildroot   — download and extract Buildroot $(BUILDROOT_VERSION)"
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
-	@echo "  make apps-build  — cross-compile Go apps to apps/.bin/"
+	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
 	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
 	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
-	@echo "BigFred (loco-server): BR2_PACKAGE_BIGFRED / package/bigfred"
+	@echo "BigFred OCI tag: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
+	@echo "microinit OCI tag: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*)"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
@@ -58,8 +63,20 @@ menuconfig: buildroot
 
 image: defconfig
 	$(BR2_MAKE) linux-pam
+	# BIGFRED_PERMISSIONS uses |xattr; host-makedevs must be built with
+	# -DEXTENDED_ATTRIBUTES. Rebuild when the binary still lacks that support
+	# (stale from before BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y).
+	@if grep -q '^BR2_ROOTFS_DEVICE_TABLE_SUPPORTS_EXTENDED_ATTRIBUTES=y' \
+		"$(OUTPUT_DIR)/.config" 2>/dev/null; then \
+		if [ ! -x "$(OUTPUT_DIR)/host/bin/makedevs" ] || \
+		   strings "$(OUTPUT_DIR)/host/bin/makedevs" 2>/dev/null | \
+			grep -q 'Did you forget to enable BR2_ROOTFS_DEVICE_TABLE'; then \
+			echo "Rebuilding host-makedevs with extended attribute support…"; \
+			$(BR2_MAKE) host-makedevs-rebuild; \
+		fi; \
+	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

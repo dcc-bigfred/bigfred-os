@@ -1,4 +1,6 @@
 apps/.bin/
+apps/prepare-nvme/target/
+
 go/
 os/.cache/
 .cache/

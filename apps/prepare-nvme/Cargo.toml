@@ -1,0 +1,23 @@
+[package]
+name = "prepare-nvme"
+version = "0.1.0"
+edition = "2021"
+description = "Migrate hub /data from microSD onto NVMe (GPT via gptman)"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "prepare-nvme"
+path = "src/main.rs"
+
+[dependencies]
+gptman = "3"
+getrandom = "0.3"
+thiserror = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+strip = true
+panic = "abort"

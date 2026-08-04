@@ -1,0 +1,27 @@
+#!/bin/sh
+# Hardware watchdog — Buildroot installs the daemon at /sbin/watchdog
+
+WATCHDOG_BIN=/sbin/watchdog
+
+case "$1" in
+start)
+	[ -c /dev/watchdog ] || exit 0
+	if [ ! -x "$WATCHDOG_BIN" ]; then
+		echo "watchdog: $WATCHDOG_BIN missing" >&2
+		exit 1
+	fi
+	# -F: foreground (do not daemonize)
+	exec "$WATCHDOG_BIN" -F -f /dev/watchdog
+	;;
+stop)
+	killall watchdog 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

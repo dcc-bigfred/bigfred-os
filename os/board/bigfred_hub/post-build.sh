@@ -26,7 +26,7 @@ mkdir -p "${TARGET_DIR}/data/etc"
 # Placeholder for BigFred (installed separately by operator)
 mkdir -p "${TARGET_DIR}/usr/share/bigfred/web"
 
-# Install hub Go binaries (make -C apps build → apps/.bin/)
+# Install hub app binaries (make -C apps build → apps/.bin/)
 APPS_BIN="${HUB}/../apps/.bin"
 if [ -d "${APPS_BIN}" ]; then
 	installed=0
@@ -35,6 +35,10 @@ if [ -d "${APPS_BIN}" ]; then
 		case "$(basename "$bin")" in
 			bigfred-os-ui-*)
 				# Installed below as /usr/sbin/bigfred-os-ui
+				continue
+				;;
+			biginit)
+				# Replaced by microinit (package/microinit)
 				continue
 				;;
 		esac
@@ -63,18 +67,37 @@ if [ -f "${HUB}/board/bigfred_hub/network.conf" ] && \
 		"${TARGET_DIR}/etc/bigfred/network.conf"
 fi
 
-# bigfred-os-ui seed (copied to /data/etc on first boot by S10-mount)
+# bigfred-os-ui seed (copied to /data/etc on first boot by early-boot.sh)
 if [ -f "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" ]; then
 	mkdir -p "${TARGET_DIR}/etc/bigfred"
 	install -m 0644 "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" \
 		"${TARGET_DIR}/etc/bigfred/bigfred-os-ui.conf"
 fi
 
-# fanctl seed (copied to /data/etc on first boot by S10-mount)
+# fanctl seed (copied to /data/etc on first boot by early-boot.sh)
 if [ -f "${HUB}/board/bigfred_hub/fanctl.conf" ]; then
 	mkdir -p "${TARGET_DIR}/etc/bigfred"
 	install -m 0644 "${HUB}/board/bigfred_hub/fanctl.conf" \
 		"${TARGET_DIR}/etc/bigfred/fanctl.conf"
 fi
+
+# Skip leftover biginit binary if present in apps/.bin from older trees
+rm -f "${TARGET_DIR}/usr/sbin/biginit"
+
+# Build-time OS identity: git commit of the bigfred-os tree.
+# prepare-nvme refuses to run unless /var/lib/bigfred exists (marker below).
+REPO_ROOT="$(cd "${HUB}/.." && pwd)"
+COMMIT="unknown"
+if command -v git >/dev/null 2>&1 && [ -d "${REPO_ROOT}/.git" ]; then
+	COMMIT="$(git -C "${REPO_ROOT}" rev-parse HEAD 2>/dev/null || true)"
+	[ -n "${COMMIT}" ] || COMMIT="unknown"
+elif [ -n "${GITHUB_SHA:-}" ]; then
+	COMMIT="${GITHUB_SHA}"
+fi
+mkdir -p "${TARGET_DIR}/usr/lib/bigfred/version"
+printf '%s\n' "${COMMIT}" > "${TARGET_DIR}/usr/lib/bigfred/version/commit"
+chmod 0644 "${TARGET_DIR}/usr/lib/bigfred/version/commit"
+mkdir -p "${TARGET_DIR}/var/lib/bigfred"
+echo "bigfred-os commit: ${COMMIT}"
 
 exit 0

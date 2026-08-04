@@ -15,17 +15,17 @@ Raspberry Pi 5 active cooler control (hub spec §8.8).
 make -C apps build
 ```
 
-Installed to `/usr/sbin/fanctl` on the hub image (`S50-fanctl`).
+Installed to `/usr/sbin/fanctl` on the hub image (`fanctl`).
 
 ## Usage
 
 ```bash
-fanctl daemon   # foreground loop (init runs via start-stop-daemon)
+fanctl daemon   # foreground loop (microinit tracks the PID via fanctl exec)
 fanctl stop     # fan off
 ```
 
 Configuration is read from `/data/etc/fanctl.conf` (created on first run if missing).
-On first boot the image seeds the file from `/etc/bigfred/fanctl.conf` via `S10-mount`.
+On first boot the image seeds the file from `/etc/bigfred/fanctl.conf` via early-boot (`/etc/microinit/early-boot.sh`).
 
 ### Config format (`/data/etc/fanctl.conf`)
 

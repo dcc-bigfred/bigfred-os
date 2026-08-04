@@ -21,7 +21,10 @@ export interface HubSupervisordProgram {
 export interface HubService {
   id: string;
   name: string;
-  script: string;
+  state: string;
+  pid?: number | null;
+  restarts: number;
+  enabled: boolean;
   running: boolean;
 }
 
@@ -119,6 +122,11 @@ export type LogWSMessage =
 export function logStreamURL(id: string): string {
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}/api/v1/logs/stream?id=${encodeURIComponent(id)}`;
+}
+
+export function serviceLogStreamURL(id: string): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/api/v1/services/${encodeURIComponent(id)}/logs/stream`;
 }
 
 export function terminalStreamURL(): string {

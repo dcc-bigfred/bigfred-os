@@ -474,10 +474,67 @@ button {
   font-weight: 600;
 }
 
+.services-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .services-id {
   font-size: 0.75rem;
   color: var(--muted);
   font-family: var(--mono);
+}
+
+.services-pid {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  color: var(--text);
+  border-color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.services-page-with-logs {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(14rem, 40vh);
+  gap: 1rem;
+  height: calc(100vh - 5.5rem);
+  min-height: 0;
+}
+
+.services-main {
+  min-height: 0;
+  overflow: auto;
+}
+
+.services-row-active td {
+  background: rgba(125, 207, 255, 0.06);
+}
+
+.services-logs-viewer {
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .services-script {

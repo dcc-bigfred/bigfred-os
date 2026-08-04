@@ -1,8 +1,11 @@
 # configure-ethernet
 
-Brings up the first Ethernet interface on the hub with a static address on common club subnets, or falls back to DHCP. Linux only.
+One-shot Ethernet bring-up for the hub. Tries common club static subnets, then
+falls back to DHCP. A separate `check` subcommand is a cheap liveness probe for
+microinit. Linux only.
 
-Started at boot by `S15-network` (`/usr/sbin/configure-ethernet`).
+Started at boot by `network` / microinit service `network`
+(`/usr/sbin/configure-ethernet`).
 
 ## Build (hub target)
 
@@ -13,13 +16,17 @@ make -C apps build
 
 Produces `apps/.bin/configure-ethernet` (`linux/arm64`, static).
 
-## Run on device
+## Commands
 
 ```bash
-/usr/sbin/configure-ethernet
+/usr/sbin/configure-ethernet          # same as "up"
+/usr/sbin/configure-ethernet up       # configure once and exit
+/usr/sbin/configure-ethernet check    # exit 0 if UP+IPv4, else 1
 ```
 
-No flags. Configuration is read from `/data/etc/configure-ethernet.conf` (created on first run if missing).
+`check` only looks at link state and IPv4 on the first Ethernet interface (no ping).
+
+Configuration is read from `/data/etc/configure-ethernet.conf` (created on first run if missing).
 
 ## Configuration
 
@@ -31,18 +38,24 @@ SECONDARY=192.168.1.120
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `PRIMARY` | `192.168.0.120` | First static address to try (`PRIMARY_ADDRESS`, `ADDRESS` also accepted) |
-| `SECONDARY` | `192.168.1.120` | Fallback static address (`SECONDARY_ADDRESS`, `FALLBACK`, `FALLBACK_ADDRESS` also accepted) |
+| `PRIMARY` | `192.168.0.120` | First static address to try |
+| `SECONDARY` | `192.168.1.120` | Fallback static address |
 
 Gateway is derived from the host address (last octet set to `.1`). Both static attempts use a `/24` prefix.
 
-## Behaviour
+## microinit liveness
 
-1. Load or create `/data/etc/configure-ethernet.conf` (warn only if the file cannot be written).
-2. Pick the first non-loopback, non-WiFi interface from `/sys/class/net`.
-3. Try `PRIMARY` — configure the interface, ping the gateway; stop on success.
-4. Try `SECONDARY` — same as above.
-5. Run `dhclient` on the interface; success when an IPv4 address is assigned.
+On the hub, `network` is a one-shot job with a liveness probe:
+
+```json
+"livenessProbe": {
+  "cmd": "/usr/sbin/configure-ethernet check",
+  "successExitCodes": [0],
+  "interval": 30
+}
+```
+
+When `check` fails, microinit re-runs the network start (bring-up again).
 
 ## Tests
 

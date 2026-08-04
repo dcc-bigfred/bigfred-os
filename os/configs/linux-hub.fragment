@@ -8,10 +8,22 @@ CONFIG_WATCHDOG=y
 CONFIG_WATCHDOG_CORE=y
 CONFIG_BCM2835_WDT=y
 
-# USB serial (Uhlenbrock 63120 on DR5000 layouts)
-CONFIG_USB_ACM=y
+# USB serial — LocoNet bridges + central USB VCP + DIY
+# Requires udevd (microinit service) for SYMLINK/GROUP/MODE rules.
+CONFIG_USB_ACM=y                    # cdc_acm: Digitrax PR3/PR4; RB1110 tty (LI100F unsupported)
 CONFIG_USB_SERIAL=y
 CONFIG_USB_SERIAL_GENERIC=y
+CONFIG_USB_SERIAL_CP210X=y          # Uhlenbrock 63120 (10c4:ea60)
+CONFIG_USB_SERIAL_FTDI_SIO=y        # RR-CirKits LocoBuffer*, DR5000/YD7010 USB VCP
+CONFIG_USB_SERIAL_PL2303=y          # DIY Prolific USB-UART
+CONFIG_USB_SERIAL_CH341=y           # DIY CH340/CH341
+
+# Pi 5 active cooler — pwm-fan driver binds to the cooling_fan DT node and
+# exposes /sys/class/thermal/cooling_device0. Without it the PWM pin is not
+# claimed and 4-pin PWM fans default to 100%. Thresholds/speeds are set via
+# dtparam=fan_temp* in board/bigfred_hub/config.txt (hub spec §8.8).
+CONFIG_SENSORS_PWM_FAN=y
+CONFIG_THERMAL=y
 
 # ext4 for RO root and RW /data
 CONFIG_EXT4_FS=y

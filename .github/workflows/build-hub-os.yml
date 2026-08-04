@@ -14,9 +14,18 @@ on:
         description: Skip Go unit tests for hub apps
         type: boolean
         default: false
+      bigfred_oci_tag:
+        description: BigFred hub OCI tag (master | latest-release | v*)
+        type: string
+        default: latest-release
+      microinit_oci_tag:
+        description: microinit PID 1 OCI tag (main | sha-<7>)
+        type: string
+        default: main
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: build-hub-os-${{ github.ref }}
@@ -30,6 +39,9 @@ jobs:
 
     env:
       MAKEFLAGS: -j$(( $(nproc) ))
+      BIGFRED_OCI_TAG: ${{ inputs.bigfred_oci_tag }}
+      MICROINIT_OCI_TAG: ${{ inputs.microinit_oci_tag }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
@@ -88,7 +100,7 @@ jobs:
         run: make -C apps test
 
       - name: Build hub OS image
-        run: make -C os image
+        run: make -C os image BIGFRED_OCI_TAG="${BIGFRED_OCI_TAG}" MICROINIT_OCI_TAG="${MICROINIT_OCI_TAG}"
 
       - name: Save host toolchain to cache
         if: success()
@@ -116,6 +128,8 @@ jobs:
             echo ""
             echo "- Run: \`${{ github.run_number }}\`"
             echo "- Commit: \`${{ github.sha }}\`"
+            echo "- BigFred OCI tag: \`${{ inputs.bigfred_oci_tag }}\`"
+            echo "- microinit OCI tag: \`${{ inputs.microinit_oci_tag }}\`"
             echo "- Artifact: \`bigfred-hub-nvme-${{ github.run_number }}\`"
             echo ""
             echo '```'

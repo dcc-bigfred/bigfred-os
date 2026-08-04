@@ -3,9 +3,10 @@
 
 kernel=Image
 
-# Hide firmware rainbow splash; early BigFred logo via fullscreen_logo + logo.cpio
+# Hide firmware rainbow splash. Graphical BigFred logo (fullscreen_logo + logo.cpio)
+# is disabled so boot shows a plain text console (microinit / kernel messages).
 disable_splash=1
-initramfs logo.cpio followkernel
+# initramfs logo.cpio followkernel
 
 # Pi 5 Rev 1.1 (BCM2712 D0) — required. Using the C0 DTB on D0 silicon
 # panics in bcm2712_pull_config_set during UART/pinctrl probe (SError).
@@ -15,8 +16,16 @@ device_tree=bcm2712d0-rpi-5-b.dtb
 # Pi 5: enable PCIe Gen3 for NVMe HAT+
 dtparam=pciex1_gen=3
 
-# Active cooler (fanctl manages policy in userspace)
+# Active cooler — kernel pwm-fan driver + thermal framework (hub spec §8.8).
+# fanctl is disabled in microinit.json; the kernel auto-controls the PWM via
+# cooling_device0 using the thresholds/speeds below (millidegrees Celsius,
+# PWM 0-255). Requires CONFIG_SENSORS_PWM_FAN=y (see configs/linux-hub.fragment).
+# Levels: <45 OFF | 45–60 LOW (75) | 60–70 MED (150) | >70 HIGH (255).
 dtparam=cooling_fan=on
+dtparam=fan_temp0=45000,fan_temp0_hyst=5000,fan_temp0_speed=75
+dtparam=fan_temp1=60000,fan_temp1_hyst=5000,fan_temp1_speed=150
+dtparam=fan_temp2=70000,fan_temp2_hyst=5000,fan_temp2_speed=255
+dtparam=fan_temp3=70000,fan_temp3_hyst=5000,fan_temp3_speed=255
 
 # UART: serial console on Pi 5 debug UART (ttyAMA10)
 enable_uart=1

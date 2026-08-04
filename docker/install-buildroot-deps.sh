@@ -42,3 +42,22 @@ apt-get install -y --no-install-recommends \
 	bison \
 	nodejs \
 	npm
+
+# ORAS — pull BigFred hub OCI bundle (package/bigfred)
+ORAS_VERSION="${ORAS_VERSION:-1.2.2}"
+ORAS_ARCH="$(uname -m)"
+case "${ORAS_ARCH}" in
+	x86_64|amd64) ORAS_ARCH=amd64 ;;
+	aarch64|arm64) ORAS_ARCH=arm64 ;;
+	*)
+		echo "error: unsupported arch for oras: ${ORAS_ARCH}" >&2
+		exit 1
+		;;
+esac
+tmp_oras="$(mktemp -d)"
+trap 'rm -rf "${tmp_oras}"' EXIT
+curl -fsSL \
+	"https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_${ORAS_ARCH}.tar.gz" \
+	| tar -xz -C "${tmp_oras}"
+install -m 0755 "${tmp_oras}/oras" /usr/local/bin/oras
+oras version
