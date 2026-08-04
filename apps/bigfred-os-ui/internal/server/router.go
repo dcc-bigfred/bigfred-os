@@ -12,8 +12,8 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
@@ -24,7 +24,7 @@ type Config struct {
 	Auth            *auth.Service
 	LogRoots        []string
 	Microinit       services.Client
-	MicroinitClient *microinit.Client
+	MicroinitClient *miclient.Client
 	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string

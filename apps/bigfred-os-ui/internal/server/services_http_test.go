@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 )
 
 type fakeMicroinit struct{}
 
-func (fakeMicroinit) List() ([]microinit.ServiceStatus, error) {
+func (fakeMicroinit) List() ([]miclient.ServiceStatus, error) {
 	pid := int32(1)
-	return []microinit.ServiceStatus{{
+	return []miclient.ServiceStatus{{
 		Name: "redis", State: "running", PID: &pid, Enabled: true,
 	}}, nil
 }

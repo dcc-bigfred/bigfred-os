@@ -4,15 +4,15 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 )
 
 type fakeClient struct {
-	list []microinit.ServiceStatus
+	list []miclient.ServiceStatus
 	err  error
 }
 
-func (f *fakeClient) List() ([]microinit.ServiceStatus, error) {
+func (f *fakeClient) List() ([]miclient.ServiceStatus, error) {
 	return f.list, f.err
 }
 
@@ -28,7 +28,7 @@ func (f *fakeClient) Control(name, action string) error {
 
 func TestListMapsMicroinitStatus(t *testing.T) {
 	pid := int32(9)
-	list, err := List(&fakeClient{list: []microinit.ServiceStatus{{
+	list, err := List(&fakeClient{list: []miclient.ServiceStatus{{
 		Name: "bigfred-os-ui", State: "running", PID: &pid, Restarts: 2, Enabled: true,
 	}}})
 	if err != nil {
