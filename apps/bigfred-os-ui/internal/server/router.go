@@ -25,7 +25,6 @@ type Config struct {
 	LogRoots        []string
 	Microinit       services.Client
 	MicroinitClient *miclient.Client
-	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
 	ZoneinfoDir     string // default /usr/share/zoneinfo
@@ -70,8 +69,6 @@ func NewRouter(cfg Config) http.Handler {
 			r.Get("/services", listServicesHandler(cfg))
 			r.Post("/services/{id}/{action}", serviceActionHandler(cfg))
 			r.Get("/services/{id}/logs/stream", streamServiceLogsHandler(cfg))
-			r.Get("/supervisord/programs", listSupervisordProgramsHandler(cfg))
-			r.Post("/supervisord/programs/{name}/{action}", supervisordProgramActionHandler(cfg))
 			r.Get("/redis/keys", listRedisKeysHandler(redisClient))
 			r.Get("/redis/key", getRedisKeyHandler(redisClient))
 			r.Get("/redis/stream", streamRedisKeyHandler(cfg, redisClient))

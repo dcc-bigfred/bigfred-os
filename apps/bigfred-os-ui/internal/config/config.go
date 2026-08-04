@@ -18,7 +18,6 @@ type File struct {
 	LogRoot         string
 	LogRoots        string
 	MicroinitSocket string
-	SupervisordConf string
 	RedisAddr       string
 	EtcDir          string
 	UpdateDir       string
@@ -72,8 +71,6 @@ func Parse(text string) *File {
 			f.LogRoots = value
 		case "MICROINIT_SOCKET", "MICROINITSOCKET":
 			f.MicroinitSocket = value
-		case "SUPERVISORD_CONF", "SUPERVISORDCONF":
-			f.SupervisordConf = value
 		case "REDIS_ADDR", "REDISADDR":
 			f.RedisAddr = value
 		case "ETC_DIR", "ETCDIR":

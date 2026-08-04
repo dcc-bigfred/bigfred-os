@@ -44,7 +44,6 @@ Hub production binary is built with `-tags pam` and links `libpam` (see `Makefil
 | `--log-roots` | `/data/logs,/var/log` | Comma-separated log directories |
 | `--log-root` | *(deprecated)* | Single log directory |
 | `--microinit-socket` | `/data/run/microinit.sock` | microinit control Unix socket |
-| `--supervisord-conf` | `/data/etc/supervisord/supervisord.conf` | supervisord configuration file |
 | `--update-dir` | `/data/opt/bigfred/bin` | Install dir for Update tab downloads |
 | `--github-token` | *(env `GITHUB_TOKEN`)* | Token for private GitHub release downloads |
 | `--secure-cookie` | `false` | Set `Secure` on session cookie (HTTPS) |
@@ -104,7 +103,6 @@ Open http://localhost:5174
 |-----|--------|
 | **Logs** | Live tail over WebSocket (`/api/v1/logs/stream`) |
 | **Terminal** | Interactive shell over WebSocket (`/api/v1/terminal`, PTY + xterm.js; requires login) |
-| **Supervisord** | Programs from `/data/etc/supervisord/supervisord.conf` — start/stop/restart via `supervisorctl` |
 | **Services** | SysV init scripts from `/etc/init.d` — start/stop/restart |
 | **Update** | Download latest GitHub release binaries into `/data/opt/bigfred/bin` (`bigfred`, `bigfred-remote-icmp`, `bigfred-os-ui`). After installing `bigfred-remote-icmp`, `cap_net_raw+ep` is applied via `setcap`. |
 
@@ -116,8 +114,6 @@ Open http://localhost:5174
 - `POST /api/v1/auth/password` — change Linux password (PAM)
 - `GET /api/v1/services` — list init scripts and running state
 - `POST /api/v1/services/{id}/{action}` — `start`, `stop`, or `restart`
-- `GET /api/v1/supervisord/programs` — list supervisord programs (config + status)
-- `POST /api/v1/supervisord/programs/{name}/{action}` — `start`, `stop`, or `restart`
 - `POST /api/v1/update/{target}` — `bigfred`, `bigfred-remote-icmp`, or `bigfred-ui` with body `{"tag":"v1.2.3"}` → `/data/opt/bigfred/bin`
 - `GET /api/v1/update/{target}/releases` — list GitHub releases that include the target asset
 - `GET /api/v1/logs` — list log files from configured roots

@@ -22,7 +22,6 @@ import (
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/update"
 )
 
@@ -35,21 +34,20 @@ func main() {
 
 func run() int {
 	var (
-		configPath      string
-		httpAddr        string
-		pamService      string
-		username        string
-		password        string
-		logRoots        string
-		legacyLogRoot   string
-		secureCookie    bool
-		staticDir       string
-		microinitSock   string
-		supervisordConf string
-		redisAddr       string
-		etcDir          string
-		updateDir       string
-		githubToken     string
+		configPath    string
+		httpAddr      string
+		pamService    string
+		username      string
+		password      string
+		logRoots      string
+		legacyLogRoot string
+		secureCookie  bool
+		staticDir     string
+		microinitSock string
+		redisAddr     string
+		etcDir        string
+		updateDir     string
+		githubToken   string
 	)
 
 	flag.StringVar(&configPath, "config", config.DefaultPath,
@@ -63,14 +61,13 @@ func run() int {
 	flag.BoolVar(&secureCookie, "secure-cookie", false, "set Secure flag on session cookie")
 	flag.StringVar(&staticDir, "static-dir", "", "serve frontend from disk instead of embedded bundle (dev)")
 	flag.StringVar(&microinitSock, "microinit-socket", miclient.DefaultSocket, "microinit control Unix socket")
-	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
 	flag.StringVar(&redisAddr, "redis-addr", redis.DefaultAddr, "Redis server address")
 	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
 	flag.StringVar(&updateDir, "update-dir", update.DefaultInstallDir, "directory for GitHub release binary installs")
 	flag.StringVar(&githubToken, "github-token", "", "optional GitHub token for private release downloads (or GITHUB_TOKEN)")
 	flag.Parse()
 
-	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &microinitSock, &supervisordConf, &redisAddr, &etcDir, &updateDir, &githubToken); err != nil {
+	if err := mergeConfigFile(configPath, &httpAddr, &pamService, &username, &password, &logRoots, &legacyLogRoot, &secureCookie, &microinitSock, &redisAddr, &etcDir, &updateDir, &githubToken); err != nil {
 		fmt.Fprintf(os.Stderr, "bigfred-os-ui: %v\n", err)
 		return 1
 	}
@@ -101,7 +98,6 @@ func run() int {
 		LogRoots:        logs.ParseRoots(logRoots, legacyLogRoot),
 		Microinit:       mi,
 		MicroinitClient: mi,
-		SupervisordConf: supervisordConf,
 		RedisAddr:       redisAddr,
 		EtcDir:          etcDir,
 		Updater: update.New(update.Config{
@@ -140,7 +136,7 @@ func run() int {
 	return 0
 }
 
-func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, microinitSock, supervisordConf, redisAddr, etcDir, updateDir, githubToken *string) error {
+func mergeConfigFile(path string, httpAddr, pamService, username, password, logRoots, legacyLogRoot *string, secureCookie *bool, microinitSock, redisAddr, etcDir, updateDir, githubToken *string) error {
 	fc, err := config.LoadOptional(path)
 	if err != nil {
 		return err
@@ -171,9 +167,6 @@ func mergeConfigFile(path string, httpAddr, pamService, username, password, logR
 	}
 	if !flagPassed("microinit-socket") && fc.MicroinitSocket != "" {
 		*microinitSock = fc.MicroinitSocket
-	}
-	if !flagPassed("supervisord-conf") && fc.SupervisordConf != "" {
-		*supervisordConf = fc.SupervisordConf
 	}
 	if !flagPassed("redis-addr") && fc.RedisAddr != "" {
 		*redisAddr = fc.RedisAddr
