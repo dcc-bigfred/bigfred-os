@@ -52,9 +52,9 @@ Drop an updated binary on the RW data partition without reflashing:
 /data/opt/bigfred/bin/bigfred
 ```
 
-`/usr/bin/bigfred` (and `S60-bigfred` / Update tab) prefer `/data/opt` over `/opt`.
+`/usr/bin/bigfred` (and `bigfred` / Update tab) prefer `/data/opt` over `/opt`.
 
 ## Init
 
-`overlays/etc/init.d/S60-bigfred` starts loco-server with CPU affinity on cores 2,3.
-`S41-remote-icmp` starts the ICMP helper separately.
+`overlays/etc/init.d/bigfred` starts loco-server with CPU affinity on cores 2,3.
+`remote-icmp` starts the ICMP helper separately.

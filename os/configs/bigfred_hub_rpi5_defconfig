@@ -14,7 +14,7 @@ BR2_TOOLCHAIN_BUILDROOT_MUSL=y
 BR2_GLOBAL_PATCH_DIR="board/raspberrypi/patches"
 BR2_DOWNLOAD_FORCE_CHECK_HASHES=y
 
-# Static IP via S15-network overlay (not DHCP)
+# Static IP via network overlay (not DHCP)
 # BR2_SYSTEM_DHCP is not set
 
 BR2_INIT_NONE=y
@@ -64,7 +64,7 @@ BR2_PACKAGE_DROPBEAR_CLIENT=y
 BR2_PACKAGE_SQLITE=y
 BR2_PACKAGE_REDIS=y
 BR2_PACKAGE_HTOP=y
-# Full `ip` from iproute2 (also used by S15-network / configure-ethernet)
+# Full `ip` from iproute2 (also used by network / configure-ethernet)
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_ETHTOOL=y
 BR2_PACKAGE_LIBCURL=y
@@ -78,6 +78,11 @@ BR2_PACKAGE_WATCHDOG=y
 BR2_PACKAGE_HOST_LIBCAP=y
 BR2_PACKAGE_LIBCAP=y
 BR2_PACKAGE_LIBCAP_TOOLS=y
+
+# mkfs.ext4 for early-boot and prepare-nvme (uses util-linux libuuid/libblkid)
+BR2_PACKAGE_E2FSPROGS=y
+BR2_PACKAGE_UTIL_LINUX_LIBUUID=y
+BR2_PACKAGE_UTIL_LINUX_LIBBLKID=y
 
 # fanctl: built from apps/fanctl → apps/.bin/ (see post-build.sh)
 BR2_PACKAGE_ALLOY=y
@@ -95,7 +100,8 @@ BR2_PACKAGE_KMOD_TOOLS=y
 # Root filesystem image (post-image builds NVMe layout)
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="1G"
+# Grafana unified binary (~330M) + Alloy (~380M) need headroom beyond 1G.
+BR2_TARGET_ROOTFS_EXT2_SIZE="2G"
 
 BR2_PACKAGE_HOST_DOSFSTOOLS=y
 BR2_PACKAGE_HOST_GENIMAGE=y

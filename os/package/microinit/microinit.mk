@@ -45,6 +45,15 @@ define MICROINIT_INSTALL_TARGET_CMDS
 	# PID 1: kernel default /sbin/init
 	$(INSTALL) -D -m 0755 $(@D)/bin/microinit \
 		$(TARGET_DIR)/sbin/init
+	# SysV-style shutdown CLI (ordered poweroff/reboot/halt via IPC).
+	# Present in OCI bundles published after the shutdown binary moved into
+	# the microinit repo; keep install optional for older tags.
+	if [ -f $(@D)/bin/shutdown ]; then \
+		$(INSTALL) -D -m 0755 $(@D)/bin/shutdown \
+			$(TARGET_DIR)/usr/sbin/shutdown; \
+		mkdir -p $(TARGET_DIR)/sbin; \
+		ln -sfn ../usr/sbin/shutdown $(TARGET_DIR)/sbin/shutdown; \
+	fi
 endef
 
 $(eval $(generic-package))

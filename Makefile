@@ -46,6 +46,8 @@ image-using-docker: docker-image check-docker-rpath relocate-br-host
 		-v "$(REPO_ROOT):$(REPO_ROOT)" \
 		-w "$(REPO_ROOT)" \
 		-e HOME="$(REPO_ROOT)" \
+		-e RUSTUP_HOME=/usr/local/rustup \
+		-e CARGO_HOME=/usr/local/cargo \
 		-e MAKEFLAGS="-j$$(nproc 2>/dev/null || echo 4)" \
 		-e BIGFRED_OCI_TAG="$(BIGFRED_OCI_TAG)" \
 		-e MICROINIT_OCI_TAG="$(MICROINIT_OCI_TAG)" \

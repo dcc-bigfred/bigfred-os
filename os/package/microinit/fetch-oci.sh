@@ -48,10 +48,15 @@ fi
 
 chmod 755 "${BIN}"
 mkdir -p "$(dirname "${OUT}")"
-# Stable layout for EXTRACT/INSTALL: bin/microinit
-# Do not install OCI early-boot.sh — hub overlay ships /etc/microinit/early-boot.sh.
+# Stable layout for EXTRACT/INSTALL: bin/microinit (+ optional bin/shutdown)
+# Do not install OCI early-boot.sh / unmount.sh — hub overlay ships both under
+# /etc/microinit/.
 staged="${tmpdir}/stage"
 mkdir -p "${staged}/bin"
 cp -f "${BIN}" "${staged}/bin/microinit"
+if [[ -f "${tmpdir}/shutdown-linux-arm64" ]]; then
+	chmod 755 "${tmpdir}/shutdown-linux-arm64"
+	cp -f "${tmpdir}/shutdown-linux-arm64" "${staged}/bin/shutdown"
+fi
 tar -C "${staged}" -cf "${OUT}" bin
 echo "Wrote ${OUT} ($(wc -c < "${OUT}") bytes) from ${IMAGE}:${TAG}"

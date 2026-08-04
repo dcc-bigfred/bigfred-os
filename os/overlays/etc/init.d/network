@@ -10,7 +10,7 @@ start)
 	"$IP" link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
 
 	if [ ! -x "$CONFIGURE" ]; then
-		echo "S15-network: $CONFIGURE missing" >&2
+		echo "network: $CONFIGURE missing" >&2
 		exit 1
 	fi
 	exec "$CONFIGURE" up

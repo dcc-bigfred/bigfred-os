@@ -50,7 +50,7 @@ Hub production binary is built with `-tags pam` and links `libpam` (see `Makefil
 | `--secure-cookie` | `false` | Set `Secure` on session cookie (HTTPS) |
 | `--static-dir` | *(embedded)* | Serve frontend from disk (dev) |
 
-CLI flags override values from `--config`. On the hub image, `S48-bigfred-os-ui`
+CLI flags override values from `--config`. On the hub image, `bigfred-os-ui`
 starts the binary with `--config /data/etc/bigfred-os-ui.conf`.
 
 ### Dotenv format (`/data/etc/bigfred-os-ui.conf`)
@@ -76,7 +76,7 @@ Authenticated operators can download the latest GitHub release assets into
 | Update BigFred UI | `dcc-bigfred/bigfred-os` | `bigfred-os-ui-linux-arm64` | `bigfred-os-ui` |
 
 After install, restart the matching service from **Services**
-(`bigfred` / `bigfred-os-ui`) via microinit. `S48-bigfred-os-ui` and `/usr/bin/bigfred`
+(`bigfred` / `bigfred-os-ui`) via microinit. `bigfred-os-ui` and `/usr/bin/bigfred`
 prefer the `/data/opt/bigfred/bin` copies.
 
 Seed template ships as `/etc/bigfred/bigfred-os-ui.conf` and is copied to

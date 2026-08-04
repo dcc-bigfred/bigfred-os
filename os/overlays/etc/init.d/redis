@@ -31,7 +31,7 @@ case "$1" in
 start)
 	ensure_redis_conf
 	[ -f "$REDIS_CONF" ] || exit 1
-	# bind 127.0.0.1 requires loopback (S15 normally brings it up).
+	# bind 127.0.0.1 requires loopback (network normally brings it up).
 	/sbin/ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
 	# Foreground under microinit; force daemonize no even if /data conf says otherwise.
 	exec /usr/bin/redis-server "$REDIS_CONF" --daemonize no

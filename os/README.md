@@ -10,10 +10,10 @@ also install or override binaries under `/data/opt/bigfred` after flash.
 | Layer | Description |
 |-------|-------------|
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
-| **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + RT and USB-ACM fragments |
-| **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` |
-| **Services** | Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
-| **Init** | **microinit** as `/sbin/init` (OCI); SysV `S??-*` scripts as backends; early-boot mounts `/data` |
+| **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm) |
+| **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); `/usr/lib/bigfred/version/commit` = build git SHA |
+| **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
+| **Init** | **microinit** as `/sbin/init` (OCI); `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
 
 ## Host requirements
 
@@ -45,6 +45,8 @@ make image
 
 Host dependencies (Ubuntu/Debian): `sudo docker/install-buildroot-deps.sh`
 (includes `flex`/`libfl2` — cross-`ar` from binutils links `libfl.so.2`).
+Rust for `prepare-nvme`: `sudo docker/install-rust.sh` (rustup +
+`aarch64-unknown-linux-musl`), or use `make image-using-docker` (image includes it).
 
 After changing the Docker image: `make docker-image`, then `make image-using-docker`.
 
@@ -106,16 +108,38 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 2. **Root password** — default `root` in defconfig; change via `make menuconfig`
    → *System configuration* → *Root password*, or on device: `passwd root`
    (password in `/data/etc/shadow`, **Account** panel in `bigfred-os-ui`).
-3. **Uhlenbrock 63120** — update `overlays/etc/udev/rules.d/99-uhlenbrock-63120.rules`
-   after `udevadm` (§3.5).
+3. **LocoNet USB** — kernel drivers in `configs/linux-hub.fragment`
+   (`cp210x`, `ftdi_sio`, `ch341`, `pl2303`, `cdc_acm`); **udevd** microinit
+   service applies `overlays/etc/udev/rules.d/99-loconet-usb.rules`
+   (symlinks `/dev/loconet-63120`, `loconet-lb-usb`, `loconet-ch340`).
+   Centrals stub: `99-loconet-centrals.rules`. See §USB / udev below.
 4. **PREEMPT_RT** — `configs/linux-hub.fragment`; if the kernel build fails, use an
    RT tag/branch from `raspberrypi/linux` or temporarily remove `CONFIG_PREEMPT_RT=y`.
-5. **Grafana Alloy** — enabled in defconfig (`BR2_PACKAGE_ALLOY`); binary is fetched
-   from GitHub releases at build time. Config: `overlays/etc/alloy/config.alloy`.
+5. **Grafana Alloy** — enabled in defconfig (`BR2_PACKAGE_ALLOY`); built from
+   source as a static musl-compatible binary (official release zips are
+   glibc-only). Config: `overlays/etc/alloy/config.alloy`.
 6. **Pi 5 Rev 1.1 (BCM2712 D0)** — `board/bigfred_hub/config.txt` sets
    `device_tree=bcm2712d0-rpi-5-b.dtb`. Without it, D0 boards panic in
    `bcm2712_pull_config_set` / `brcmuart_init`. For older Rev 1.0 (C0) use
    `bcm2712-rpi-5-b.dtb` instead.
+
+## USB / udev (LocoNet)
+
+`BR2_INIT_NONE` means Buildroot's `S10udev` never runs. The hub starts **eudev**
+via microinit service `udevd` (`overlays/etc/init.d/udevd`) so `SYMLINK` /
+`GROUP` / `MODE` rules apply on coldplug and hotplug. `bigfred` depends on
+`udevd`.
+
+| Symlink | Match | Hardware |
+|---------|-------|----------|
+| `/dev/loconet-63120` | `10c4:ea60` | Uhlenbrock 63120 (CP210x → `ttyUSB*`) |
+| `/dev/loconet-lb-usb` | `0403:c7d0` | RR-CirKits LocoBuffer-USB |
+| `/dev/loconet-ch340` | `1a86:7523` | DIY CH340 |
+| (raw) `ttyACM*` | dialout | Digitrax PR3/PR4 (cdc_acm); RB1110 ACM is LI100F — use Z21 UDP |
+
+Kernel options: `CONFIG_USB_SERIAL_CP210X`, `FTDI_SIO`, `CH341`, `PL2303`,
+`CONFIG_USB_ACM`. On device: `microinit list \| grep udevd`,
+`ls -l /dev/loconet-*`.
 
 ## BigFred (loco-server)
 
@@ -133,20 +157,27 @@ Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires host `oras` (see
 ## microinit (PID 1)
 
 Buildroot package `package/microinit` pulls
-`ghcr.io/dcc-bigfred/microinit-linux-arm64` (ORAS) and installs `/sbin/init`
-plus `/usr/sbin/microinit`. Init system is `BR2_INIT_NONE` (BusyBox stays for
+`ghcr.io/dcc-bigfred/microinit-linux-arm64` (ORAS) and installs `/sbin/init`,
+`/usr/sbin/microinit`, and `/usr/sbin/shutdown` (SysV-style ordered
+poweroff/reboot/halt). Init system is `BR2_INIT_NONE` (BusyBox stays for
 utilities; it does not own `/sbin/init`).
 
-- Early-boot: `overlays/etc/microinit/early-boot.sh` (mounts `/data`, seeds configs)
+- Early-boot: `overlays/etc/microinit/early-boot.sh` (`fsck -y` before mounts,
+  mounts `/data`, optional `prepare-nvme` migrate to NVMe so the microSD stays
+  read-only, seeds configs)
+- Unmount: `overlays/etc/microinit/unmount.sh` (unbind shadow, remount/umount
+  `/data`, remount root RO, `umount -a -r`; called at end of shutdown)
+
 - Service list seed: `overlays/etc/microinit/microinit.json` → `/data/etc/microinit.json`
-- SysV scripts under `overlays/etc/init.d/S??-*` remain as `cmd` backends
+  (includes **udevd** early; `bigfred` `dependsOn` includes `udevd`)
+- Scripts under `overlays/etc/init.d/` remain as `cmd` backends
 
 OCI tag: `make image MICROINIT_OCI_TAG=main` (or `sha-<7>`).
 Menuconfig: `BR2_PACKAGE_MICROINIT_OCI_TAG`. Details: `package/microinit/README.md`.
 
 CLI on device: `microinit list`, `microinit start redis`, `microinit logs --follow`.
 
-Init scripts: `S60-bigfred` with `taskset` on cores 2,3. `S41-remote-icmp` starts the
+Init scripts: `bigfred` with `taskset` on cores 2,3. `remote-icmp` starts the
 ICMP helper.
 
 Databases: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, default RDB `save 60 100`).
@@ -167,7 +198,7 @@ os/
 ├── kernel/            # (fragments in configs/linux-hub.fragment)
 ├── package/           # bigfred, alloy, grafana, victoriametrics (hub apps: ../apps/)
 ├── scripts/           # flash-nvme.sh
-../apps/                 # Go apps → apps/.bin/ → /usr/sbin/ on image
+../apps/                 # apps → apps/.bin/ → /usr/sbin/ (Go + Rust prepare-nvme)
 ../scripts/              # flash-sdcard.sh (repo root)
 ├── Makefile
 └── external.desc

@@ -1,0 +1,50 @@
+#!/bin/sh
+# eudev daemon for microinit (BR2_INIT_NONE — Buildroot S10udev is never run).
+# Applies /etc/udev/rules.d (SYMLINK, GROUP, MODE) on coldplug and hotplug.
+#
+# Foreground under microinit; coldplug runs once udevd accepts control.
+
+UDEVD=/sbin/udevd
+SETTLE_TIMEOUT=30
+
+case "$1" in
+start)
+	[ -x "$UDEVD" ] || UDEVD=/usr/sbin/udevd
+	[ -x "$UDEVD" ] || {
+		echo "udevd: binary not found" >&2
+		exit 1
+	}
+
+	# Disable legacy /sbin/hotplug helper; udevd owns uevents.
+	if [ -e /proc/sys/kernel/hotplug ]; then
+		printf '\000\000\000\000' >/proc/sys/kernel/hotplug
+	fi
+
+	# Coldplug after the daemon is reachable (background so we can exec).
+	(
+		i=0
+		while [ "$i" -lt 50 ]; do
+			udevadm control --ping >/dev/null 2>&1 && break
+			i=$((i + 1))
+			sleep 0.1
+		done
+		udevadm trigger --type=subsystems --action=add 2>/dev/null || true
+		udevadm trigger --type=devices --action=add 2>/dev/null || true
+		udevadm settle --timeout="$SETTLE_TIMEOUT" 2>/dev/null || true
+	) &
+
+	exec "$UDEVD"
+	;;
+stop)
+	udevadm control --stop-exec-queue 2>/dev/null || true
+	killall udevd 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

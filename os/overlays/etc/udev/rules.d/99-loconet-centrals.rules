@@ -1,0 +1,20 @@
+# BigFred OS — USB LocoNet COM on multi-VCP command stations (stubs).
+#
+# Digikeijs DR5000 and YaMoRC YD7010 expose three FTDI virtual COM ports
+# (LocoNet / XpressNet / config). Symlink ONLY the LocoNet interface after
+# measuring on real hardware:
+#
+#   udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|bInterfaceNumber'
+#
+# Example (fill in real IDs — do not guess multi-interface FTDI):
+#
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", \
+#   ATTRS{bInterfaceNumber}=="00", SYMLINK+="loconet-dr5000", GROUP="dialout", MODE="0660"
+#
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", \
+#   ATTRS{bInterfaceNumber}=="00", SYMLINK+="loconet-yd7010", GROUP="dialout", MODE="0660"
+#
+# Until filled in, use serial:///dev/ttyUSBn:57600 (LocoNet COM from DR5000 Tool /
+# YaMoRC docs) and keep knownSerialSymlinks commented for these names in Go.
+#
+# RB1110 USB-C 28e9:018a is Lenz LI100F — do NOT symlink as loconet-*; use z21 UDP.

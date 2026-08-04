@@ -1,9 +1,12 @@
 config BR2_PACKAGE_ALLOY
-	bool "Grafana Alloy (prebuilt binary)"
+	bool "Grafana Alloy (static binary from source)"
 	default n
 	help
-	  Install Grafana Alloy from the official GitHub release zip
-	  matching the target CPU (arm64). Runtime state: /data/alloy.
+	  Build Grafana Alloy from source as a pure-Go static binary for the
+	  musl rootfs. Official release zips are glibc-dynamic and will not
+	  run on this image. Runtime state: /data/alloy.
+
+	  Host requirement: go on PATH (docker/install-go.sh, Go ≥ 1.26).
 
 config BR2_PACKAGE_BIGFRED
 	bool "BigFred (loco-server)"
@@ -33,8 +36,8 @@ config BR2_PACKAGE_MICROINIT
 	default y
 	help
 	  Pull ghcr.io/dcc-bigfred/microinit-linux-arm64 via oras and
-	  install /sbin/init and /usr/sbin/microinit. Use with
-	  BR2_INIT_NONE so BusyBox does not own /sbin/init.
+	  install /sbin/init, /usr/sbin/microinit, and /usr/sbin/shutdown.
+	  Use with BR2_INIT_NONE so BusyBox does not own /sbin/init.
 
 	  Hub early-boot: overlays/etc/microinit/early-boot.sh
 	  https://github.com/dcc-bigfred/microinit

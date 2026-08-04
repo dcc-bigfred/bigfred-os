@@ -4,7 +4,7 @@ One-shot Ethernet bring-up for the hub. Tries common club static subnets, then
 falls back to DHCP. A separate `check` subcommand is a cheap liveness probe for
 microinit. Linux only.
 
-Started at boot by `S15-network` / microinit service `network`
+Started at boot by `network` / microinit service `network`
 (`/usr/sbin/configure-ethernet`).
 
 ## Build (hub target)

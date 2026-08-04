@@ -97,3 +97,5 @@ dev-web:
 clean:
 	rm -rf "$(WEB_DIR)/node_modules" "$(WEB_DIR)/dist"
 	rm -f "$(OUT_HOST)" "$(OUT_TARGET)"
+	# post-build / operators may also look for an unprefixed name
+	rm -f "$(BIN_DIR)/$(BIN_BASE)"

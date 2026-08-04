@@ -18,21 +18,32 @@
   },
   "services": [
     {
+      "name": "udevd",
+      "enabled": true,
+      "daemon": true,
+      "restart": true,
+      "restartBackoff": 2,
+      "startWaitSecs": 2,
+      "cmd": "/etc/init.d/udevd",
+      "dependsOn": []
+    },
+    {
       "name": "cron",
       "enabled": true,
       "daemon": true,
       "restart": true,
       "restartBackoff": 2,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S05-cron",
+      "cmd": "/etc/init.d/cron",
       "dependsOn": []
     },
     {
       "name": "network",
       "enabled": true,
       "daemon": false,
-      "cmd": "/etc/init.d/S15-network",
+      "cmd": "/etc/init.d/network",
       "dependsOn": [],
+      "startWaitSecs": 10,
       "livenessProbe": {
         "cmd": "/usr/sbin/configure-ethernet check",
         "successExitCodes": [0],
@@ -43,7 +54,7 @@
       "name": "sysctl",
       "enabled": true,
       "daemon": false,
-      "cmd": "/etc/init.d/S20-sysctl",
+      "cmd": "/etc/init.d/sysctl",
       "dependsOn": []
     },
     {
@@ -51,9 +62,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 5,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S30-redis",
+      "cmd": "/etc/init.d/redis",
       "dependsOn": ["network"],
       "livenessProbe": {
         "tcpAddr": "127.0.0.1:6379",
@@ -65,9 +76,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 15,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S35-victoriametrics",
+      "cmd": "/etc/init.d/victoriametrics",
       "dependsOn": []
     },
     {
@@ -75,9 +86,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 30,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S40-alloy",
+      "cmd": "/etc/init.d/alloy",
       "dependsOn": ["network"],
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:12345/-/ready",
@@ -90,9 +101,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 5,
+      "restartBackoff": 15,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S41-remote-icmp",
+      "cmd": "/etc/init.d/remote-icmp",
       "dependsOn": ["network"]
     },
     {
@@ -100,9 +111,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 15,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S42-grafana",
+      "cmd": "/etc/init.d/grafana",
       "dependsOn": ["victoriametrics"],
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:3000/api/health",
@@ -115,19 +126,19 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 10,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S48-bigfred-os-ui",
+      "cmd": "/etc/init.d/bigfred-os-ui",
       "dependsOn": ["network"]
     },
     {
       "name": "fanctl",
-      "enabled": true,
+      "enabled": false,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 10,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S50-fanctl",
+      "cmd": "/etc/init.d/fanctl",
       "dependsOn": []
     },
     {
@@ -135,10 +146,11 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 15,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S60-bigfred",
-      "dependsOn": ["network", "redis"],
+      "shutdownWaitSecs": 30,
+      "cmd": "/etc/init.d/bigfred",
+      "dependsOn": ["network", "redis", "udevd"],
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:8080/health",
         "httpAcceptedCodes": [200],
@@ -150,9 +162,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 5,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S90-dropbear",
+      "cmd": "/etc/init.d/dropbear",
       "dependsOn": ["network"],
       "livenessProbe": {
         "tcpAddr": "127.0.0.1:22",
@@ -164,9 +176,9 @@
       "enabled": true,
       "daemon": true,
       "restart": true,
-      "restartBackoff": 2,
+      "restartBackoff": 5,
       "startWaitSecs": 1,
-      "cmd": "/etc/init.d/S95-watchdog",
+      "cmd": "/etc/init.d/watchdog",
       "dependsOn": []
     }
   ]

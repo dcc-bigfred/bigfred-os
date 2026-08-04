@@ -1,21 +1,24 @@
 #!/bin/sh
-# Grafana OSS (BR2_PACKAGE_GRAFANA)
+# Grafana OSS (BR2_PACKAGE_GRAFANA) — `grafana server` (not deprecated grafana-server)
 
-GRAFANA_BIN=/usr/bin/grafana-server
+GRAFANA_BIN=/usr/bin/grafana
 GRAFANA_HOME=/usr/share/grafana
 GRAFANA_CFG=/etc/grafana/grafana.ini
 
 case "$1" in
 start)
-	[ -x "$GRAFANA_BIN" ] || exit 0
-	[ -f "$GRAFANA_CFG" ] || exit 0
+	if [ ! -x "$GRAFANA_BIN" ]; then
+		echo "grafana: $GRAFANA_BIN missing" >&2
+		exit 1
+	fi
+	[ -f "$GRAFANA_CFG" ] || exit 1
 	mkdir -p /data/opt/grafana/data /data/opt/grafana/log /data/opt/grafana/plugins
-	exec "$GRAFANA_BIN" \
+	exec "$GRAFANA_BIN" server \
 		--homepath="$GRAFANA_HOME" \
 		--config="$GRAFANA_CFG"
 	;;
 stop)
-	killall grafana-server 2>/dev/null
+	killall grafana 2>/dev/null
 	;;
 restart)
 	$0 stop

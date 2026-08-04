@@ -26,7 +26,7 @@ mkdir -p "${TARGET_DIR}/data/etc"
 # Placeholder for BigFred (installed separately by operator)
 mkdir -p "${TARGET_DIR}/usr/share/bigfred/web"
 
-# Install hub Go binaries (make -C apps build → apps/.bin/)
+# Install hub app binaries (make -C apps build → apps/.bin/)
 APPS_BIN="${HUB}/../apps/.bin"
 if [ -d "${APPS_BIN}" ]; then
 	installed=0
@@ -83,5 +83,21 @@ fi
 
 # Skip leftover biginit binary if present in apps/.bin from older trees
 rm -f "${TARGET_DIR}/usr/sbin/biginit"
+
+# Build-time OS identity: git commit of the bigfred-os tree.
+# prepare-nvme refuses to run unless /var/lib/bigfred exists (marker below).
+REPO_ROOT="$(cd "${HUB}/.." && pwd)"
+COMMIT="unknown"
+if command -v git >/dev/null 2>&1 && [ -d "${REPO_ROOT}/.git" ]; then
+	COMMIT="$(git -C "${REPO_ROOT}" rev-parse HEAD 2>/dev/null || true)"
+	[ -n "${COMMIT}" ] || COMMIT="unknown"
+elif [ -n "${GITHUB_SHA:-}" ]; then
+	COMMIT="${GITHUB_SHA}"
+fi
+mkdir -p "${TARGET_DIR}/usr/lib/bigfred/version"
+printf '%s\n' "${COMMIT}" > "${TARGET_DIR}/usr/lib/bigfred/version/commit"
+chmod 0644 "${TARGET_DIR}/usr/lib/bigfred/version/commit"
+mkdir -p "${TARGET_DIR}/var/lib/bigfred"
+echo "bigfred-os commit: ${COMMIT}"
 
 exit 0

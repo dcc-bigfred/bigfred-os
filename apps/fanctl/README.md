@@ -15,12 +15,12 @@ Raspberry Pi 5 active cooler control (hub spec §8.8).
 make -C apps build
 ```
 
-Installed to `/usr/sbin/fanctl` on the hub image (`S50-fanctl`).
+Installed to `/usr/sbin/fanctl` on the hub image (`fanctl`).
 
 ## Usage
 
 ```bash
-fanctl daemon   # foreground loop (microinit tracks the PID via S50-fanctl exec)
+fanctl daemon   # foreground loop (microinit tracks the PID via fanctl exec)
 fanctl stop     # fan off
 ```
 

@@ -4,6 +4,7 @@ Prebuilt tarball from [dl.grafana.com](https://dl.grafana.com/oss/release/).
 Architecture suffix is chosen from the Buildroot target CPU (`prebuilt-arch.mk`).
 
 - Version: see `grafana.mk`
+- Binary: `/usr/bin/grafana` (`grafana server` / `grafana cli`)
 - Runtime data: `/data/opt/grafana`
 - Config: `/etc/grafana/grafana.ini`
 - VictoriaMetrics datasource: `/etc/grafana/provisioning/datasources/victoriametrics.yaml`

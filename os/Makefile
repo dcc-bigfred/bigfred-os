@@ -35,7 +35,7 @@ help:
 	@echo "  make buildroot   — download and extract Buildroot $(BUILDROOT_VERSION)"
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
-	@echo "  make apps-build  — cross-compile Go apps to apps/.bin/"
+	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
 	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"

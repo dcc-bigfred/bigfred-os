@@ -1,2 +1,0 @@
-# Uhlenbrock LocoNet-Interface 63120 — Silicon Labs CP210x (10c4:ea60)
-SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="loconet-63120", GROUP="dialout", MODE="0660"

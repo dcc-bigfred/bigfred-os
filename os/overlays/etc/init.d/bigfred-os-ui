@@ -13,7 +13,7 @@ case "$1" in
 start)
 	[ -x "$UI_BIN" ] || exit 0
 	[ -f "$UI_CONF" ] || {
-		echo "S48-bigfred-os-ui: missing $UI_CONF" >&2
+		echo "bigfred-os-ui: missing $UI_CONF" >&2
 		exit 0
 	}
 	exec "$UI_BIN" --config "$UI_CONF"
