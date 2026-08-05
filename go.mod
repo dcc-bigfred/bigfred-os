@@ -20,3 +20,10 @@ require (
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 )
+
+// Coordination with the microinit migration PRs: use the local SDK checkout
+// so bigfred-os-ui picks up ReadFrame (per-frame read-deadline) and the
+// stable error `code` field. Drop this and bump the require version once
+// a new microinit/go tag is published.
+replace github.com/dcc-bigfred/microinit/go => ../microinit/go
+

@@ -109,7 +109,7 @@ func streamServiceLogsHandler(cfg Config) http.HandlerFunc {
 			default:
 			}
 
-			resp, err := miclient.ReadResponse(unix)
+			resp, err := cfg.MicroinitClient.ReadFrame(unix)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
 					return
@@ -150,7 +150,7 @@ func fetchServiceLogHistory(client *miclient.Client, name string, lines int) ([]
 
 	out := make([]string, 0, 64)
 	for {
-		resp, err := miclient.ReadResponse(unix)
+		resp, err := client.ReadFrame(unix)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return out, nil
