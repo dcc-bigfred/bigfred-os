@@ -138,7 +138,7 @@ export default function ServicesPage() {
           </button>
         </div>
         <p className="services-hint">
-          Managed by <code>microinit</code> via <code>/run/microinit.sock</code>.
+          Managed by <code>microinit</code> via <code>/data/run/microinit.sock</code>.
         </p>
 
         {actionError ? <div className="services-error">{actionError}</div> : null}
