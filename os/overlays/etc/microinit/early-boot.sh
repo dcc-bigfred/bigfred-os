@@ -352,6 +352,7 @@ seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
 # Service list for microinit (PID 1); only seed if operator has not customized yet.
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json" 644
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json.example" 644
+seed /etc/microinit/otel.env.example "$DATA_ROOT/etc/otel.env.example" 644
 
 # --- persistent root password via bind-mounted shadow ---
 if [ ! -f "$DATA_ROOT/etc/shadow" ] && [ -f /etc/shadow ]; then
