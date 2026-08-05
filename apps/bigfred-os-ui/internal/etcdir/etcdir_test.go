@@ -9,14 +9,14 @@ import (
 
 func TestListReadWrite(t *testing.T) {
 	root := t.TempDir()
-	sub := filepath.Join(root, "supervisord")
+	sub := filepath.Join(root, "services")
 	if err := os.MkdirAll(sub, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "redis.conf"), []byte("port 6380\n"), 0o640); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(sub, "supervisord.conf"), []byte("[supervisord]\n"), 0o640); err != nil {
+	if err := os.WriteFile(filepath.Join(sub, "bigfred.conf"), []byte("enabled=true\n"), 0o640); err != nil {
 		t.Fatal(err)
 	}
 

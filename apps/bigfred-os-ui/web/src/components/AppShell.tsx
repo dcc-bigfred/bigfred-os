@@ -9,9 +9,6 @@ export default function AppShell() {
       <header className="app-header">
         <div className="app-brand">BigFred Hub OS</div>
         <nav className="app-nav">
-          <NavLink to="/supervisord" className={({ isActive }) => (isActive ? "active" : "")}>
-            Supervisord
-          </NavLink>
           <NavLink to="/services" className={({ isActive }) => (isActive ? "active" : "")}>
             Services
           </NavLink>

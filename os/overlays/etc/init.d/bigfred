@@ -1,5 +1,5 @@
 #!/bin/sh
-# BigFred loco-server (dcc-bus is spawned via supervisord as: bigfred dcc-bus …)
+# BigFred loco-server (dcc-bus is spawned as: bigfred dcc-bus …)
 # /usr/bin/bigfred resolves /data/opt then /opt.
 
 BIN=/usr/bin/bigfred

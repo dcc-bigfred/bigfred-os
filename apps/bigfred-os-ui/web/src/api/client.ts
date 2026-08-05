@@ -9,15 +9,6 @@ export class ApiError extends Error {
   }
 }
 
-export interface HubSupervisordProgram {
-  name: string;
-  group?: string;
-  command?: string;
-  autostart: boolean;
-  status: string;
-  pid?: number;
-}
-
 export interface HubService {
   id: string;
   name: string;
@@ -144,19 +135,6 @@ export function serviceAction(id: string, action: ServiceAction): Promise<void> 
   return apiFetch<void>(`/api/v1/services/${encodeURIComponent(id)}/${action}`, {
     method: "POST",
   });
-}
-
-export function fetchSupervisordPrograms(): Promise<HubSupervisordProgram[]> {
-  return apiFetch<HubSupervisordProgram[]>("/api/v1/supervisord/programs");
-}
-
-export type SupervisordAction = "start" | "stop" | "restart";
-
-export function supervisordProgramAction(name: string, action: SupervisordAction): Promise<void> {
-  return apiFetch<void>(
-    `/api/v1/supervisord/programs/${encodeURIComponent(name)}/${action}`,
-    { method: "POST" },
-  );
 }
 
 export interface RedisKeySummary {
