@@ -368,6 +368,29 @@ if [ -f "$DATA_ROOT/etc/shadow" ]; then
 	fi
 fi
 
+# --- timezone: persist operator choice from /data/etc (bind over RO /etc/localtime) ---
+# Same category as shadow: must be ready before any supervised process starts
+# (microinit launches dependsOn:[] services in parallel).
+if [ -r "$DATA_ROOT/etc/timezone" ]; then
+	_tz=$(tr -d '[:space:]' < "$DATA_ROOT/etc/timezone" 2>/dev/null || true)
+	if [ -n "$_tz" ] && [ -e "/usr/share/zoneinfo/$_tz" ]; then
+		cp -f "/usr/share/zoneinfo/$_tz" "$DATA_ROOT/etc/localtime"
+	fi
+fi
+if [ -f "$DATA_ROOT/etc/localtime" ] && ! is_mounted /etc/localtime; then
+	mount --bind "$DATA_ROOT/etc/localtime" /etc/localtime 2>/dev/null || true
+fi
+
+# --- fake-hwclock: restore last known wall clock (no RTC on hub) ---
+if [ -r "$DATA_ROOT/etc/fake-hwclock" ] && command -v date >/dev/null 2>&1; then
+	_epoch=$(tr -dc '0-9' < "$DATA_ROOT/etc/fake-hwclock" 2>/dev/null || true)
+	_now=$(date -u +%s 2>/dev/null || echo 0)
+	if [ -n "$_epoch" ] && [ "$_now" -lt "$_epoch" ] 2>/dev/null; then
+		log "fake-hwclock: restore $_epoch"
+		date -u -s "@$_epoch" 2>/dev/null || true
+	fi
+fi
+
 # Enforce read-only root (hub policy; ignore failure on RW systems)
 mount -o remount,ro / 2>/dev/null || true
 
