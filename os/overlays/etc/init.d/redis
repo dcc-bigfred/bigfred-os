@@ -2,9 +2,10 @@
 
 REDIS_CONF=/data/etc/redis.conf
 DEFAULT_REDIS_CONF=/etc/redis/redis.conf
+REDIS_DIR=/data/var/db/redis
 
 ensure_redis_conf() {
-	mkdir -p /data/etc /data/redis /data/logs/redis
+	mkdir -p /data/etc "$REDIS_DIR" /data/logs/redis
 	if [ -f "$REDIS_CONF" ]; then
 		return 0
 	fi
@@ -16,7 +17,7 @@ bind 127.0.0.1
 port 6379
 daemonize no
 supervised no
-dir /data/redis
+dir /data/var/db/redis
 dbfilename dump.rdb
 appendonly no
 save 60 100

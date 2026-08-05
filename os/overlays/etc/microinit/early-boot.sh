@@ -320,13 +320,50 @@ else
 fi
 
 # --- directories ---
-mkdir -p "$DATA_ROOT/etc" "$DATA_ROOT/logs" "$DATA_ROOT/sqlite" \
-	"$DATA_ROOT/redis" "$DATA_ROOT/alloy" "$DATA_ROOT/run"
-mkdir -p "$DATA_ROOT/opt/bigfred/bin" "$DATA_ROOT/opt/grafana/data" \
-	"$DATA_ROOT/opt/grafana/log" "$DATA_ROOT/opt/grafana/plugins" \
-	"$DATA_ROOT/opt/victoriametrics"
+mkdir -p "$DATA_ROOT/etc" "$DATA_ROOT/logs" "$DATA_ROOT/run"
+mkdir -p "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db"
+mkdir -p "$DATA_ROOT/var/lib/alloy" \
+	"$DATA_ROOT/var/lib/victoriametrics" \
+	"$DATA_ROOT/var/lib/grafana/data" \
+	"$DATA_ROOT/var/lib/grafana/log" \
+	"$DATA_ROOT/var/lib/grafana/plugins"
+mkdir -p "$DATA_ROOT/opt/bigfred/bin"
 mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy"
-mkdir -p "$DATA_ROOT/etc/microinit"
+mkdir -p "$DATA_ROOT/etc/microinit" \
+	"$DATA_ROOT/etc/microinit.d/services/infra" \
+	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
+
+# --- ownership for non-root services (best-effort if users exist) ---
+chown_if() {
+	_user=$1
+	shift
+	if id "$_user" >/dev/null 2>&1; then
+		chown -R "$_user:$_user" "$@" 2>/dev/null || true
+	fi
+}
+chown_if redis "$DATA_ROOT/var/db/redis" "$DATA_ROOT/logs/redis"
+chown_if alloy "$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/logs/alloy"
+chown_if metrics \
+	"$DATA_ROOT/var/lib/victoriametrics" \
+	"$DATA_ROOT/var/lib/grafana"
+chown_if bigfred \
+	"$DATA_ROOT/var/db" \
+	"$DATA_ROOT/logs/bigfred" \
+	"$DATA_ROOT/etc/microinit.d"
+chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/lib/alloy" \
+	"$DATA_ROOT/var/lib/victoriametrics" "$DATA_ROOT/var/db" 2>/dev/null || true
+chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" 2>/dev/null || true
+chmod 0750 "$DATA_ROOT/etc/microinit.d" "$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
+if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
+	chmod 0640 "$DATA_ROOT/etc/redis.conf"
+	if id redis >/dev/null 2>&1; then
+		chown root:redis "$DATA_ROOT/etc/redis.conf" 2>/dev/null || true
+	fi
+fi
+if [ -f "$DATA_ROOT/var/db/bigfred.sqlite3" ] && id bigfred >/dev/null 2>&1; then
+	chown bigfred:bigfred "$DATA_ROOT/var/db/bigfred.sqlite3"* 2>/dev/null || true
+	chmod 0640 "$DATA_ROOT/var/db/bigfred.sqlite3" 2>/dev/null || true
+fi
 
 # --- seed configs from image if missing ---
 seed() {
@@ -353,6 +390,16 @@ seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json" 644
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json.example" 644
 seed /etc/microinit/otel.env.example "$DATA_ROOT/etc/otel.env.example" 644
+
+if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
+	chmod 0640 "$DATA_ROOT/etc/redis.conf"
+	if id redis >/dev/null 2>&1; then
+		chown root:redis "$DATA_ROOT/etc/redis.conf" 2>/dev/null || true
+	fi
+fi
+if id bigfred >/dev/null 2>&1; then
+	chown -R bigfred:bigfred "$DATA_ROOT/etc/microinit.d" 2>/dev/null || true
+fi
 
 # --- persistent root password via bind-mounted shadow ---
 if [ ! -f "$DATA_ROOT/etc/shadow" ] && [ -f /etc/shadow ]; then

@@ -61,6 +61,30 @@ rm -rf os/output/build/host-m4-* os/output/build/host-e2fsprogs-*
 make -C os image
 ```
 
+### Docker `apparmor/profiles` on Manjaro/Arch
+
+If `docker run` fails with:
+
+```text
+Could not check if docker-default AppArmor profile was loaded:
+open /sys/kernel/security/apparmor/profiles: no such file or directory
+```
+
+the kernel has AppArmor but **securityfs** is not mounted (empty
+`/sys/kernel/security/`). `make image-using-docker` auto-adds
+`--security-opt apparmor=unconfined` when that path is missing.
+
+To fix the host permanently:
+
+```bash
+sudo mount -t securityfs securityfs /sys/kernel/security
+sudo systemctl restart apparmor docker
+docker run --rm hello-world
+```
+
+For a persistent mount, ensure `securityfs` is mounted at boot (AppArmor
+service or `/etc/fstab` entry for `/sys/kernel/security`).
+
 ### GitHub Actions (manual)
 
 The **Build hub OS image** workflow (`/.github/workflows/build-hub-os.yml`) caches
@@ -185,11 +209,17 @@ CLI on device: `microinit list`, `microinit start redis`, `microinit logs --foll
 Init scripts: `bigfred` with `taskset` on cores 2,3. `remote-icmp` starts the
 ICMP helper.
 
-Databases: `/data/sqlite/`, Redis: `/data/redis/` (config `/data/etc/redis.conf`, default RDB `save 60 100`).
+Databases: SQLite `/data/var/db/bigfred.sqlite3`, Redis `/data/var/db/redis/`
+(config `/data/etc/redis.conf`, default RDB `save 60 100`).
+
+Service accounts (non-root): `redis`, `alloy`, `bigfred` (also in `dialout`),
+`metrics` (VictoriaMetrics + Grafana). `bigfred-os-ui` stays root.
+microinit IPC: `socketAllowUsers: ["bigfred"]` (socket `0660`).
 
 Monitoring: Grafana (`http://:3000`, admin/bigfred) with VictoriaMetrics datasource
-(`:8428`). Data: `/data/opt/grafana`, `/data/opt/victoriametrics`.
-VM disk flush: `-inmemoryDataFlushInterval=5m` in `/etc/default/victoriametrics`.
+(`:8428`). Data: `/data/var/lib/grafana`, `/data/var/lib/victoriametrics`,
+Alloy `/data/var/lib/alloy`.
+VM disk flush: `-inmemoryDataFlushInterval` in `/etc/default/victoriametrics`.
 
 Admin panel: `bigfred-os-ui` (`http://:8090`, config in `/data/etc/bigfred-os-ui.conf`).
 

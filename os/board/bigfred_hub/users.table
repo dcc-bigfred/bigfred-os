@@ -1,0 +1,6 @@
+# BigFred hub service accounts (Buildroot makeusers syntax).
+# username uid group gid password home shell groups comment
+redis -1 redis -1 ! /data/var/db/redis /bin/false - Redis service
+alloy -1 alloy -1 ! /data/var/lib/alloy /bin/false - Grafana Alloy
+bigfred -1 bigfred -1 ! /data /bin/false dialout BigFred loco-server
+metrics -1 metrics -1 ! /data/var/lib /bin/false - VictoriaMetrics and Grafana

@@ -8,6 +8,7 @@
     "logToFiles": false
   },
   "socket": "/data/run/microinit.sock",
+  "socketAllowUsers": ["bigfred"],
   "console": "/dev/tty1",
   "openTelemetry": {
     "enable": false,
@@ -66,6 +67,9 @@
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/redis",
       "dependsOn": ["network"],
+      "securityContext": {
+        "runAsUser": "redis"
+      },
       "livenessProbe": {
         "tcpAddr": "127.0.0.1:6379",
         "interval": 10
@@ -79,7 +83,10 @@
       "restartBackoff": 15,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/victoriametrics",
-      "dependsOn": []
+      "dependsOn": [],
+      "securityContext": {
+        "runAsUser": "metrics"
+      }
     },
     {
       "name": "alloy",
@@ -90,6 +97,9 @@
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/alloy",
       "dependsOn": ["network"],
+      "securityContext": {
+        "runAsUser": "alloy"
+      },
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:12345/-/ready",
         "httpAcceptedCodes": [200],
@@ -115,6 +125,9 @@
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/grafana",
       "dependsOn": ["victoriametrics"],
+      "securityContext": {
+        "runAsUser": "metrics"
+      },
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:3000/api/health",
         "httpAcceptedCodes": [200],
@@ -151,6 +164,9 @@
       "shutdownWaitSecs": 30,
       "cmd": "/etc/init.d/bigfred",
       "dependsOn": ["network", "redis", "udevd"],
+      "securityContext": {
+        "runAsUser": "bigfred"
+      },
       "livenessProbe": {
         "httpUrl": "http://127.0.0.1:8080/health",
         "httpAcceptedCodes": [200],
