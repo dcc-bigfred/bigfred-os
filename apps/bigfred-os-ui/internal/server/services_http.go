@@ -8,7 +8,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/go-chi/chi/v5"
 
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/services"
 )
 
@@ -64,7 +64,7 @@ func streamServiceLogsHandler(cfg Config) http.HandlerFunc {
 		}
 
 		id := chi.URLParam(r, "id")
-		if err := microinit.ValidateName(id); err != nil {
+		if err := miclient.ValidateName(id); err != nil {
 			writeJSONError(w, http.StatusBadRequest, "bad_request")
 			return
 		}
@@ -109,7 +109,7 @@ func streamServiceLogsHandler(cfg Config) http.HandlerFunc {
 			default:
 			}
 
-			resp, err := microinit.ReadResponse(unix)
+			resp, err := cfg.MicroinitClient.ReadFrame(unix)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
 					return
@@ -123,7 +123,7 @@ func streamServiceLogsHandler(cfg Config) http.HandlerFunc {
 				if resp.Line == nil {
 					continue
 				}
-				text := microinit.FormatLogLine(*resp.Line)
+				text := miclient.FormatLogLine(*resp.Line)
 				if err := writeWS(wsConn, ctx, wsMessage{Type: "line", Text: text}); err != nil {
 					return
 				}
@@ -141,7 +141,7 @@ func streamServiceLogsHandler(cfg Config) http.HandlerFunc {
 	}
 }
 
-func fetchServiceLogHistory(client *microinit.Client, name string, lines int) ([]string, error) {
+func fetchServiceLogHistory(client *miclient.Client, name string, lines int) ([]string, error) {
 	unix, err := client.FollowLogs(name, lines, false)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func fetchServiceLogHistory(client *microinit.Client, name string, lines int) ([
 
 	out := make([]string, 0, 64)
 	for {
-		resp, err := microinit.ReadResponse(unix)
+		resp, err := client.ReadFrame(unix)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return out, nil
@@ -160,7 +160,7 @@ func fetchServiceLogHistory(client *microinit.Client, name string, lines int) ([
 		switch resp.Type {
 		case "log":
 			if resp.Line != nil {
-				out = append(out, microinit.FormatLogLine(*resp.Line))
+				out = append(out, miclient.FormatLogLine(*resp.Line))
 			}
 		case "ok":
 			return out, nil

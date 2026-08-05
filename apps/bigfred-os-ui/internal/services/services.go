@@ -5,15 +5,15 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 )
 
-const DefaultSocket = microinit.DefaultSocket
+const DefaultSocket = miclient.DefaultSocket
 
 var (
-	ErrInvalidID     = microinit.ErrInvalidName
-	ErrInvalidAction = microinit.ErrInvalidAction
-	ErrNotFound      = microinit.ErrNotFound
+	ErrInvalidID     = miclient.ErrInvalidName
+	ErrInvalidAction = miclient.ErrInvalidAction
+	ErrNotFound      = miclient.ErrNotFound
 )
 
 // Service is one microinit-managed service for the admin API.
@@ -29,7 +29,7 @@ type Service struct {
 
 // Client abstracts microinit for tests.
 type Client interface {
-	List() ([]microinit.ServiceStatus, error)
+	List() ([]miclient.ServiceStatus, error)
 	Control(name, action string) error
 }
 
@@ -57,7 +57,7 @@ func Control(client Client, id, action string) error {
 	return client.Control(id, action)
 }
 
-func fromStatus(s microinit.ServiceStatus) Service {
+func fromStatus(s miclient.ServiceStatus) Service {
 	state := s.State
 	if state == "" {
 		state = "unknown"

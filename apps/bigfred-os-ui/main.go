@@ -15,11 +15,11 @@ import (
 	"syscall"
 	"time"
 
+	miclient "github.com/dcc-bigfred/microinit/go/client"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/auth"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/config"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/etcdir"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/logs"
-	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/microinit"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/redis"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/server"
 	"github.com/keskad/bigfred-os/apps/bigfred-os-ui/internal/supervisord"
@@ -62,7 +62,7 @@ func run() int {
 	flag.StringVar(&legacyLogRoot, "log-root", "", "deprecated: single log directory (use --log-roots)")
 	flag.BoolVar(&secureCookie, "secure-cookie", false, "set Secure flag on session cookie")
 	flag.StringVar(&staticDir, "static-dir", "", "serve frontend from disk instead of embedded bundle (dev)")
-	flag.StringVar(&microinitSock, "microinit-socket", microinit.DefaultSocket, "microinit control Unix socket")
+	flag.StringVar(&microinitSock, "microinit-socket", miclient.DefaultSocket, "microinit control Unix socket")
 	flag.StringVar(&supervisordConf, "supervisord-conf", supervisord.DefaultConfigPath, "supervisord configuration file")
 	flag.StringVar(&redisAddr, "redis-addr", redis.DefaultAddr, "Redis server address")
 	flag.StringVar(&etcDir, "etc-dir", etcdir.DefaultDir, "editable configuration directory")
@@ -95,7 +95,7 @@ func run() int {
 		return 1
 	}
 
-	mi := &microinit.Client{Socket: microinitSock}
+	mi := &miclient.Client{Socket: microinitSock}
 	handler := server.NewRouter(server.Config{
 		Auth:            authSvc,
 		LogRoots:        logs.ParseRoots(logRoots, legacyLogRoot),
