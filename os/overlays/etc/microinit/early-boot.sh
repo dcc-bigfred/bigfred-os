@@ -5,8 +5,8 @@
 # Env: DATA_DIR, MICROINIT_LOGS_TTY, MICROINIT_INIT_LOGS_TTY, MICROINIT_CONSOLE
 #
 # Portable base (pseudo-FS + fsck -y + fstab) plus BigFred data root, seeding,
-# shadow bind. Replaces the former SysV mount init script for the microinit
-# boot path.
+# shadow and root SSH binds. Replaces the former SysV mount init script for
+# the microinit boot path.
 #
 # Exit 0 on success. Non-zero aborts microinit boot when required.
 
@@ -366,6 +366,24 @@ if [ -f "$DATA_ROOT/etc/shadow" ]; then
 	elif ! is_mounted /etc/shadow; then
 		mount --bind "$DATA_ROOT/etc/shadow" /etc/shadow 2>/dev/null || true
 	fi
+fi
+
+# --- persistent root SSH keys via bind-mounted .ssh ---
+mkdir -p "$DATA_ROOT/root/.ssh"
+chmod 700 "$DATA_ROOT/root/.ssh"
+if [ ! -d /root/.ssh ]; then
+	# Root is RO after fsck; remount RW only long enough to create the mount point
+	# (needed on images built before post-build seeded /root/.ssh).
+	mount -o remount,rw / 2>/dev/null || true
+	mkdir -p /root/.ssh
+	chmod 700 /root/.ssh
+fi
+if [ "$DATA_ROOT" = /data ]; then
+	if is_mounted /data && ! is_mounted /root/.ssh; then
+		mount --bind "$DATA_ROOT/root/.ssh" /root/.ssh 2>/dev/null || true
+	fi
+elif ! is_mounted /root/.ssh; then
+	mount --bind "$DATA_ROOT/root/.ssh" /root/.ssh 2>/dev/null || true
 fi
 
 # --- timezone: persist operator choice from /data/etc (bind over RO /etc/localtime) ---

@@ -22,6 +22,12 @@ mkdir -p "${TARGET_DIR}/data/logs/bigfred"
 mkdir -p "${TARGET_DIR}/data/logs/redis"
 mkdir -p "${TARGET_DIR}/data/logs/alloy"
 mkdir -p "${TARGET_DIR}/data/etc"
+# Persistent root SSH (bound over /root/.ssh at early-boot)
+mkdir -p "${TARGET_DIR}/data/root/.ssh"
+chmod 700 "${TARGET_DIR}/data/root/.ssh"
+# Mount point on RO rootfs for the .ssh bind
+mkdir -p "${TARGET_DIR}/root/.ssh"
+chmod 700 "${TARGET_DIR}/root/.ssh"
 
 # Placeholder for BigFred (installed separately by operator)
 mkdir -p "${TARGET_DIR}/usr/share/bigfred/web"
