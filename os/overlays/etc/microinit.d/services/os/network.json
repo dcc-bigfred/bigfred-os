@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "network",
+      "enabled": true,
+      "daemon": false,
+      "cmd": "/etc/init.d/network",
+      "dependsOn": [],
+      "startWaitSecs": 10,
+      "livenessProbe": {
+        "cmd": "/usr/sbin/configure-ethernet check",
+        "successExitCodes": [
+          0
+        ],
+        "interval": 30
+      }
+    }
+  ]
+}

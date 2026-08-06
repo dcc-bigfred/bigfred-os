@@ -1,0 +1,26 @@
+{
+  "services": [
+    {
+      "name": "grafana",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 15,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/grafana",
+      "dependsOn": [
+        "victoriametrics"
+      ],
+      "securityContext": {
+        "runAsUser": "metrics"
+      },
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:3000/api/health",
+        "httpAcceptedCodes": [
+          200
+        ],
+        "interval": 300
+      }
+    }
+  ]
+}

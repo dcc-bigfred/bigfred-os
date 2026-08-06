@@ -331,7 +331,8 @@ mkdir -p "$DATA_ROOT/opt/bigfred/bin"
 mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy"
 mkdir -p "$DATA_ROOT/etc/microinit" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
-	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
+	"$DATA_ROOT/etc/microinit.d/services/dcc-bus" \
+	"$DATA_ROOT/etc/microinit.d/services/os"
 
 # Service $HOME on RO root: tmpfs so accidental writes to HOME do not fail
 # and do not pollute /data. No login shell (users.table: /bin/false).
@@ -358,14 +359,19 @@ chown_if metrics \
 	"$DATA_ROOT/var/lib/victoriametrics" \
 	"$DATA_ROOT/var/lib/grafana"
 # SQLite lives under var/db/bigfred/; chown the directory so WAL/SHM inherit.
+# Only loco-server-managed drop-in groups are bigfred-owned; OS services stay root.
 chown_if bigfred \
 	"$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/logs/bigfred" \
-	"$DATA_ROOT/etc/microinit.d"
+	"$DATA_ROOT/etc/microinit.d/services/infra" \
+	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
 chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/var/lib/victoriametrics" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/etc/microinit.d" "$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
+chmod 0750 "$DATA_ROOT/etc/microinit.d/services/infra" \
+	"$DATA_ROOT/etc/microinit.d/services/dcc-bus" 2>/dev/null || true
+chmod 0755 "$DATA_ROOT/etc/microinit.d/services/os" 2>/dev/null || true
 if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
 	chmod 0640 "$DATA_ROOT/etc/redis.conf"
 	if id redis >/dev/null 2>&1; then
@@ -404,9 +410,29 @@ if [ -e /etc/microdns/microdns.json ]; then
 	cp /etc/microdns/microdns.json "$DATA_ROOT/etc/microdns.json"
 	chmod 644 "$DATA_ROOT/etc/microdns.json"
 fi
-# Service list for microinit (PID 1); only seed if operator has not customized yet.
-# microinit.json stays root-owned (PID 1 reads/writes it); drop-ins under
-# microinit.d are chowned to bigfred below so loco-server can write them.
+# OS-owned microinit services live as one JSON file per service under
+# microinit.d/services/os/. Always refresh from the image so upgrades pick up
+# new services (e.g. microdns) even when /data/etc/microinit.json already exists.
+# Drop-ins with the same name override any leftover entries in the main file.
+OS_DROPINS_SRC=/etc/microinit.d/services/os
+OS_DROPINS_DST="$DATA_ROOT/etc/microinit.d/services/os"
+mkdir -p "$OS_DROPINS_DST"
+if [ -d "$OS_DROPINS_SRC" ]; then
+	for f in "$OS_DROPINS_DST"/*.json; do
+		[ -e "$f" ] || continue
+		base=$(basename "$f")
+		[ -f "$OS_DROPINS_SRC/$base" ] || rm -f "$f"
+	done
+	for f in "$OS_DROPINS_SRC"/*.json; do
+		[ -e "$f" ] || continue
+		cp "$f" "$OS_DROPINS_DST/"
+		chmod 644 "$OS_DROPINS_DST/$(basename "$f")"
+	done
+fi
+# Main microinit.json keeps globals only (services[] empty in the image template).
+# Seed only if missing so operator customizations of logs/socket/otel remain.
+# microinit.json stays root-owned (PID 1 reads/writes it); loco-server drop-ins
+# under infra/ and dcc-bus/ are chowned to bigfred below.
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json" 644
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json.example" 644
 seed /etc/microinit/otel.env.example "$DATA_ROOT/etc/otel.env.example" 644
@@ -418,7 +444,13 @@ if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
 	fi
 fi
 if id bigfred >/dev/null 2>&1; then
-	chown -R bigfred:bigfred "$DATA_ROOT/etc/microinit.d" 2>/dev/null || true
+	chown -R bigfred:bigfred \
+		"$DATA_ROOT/etc/microinit.d/services/infra" \
+		"$DATA_ROOT/etc/microinit.d/services/dcc-bus" 2>/dev/null || true
+fi
+# Image-managed OS drop-ins must stay root-owned.
+if [ -d "$OS_DROPINS_DST" ]; then
+	chown -R root:root "$OS_DROPINS_DST" 2>/dev/null || true
 fi
 
 # --- persistent root password via bind-mounted shadow ---

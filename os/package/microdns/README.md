@@ -5,7 +5,8 @@ via `oras` and installs `/usr/sbin/microdns`.
 
 Config is regenerated every boot from the rootfs overlay into
 `/data/etc/microdns.json` (see `overlays/etc/microdns/microdns.json` and
-`early-boot.sh`). The daemon is supervised by microinit (`/etc/init.d/microdns`).
+`early-boot.sh`). The daemon is supervised by microinit via the OS drop-in
+`/etc/microinit.d/services/os/microdns.json` (refreshed into `/data` every boot).
 
 ## OCI tag
 

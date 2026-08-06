@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "name": "dropbear",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 5,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/dropbear",
+      "dependsOn": [
+        "network"
+      ],
+      "livenessProbe": {
+        "tcpAddr": "127.0.0.1:22",
+        "interval": 30
+      }
+    }
+  ]
+}

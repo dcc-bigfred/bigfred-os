@@ -1,0 +1,11 @@
+{
+  "services": [
+    {
+      "name": "sysctl",
+      "enabled": true,
+      "daemon": false,
+      "cmd": "/etc/init.d/sysctl",
+      "dependsOn": []
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "services": [
+    {
+      "name": "bigfred",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 15,
+      "startWaitSecs": 1,
+      "shutdownWaitSecs": 30,
+      "cmd": "/etc/init.d/bigfred",
+      "dependsOn": [
+        "network",
+        "redis",
+        "udevd"
+      ],
+      "securityContext": {
+        "runAsUser": "bigfred"
+      },
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:8080/health",
+        "httpAcceptedCodes": [
+          200
+        ],
+        "interval": 60
+      }
+    }
+  ]
+}

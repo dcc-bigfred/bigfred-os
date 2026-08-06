@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "name": "udevd",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 2,
+      "startWaitSecs": 2,
+      "cmd": "/etc/init.d/udevd",
+      "dependsOn": []
+    }
+  ]
+}
