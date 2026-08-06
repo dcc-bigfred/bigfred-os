@@ -43,5 +43,5 @@ apt-get install -y --no-install-recommends \
 	nodejs \
 	npm
 
-# curl / unzip / python3 already installed — used by package/*/fetch.sh
-# (dcc-bigfred/.github fetch-github-binaries.sh). No oras / gh CLI.
+# python3 is a Buildroot host requirement. Binary fetch uses Go
+# (go run github.com/dcc-bigfred/common/cmd/fetch@latest). No oras / gh CLI.

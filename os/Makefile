@@ -1,5 +1,6 @@
 # BigFred hub OS — Buildroot wrapper
 # Requires: host packages per https://buildroot.org/downloads/manual/manual.html#requirement
+# Binary fetch uses: go run github.com/dcc-bigfred/common/cmd/fetch@latest
 
 BUILDROOT_VERSION ?= 2025.02
 BUILDROOT_URL       = https://github.com/buildroot/buildroot/archive/$(BUILDROOT_VERSION).tar.gz
@@ -16,16 +17,11 @@ BIGFRED_OCI_TAG   ?= latest-release
 MICROINIT_OCI_TAG ?= main
 MICRONET_OCI_TAG  ?= main
 
-CI_SCRIPTS_REPO ?= https://github.com/dcc-bigfred/.github.git
-CI_SCRIPTS_REF  ?= v2
-CI_SCRIPTS_DIR  ?= $(REPO_ROOT)/.ci-github
-export CI_SCRIPTS_DIR
-
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
 .PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash \
-	apps-build apps-clean ci-scripts ci-scripts-update
+	apps-build apps-clean
 
 all: image
 
@@ -35,19 +31,6 @@ apps-build:
 apps-clean:
 	$(MAKE) -C $(REPO_ROOT)/apps clean
 
-$(CI_SCRIPTS_DIR)/.ok:
-	@echo "Cloning $(CI_SCRIPTS_REPO) @ $(CI_SCRIPTS_REF) → $(CI_SCRIPTS_DIR)"
-	@rm -rf "$(CI_SCRIPTS_DIR)"
-	@git clone --depth 1 --branch "$(CI_SCRIPTS_REF)" "$(CI_SCRIPTS_REPO)" "$(CI_SCRIPTS_DIR)" \
-		|| { echo "error: failed to clone $(CI_SCRIPTS_REPO) @ $(CI_SCRIPTS_REF)"; exit 1; }
-	@touch "$@"
-
-ci-scripts: $(CI_SCRIPTS_DIR)/.ok
-
-ci-scripts-update:
-	rm -rf "$(CI_SCRIPTS_DIR)"
-	$(MAKE) "$(CI_SCRIPTS_DIR)/.ok"
-
 help:
 	@echo "BigFred hub OS (Raspberry Pi 5)"
 	@echo ""
@@ -55,7 +38,6 @@ help:
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
 	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
-	@echo "  make ci-scripts  — clone dcc-bigfred/.github @ $(CI_SCRIPTS_REF) for binary fetch"
 	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
@@ -65,6 +47,7 @@ help:
 	@echo "microinit ref: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*|v*)"
 	@echo "micronet ref: MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) (main|sha-*|v*)"
 	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
+	@echo "Binary fetch: go run github.com/dcc-bigfred/common/cmd/fetch@latest"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
@@ -83,7 +66,8 @@ defconfig: buildroot $(CURDIR)/configs/$(DEFCONFIG)
 menuconfig: buildroot
 	$(BR2_MAKE) menuconfig
 
-image: defconfig ci-scripts
+image: defconfig
+	@command -v go >/dev/null 2>&1 || { echo "error: go required for package/*/fetch.sh"; exit 1; }
 	$(BR2_MAKE) linux-pam
 	# BIGFRED_PERMISSIONS uses |xattr; host-makedevs must be built with
 	# -DEXTENDED_ATTRIBUTES. Rebuild when the binary still lacks that support
@@ -98,7 +82,7 @@ image: defconfig ci-scripts
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) CI_SCRIPTS_DIR=$(CI_SCRIPTS_DIR)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true
