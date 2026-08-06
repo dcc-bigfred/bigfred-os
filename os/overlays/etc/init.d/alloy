@@ -14,8 +14,8 @@ start)
 		echo "alloy: $ALLOY_CFG missing" >&2
 		exit 1
 	fi
-	mkdir -p /data/alloy /data/logs/alloy
-	exec "$ALLOY_BIN" run "$ALLOY_CFG"
+	mkdir -p /data/var/lib/alloy /data/logs/alloy
+	exec "$ALLOY_BIN" run --storage.path=/data/var/lib/alloy "$ALLOY_CFG"
 	;;
 stop)
 	killall alloy 2>/dev/null
