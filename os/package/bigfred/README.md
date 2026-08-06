@@ -1,60 +1,10 @@
-# BigFred (`loco-server`)
+# bigfred (Buildroot package)
 
-Fetches the hub OCI bundle from GHCR
-([`ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64`](https://github.com/dcc-bigfred/bigfred))
-via `oras` and installs:
+Pulls [dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred) hub linux/arm64
+binaries via shared GitHub fetch and installs loco-server + remote-icmp under
+`/opt/bigfred/bin/` with `/usr/bin` wrappers.
 
-| Path | Role |
-|------|------|
-| `/opt/bigfred/bin/bigfred` | `loco-server` (`dcc-bus` is a subcommand) |
-| `/opt/bigfred/bin/bigfred-remote-icmp` | Wi-Fi RTT probe helper |
-| `/usr/bin/bigfred` | Wrapper: prefers `/data/opt/bigfred`, then `/opt/bigfred` |
+Default ref: `latest-release` (falls back to `master` if no release exists).
+Tip/`master` needs a GitHub token; public Releases usually do not.
 
-Bundle tags (from the `bigfred` CI):
-
-| Tag | Meaning |
-|-----|---------|
-| `latest-release` | Latest `v*` release (default) |
-| `master` | Tip of `master` |
-| `v1.2.3` | Pinned release |
-| `sha-<7>` | Immutable commit from a `master` push |
-
-## Configuration
-
-Makefile (preferred):
-
-```bash
-make image BIGFRED_OCI_TAG=latest-release
-make image BIGFRED_OCI_TAG=master
-make image-using-docker BIGFRED_OCI_TAG=v1.2.3
-```
-
-Or in `make menuconfig` → *BigFred hub* → **OCI tag**.
-
-Host requirement: `oras` on `PATH` (installed by `docker/install-buildroot-deps.sh`).
-For private GHCR packages, export `GITHUB_TOKEN` (or `GH_TOKEN`).
-
-Floating tags (`master`, `latest-release`, `sha-*`) are re-pulled on every package
-download via a Buildroot `PRE_DOWNLOAD` hook (`oras`). After changing a pinned
-`v*` tag, clear the cache if needed:
-
-```bash
-rm -rf os/output/build/bigfred-* os/dl/bigfred
-make -C os bigfred-dirclean   # if already built
-make image BIGFRED_OCI_TAG=v1.2.3
-```
-
-## Runtime override
-
-Drop an updated binary on the RW data partition without reflashing:
-
-```text
-/data/opt/bigfred/bin/bigfred
-```
-
-`/usr/bin/bigfred` (and `bigfred` / Update tab) prefer `/data/opt` over `/opt`.
-
-## Init
-
-`overlays/etc/init.d/bigfred` starts loco-server with CPU affinity on cores 2,3.
-`remote-icmp` starts the ICMP helper separately.
+Requires Go on the host (`go run github.com/dcc-bigfred/common/cmd/fetch@latest`).

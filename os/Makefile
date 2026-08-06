@@ -1,5 +1,6 @@
 # BigFred hub OS — Buildroot wrapper
 # Requires: host packages per https://buildroot.org/downloads/manual/manual.html#requirement
+# Binary fetch uses: go run github.com/dcc-bigfred/common/cmd/fetch@latest
 
 BUILDROOT_VERSION ?= 2025.02
 BUILDROOT_URL       = https://github.com/buildroot/buildroot/archive/$(BUILDROOT_VERSION).tar.gz
@@ -11,17 +12,17 @@ BUILDROOT_DIR     ?= $(CURDIR)/buildroot
 OUTPUT_DIR        ?= $(CURDIR)/output
 DEFCONFIG         ?= bigfred_hub_rpi5_defconfig
 APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
-# Hub OCI tag override (also: BR2_PACKAGE_BIGFRED_OCI_TAG in menuconfig)
+# GitHub refs for package fetch (also BR2_PACKAGE_*_OCI_TAG in menuconfig)
 BIGFRED_OCI_TAG   ?= latest-release
-# microinit PID 1 OCI tag (also: BR2_PACKAGE_MICROINIT_OCI_TAG)
 MICROINIT_OCI_TAG ?= main
-# microdns OCI tag (also: BR2_PACKAGE_MICRODNS_OCI_TAG)
+MICRONET_OCI_TAG  ?= main
 MICRODNS_OCI_TAG  ?= main
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
-.PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash apps-build apps-clean
+.PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash \
+	apps-build apps-clean
 
 all: image
 
@@ -42,10 +43,12 @@ help:
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
-	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
-	@echo "BigFred OCI tag: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
-	@echo "microinit OCI tag: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*)"
-	@echo "microdns OCI tag: MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG) (main|sha-*)"
+	@echo "BigFred ref: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
+	@echo "microinit ref: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*|v*)"
+	@echo "micronet ref: MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) (main|sha-*|v*)"
+	@echo "microdns ref: MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG) (main|sha-*|v*)"
+	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
+	@echo "Binary fetch: go run github.com/dcc-bigfred/common/cmd/fetch@latest"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
@@ -65,6 +68,7 @@ menuconfig: buildroot
 	$(BR2_MAKE) menuconfig
 
 image: defconfig
+	@command -v go >/dev/null 2>&1 || { echo "error: go required for package/*/fetch.sh"; exit 1; }
 	$(BR2_MAKE) linux-pam
 	# BIGFRED_PERMISSIONS uses |xattr; host-makedevs must be built with
 	# -DEXTENDED_ATTRIBUTES. Rebuild when the binary still lacks that support
@@ -79,7 +83,7 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

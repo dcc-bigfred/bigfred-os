@@ -54,6 +54,10 @@ if [ -d "${APPS_BIN}" ]; then
 				# Replaced by microinit (package/microinit)
 				continue
 				;;
+			configure-ethernet|configure-dhcp)
+				# Replaced by micronet (package/micronet)
+				continue
+				;;
 		esac
 		[ -x "$bin" ] || chmod 755 "$bin"
 		name=$(basename "$bin")

@@ -12,9 +12,8 @@ config BR2_PACKAGE_BIGFRED
 	bool "BigFred (loco-server)"
 	default y
 	help
-	  Pull the hub OCI bundle from GHCR
-	  (ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64) via oras and
-	  install /opt/bigfred/bin/{bigfred,bigfred-remote-icmp} plus
+	  Pull hub linux/arm64 binaries from GitHub (Actions tip or Releases)
+	  and install /opt/bigfred/bin/{bigfred,bigfred-remote-icmp} plus
 	  /usr/bin wrappers that prefer /data/opt/bigfred over /opt.
 
 	  https://github.com/dcc-bigfred/bigfred
@@ -22,21 +21,21 @@ config BR2_PACKAGE_BIGFRED
 if BR2_PACKAGE_BIGFRED
 
 config BR2_PACKAGE_BIGFRED_OCI_TAG
-	string "OCI tag (master | latest-release | v*)"
+	string "GitHub ref (master | latest-release | v* | sha-*)"
 	default "latest-release"
 	help
-	  Tag of ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64.
-	  Override at build time with: make image BIGFRED_OCI_TAG=master
-	  Floating tags (master, latest-release) are re-pulled each download.
+	  Ref for dcc-bigfred/bigfred binaries.
+	  Override: make image BIGFRED_OCI_TAG=master
+	  Tip refs need GITHUB_TOKEN; Releases usually do not.
 
 endif
 
 config BR2_PACKAGE_MICROINIT
-	bool "microinit (PID 1 from GHCR OCI)"
+	bool "microinit (PID 1 from GitHub)"
 	default y
 	help
-	  Pull ghcr.io/dcc-bigfred/microinit-linux-arm64 via oras and
-	  install /sbin/init, /usr/sbin/microinit, and /usr/sbin/shutdown.
+	  Pull microinit linux/arm64 from GitHub (Actions tip or Releases)
+	  and install /sbin/init, /usr/sbin/microinit, and /usr/sbin/shutdown.
 	  Use with BR2_INIT_NONE so BusyBox does not own /sbin/init.
 
 	  Hub early-boot: overlays/etc/microinit/early-boot.sh
@@ -45,12 +44,32 @@ config BR2_PACKAGE_MICROINIT
 if BR2_PACKAGE_MICROINIT
 
 config BR2_PACKAGE_MICROINIT_OCI_TAG
-	string "OCI tag (main | sha-<7>)"
+	string "GitHub ref (main | sha-<7> | v*)"
 	default "main"
 	help
-	  Tag of ghcr.io/dcc-bigfred/microinit-linux-arm64.
+	  Ref for dcc-bigfred/microinit binaries.
 	  Override: make image MICROINIT_OCI_TAG=main
-	  Floating tags (main, sha-*) are re-pulled each download.
+	  Tip refs need GITHUB_TOKEN.
+
+endif
+
+config BR2_PACKAGE_MICRONET
+	bool "micronet (configure-ethernet + configure-dhcp from GitHub)"
+	default y
+	help
+	  Pull configure-ethernet and configure-dhcp from GitHub
+	  (Actions tip or Releases) into /usr/sbin/.
+
+	  https://github.com/dcc-bigfred/micronet
+
+if BR2_PACKAGE_MICRONET
+
+config BR2_PACKAGE_MICRONET_OCI_TAG
+	string "GitHub ref (main | sha-<7> | v*)"
+	default "main"
+	help
+	  Ref for dcc-bigfred/micronet binaries.
+	  Override: make image MICRONET_OCI_TAG=main
 
 endif
 

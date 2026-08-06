@@ -4,5 +4,6 @@ apps/prepare-nvme/target/
 go/
 os/.cache/
 .cache/
+.ci-github/
 .npm/
 .wget-hsts
