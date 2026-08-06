@@ -633,7 +633,8 @@ button {
 }
 
 .logs-viewer.is-fullscreen,
-.terminal-viewer.is-fullscreen {
+.terminal-viewer.is-fullscreen,
+.etc-editor.is-fullscreen {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -1272,6 +1273,11 @@ button {
 
 .etc-textarea:disabled {
   opacity: 0.6;
+}
+
+.etc-textarea--nowrap {
+  white-space: pre;
+  overflow-x: auto;
 }
 
 .etc-meta {

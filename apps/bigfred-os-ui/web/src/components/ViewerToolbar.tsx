@@ -73,8 +73,8 @@ export type StreamStatus = "idle" | "connecting" | "connected" | "error";
 
 export type ViewerToolbarProps = {
   children?: ReactNode;
-  status: StreamStatus;
-  statusLabel: string;
+  status?: StreamStatus;
+  statusLabel?: string;
   fontSize: number;
   wrap: boolean;
   fullscreen: boolean;
@@ -83,6 +83,7 @@ export type ViewerToolbarProps = {
   onFullscreenToggle: () => void;
   onReconnect?: () => void;
   showWrap?: boolean;
+  actions?: ReactNode;
 };
 
 export { FONT_MIN, FONT_MAX };
@@ -99,17 +100,19 @@ export default function ViewerToolbar({
   onFullscreenToggle,
   onReconnect,
   showWrap = true,
+  actions,
 }: ViewerToolbarProps) {
   return (
     <div className="logs-toolbar viewer-toolbar">
       <div className="viewer-toolbar-left">{children}</div>
       <div className="viewer-toolbar-actions">
-        <span className={`logs-status ${status}`}>{statusLabel}</span>
+        {statusLabel ? <span className={`logs-status ${status ?? "idle"}`}>{statusLabel}</span> : null}
         {onReconnect ? (
           <button type="button" className="btn-ghost" onClick={onReconnect}>
             Reconnect
           </button>
         ) : null}
+        {actions}
         <div className="viewer-toolbar-icons" role="group" aria-label="Viewer controls">
           <button
             type="button"
