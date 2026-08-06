@@ -668,6 +668,13 @@ button {
   overflow: hidden;
 }
 
+.services-logs-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .services-script {
   font-family: var(--mono);
   font-size: 0.78rem;
