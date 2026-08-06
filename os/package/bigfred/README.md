@@ -7,4 +7,4 @@ binaries via shared GitHub fetch and installs loco-server + remote-icmp under
 Default ref: `latest-release` (falls back to `master` if no release exists).
 Tip/`master` needs a GitHub token; public Releases usually do not.
 
-Requires `make ci-scripts` (`dcc-bigfred/.github` @ v2).
+Requires Go on the host (`go run github.com/dcc-bigfred/common/cmd/fetch@latest`).
