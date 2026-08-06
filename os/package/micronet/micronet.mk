@@ -1,7 +1,7 @@
 ################################################################################
 #
-# micronet — configure-ethernet + configure-dhcp from GHCR OCI bundle
-# (ghcr.io/dcc-bigfred/micronet-linux-arm64)
+# micronet — configure-ethernet + configure-dhcp from GitHub
+# (Actions tip / Releases)
 #
 ################################################################################
 
@@ -16,16 +16,16 @@ endif
 MICRONET_VERSION_SAFE = $(subst /,_,$(MICRONET_VERSION))
 
 MICRONET_SOURCE = micronet-linux-arm64-$(MICRONET_VERSION_SAFE).tar
-MICRONET_SITE = https://ghcr.io/dcc-bigfred/micronet-linux-arm64
+MICRONET_SITE = https://github.com/dcc-bigfred/micronet
 MICRONET_LICENSE = MIT
 
-define MICRONET_FETCH_OCI
+define MICRONET_FETCH_GITHUB
 	mkdir -p $(MICRONET_DL_DIR)
 	rm -f "$(MICRONET_DL_DIR)/$(MICRONET_SOURCE)"
-	$(MICRONET_PKGDIR)/fetch-oci.sh "$(MICRONET_VERSION)" \
+	$(MICRONET_PKGDIR)/fetch.sh "$(MICRONET_VERSION)" \
 		"$(MICRONET_DL_DIR)/$(MICRONET_SOURCE)"
 endef
-MICRONET_PRE_DOWNLOAD_HOOKS += MICRONET_FETCH_OCI
+MICRONET_PRE_DOWNLOAD_HOOKS += MICRONET_FETCH_GITHUB
 
 define MICRONET_EXTRACT_CMDS
 	$(TAR) -C $(@D) -xf $(MICRONET_DL_DIR)/$(MICRONET_SOURCE)

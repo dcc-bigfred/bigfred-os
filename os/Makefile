@@ -11,17 +11,21 @@ BUILDROOT_DIR     ?= $(CURDIR)/buildroot
 OUTPUT_DIR        ?= $(CURDIR)/output
 DEFCONFIG         ?= bigfred_hub_rpi5_defconfig
 APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
-# Hub OCI tag override (also: BR2_PACKAGE_BIGFRED_OCI_TAG in menuconfig)
+# GitHub refs for package fetch (also BR2_PACKAGE_*_OCI_TAG in menuconfig)
 BIGFRED_OCI_TAG   ?= latest-release
-# microinit PID 1 OCI tag (also: BR2_PACKAGE_MICROINIT_OCI_TAG)
 MICROINIT_OCI_TAG ?= main
-# micronet tools OCI tag (also: BR2_PACKAGE_MICRONET_OCI_TAG)
 MICRONET_OCI_TAG  ?= main
+
+CI_SCRIPTS_REPO ?= https://github.com/dcc-bigfred/.github.git
+CI_SCRIPTS_REF  ?= v2
+CI_SCRIPTS_DIR  ?= $(REPO_ROOT)/.ci-github
+export CI_SCRIPTS_DIR
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
-.PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash apps-build apps-clean
+.PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash \
+	apps-build apps-clean ci-scripts ci-scripts-update
 
 all: image
 
@@ -31,6 +35,19 @@ apps-build:
 apps-clean:
 	$(MAKE) -C $(REPO_ROOT)/apps clean
 
+$(CI_SCRIPTS_DIR)/.ok:
+	@echo "Cloning $(CI_SCRIPTS_REPO) @ $(CI_SCRIPTS_REF) → $(CI_SCRIPTS_DIR)"
+	@rm -rf "$(CI_SCRIPTS_DIR)"
+	@git clone --depth 1 --branch "$(CI_SCRIPTS_REF)" "$(CI_SCRIPTS_REPO)" "$(CI_SCRIPTS_DIR)" \
+		|| { echo "error: failed to clone $(CI_SCRIPTS_REPO) @ $(CI_SCRIPTS_REF)"; exit 1; }
+	@touch "$@"
+
+ci-scripts: $(CI_SCRIPTS_DIR)/.ok
+
+ci-scripts-update:
+	rm -rf "$(CI_SCRIPTS_DIR)"
+	$(MAKE) "$(CI_SCRIPTS_DIR)/.ok"
+
 help:
 	@echo "BigFred hub OS (Raspberry Pi 5)"
 	@echo ""
@@ -38,14 +55,16 @@ help:
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
 	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
+	@echo "  make ci-scripts  — clone dcc-bigfred/.github @ $(CI_SCRIPTS_REF) for binary fetch"
 	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
 	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
-	@echo "BigFred OCI tag: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
-	@echo "microinit OCI tag: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*)"
-	@echo "micronet OCI tag: MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) (main|sha-*|v*)"
+	@echo "BigFred ref: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
+	@echo "microinit ref: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*|v*)"
+	@echo "micronet ref: MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) (main|sha-*|v*)"
+	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
@@ -64,7 +83,7 @@ defconfig: buildroot $(CURDIR)/configs/$(DEFCONFIG)
 menuconfig: buildroot
 	$(BR2_MAKE) menuconfig
 
-image: defconfig
+image: defconfig ci-scripts
 	$(BR2_MAKE) linux-pam
 	# BIGFRED_PERMISSIONS uses |xattr; host-makedevs must be built with
 	# -DEXTENDED_ATTRIBUTES. Rebuild when the binary still lacks that support
@@ -79,7 +98,7 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) CI_SCRIPTS_DIR=$(CI_SCRIPTS_DIR)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

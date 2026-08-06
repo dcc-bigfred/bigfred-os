@@ -1,11 +1,10 @@
 ################################################################################
 #
-# bigfred — loco-server + bigfred-remote-icmp from GHCR OCI bundle
-# (ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64)
+# bigfred — loco-server + bigfred-remote-icmp from GitHub
+# (Actions tip / Releases)
 #
 ################################################################################
 
-# Prefer Makefile override (make image BIGFRED_OCI_TAG=master), else Kconfig.
 BIGFRED_VERSION = $(call qstrip,$(BIGFRED_OCI_TAG))
 ifeq ($(BIGFRED_VERSION),)
 BIGFRED_VERSION = $(call qstrip,$(BR2_PACKAGE_BIGFRED_OCI_TAG))
@@ -14,31 +13,23 @@ ifeq ($(BIGFRED_VERSION),)
 BIGFRED_VERSION = latest-release
 endif
 
-# Sanitize for use as a download filename (no path separators).
 BIGFRED_VERSION_SAFE = $(subst /,_,$(BIGFRED_VERSION))
 
 BIGFRED_SOURCE = bigfred-hub-linux-arm64-$(BIGFRED_VERSION_SAFE).tar
-# SITE is unused for content (PRE_DOWNLOAD fills DL_DIR); keep non-empty so
-# Buildroot still registers a MAIN_DOWNLOAD. After the hook creates the
-# tarball, dl-wrapper finds it and skips network fetch.
-BIGFRED_SITE = https://ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64
+BIGFRED_SITE = https://github.com/dcc-bigfred/bigfred
 BIGFRED_LICENSE = proprietary
 BIGFRED_DEPENDENCIES = host-libcap
-# No bigfred.hash: floating OCI tags change under the same filename.
-# dl-wrapper allows an existing DL file when no .hash is present.
 
-# Buildroot 2025.x dropped *_DOWNLOAD_CMDS; use PRE_DOWNLOAD instead of
-# wget/SITE. Floating tags are re-pulled every package download.
-define BIGFRED_FETCH_OCI
+define BIGFRED_FETCH_GITHUB
 	mkdir -p $(BIGFRED_DL_DIR)
 	case "$(BIGFRED_VERSION)" in \
-		master|latest-release|sha-*) \
+		master|main|latest-release|sha-*) \
 			rm -f "$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)" ;; \
 	esac
-	$(BIGFRED_PKGDIR)/fetch-oci.sh "$(BIGFRED_VERSION)" \
+	$(BIGFRED_PKGDIR)/fetch.sh "$(BIGFRED_VERSION)" \
 		"$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)"
 endef
-BIGFRED_PRE_DOWNLOAD_HOOKS += BIGFRED_FETCH_OCI
+BIGFRED_PRE_DOWNLOAD_HOOKS += BIGFRED_FETCH_GITHUB
 
 define BIGFRED_EXTRACT_CMDS
 	$(TAR) -C $(@D) -xf $(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)
@@ -56,8 +47,6 @@ define BIGFRED_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/bin/bigfred-remote-icmp
 endef
 
-# Applied under fakeroot when assembling the rootfs (works in Docker uid 1000
-# builds). Do not setcap in INSTALL_TARGET_CMDS — that runs outside fakeroot.
 define BIGFRED_PERMISSIONS
 	/opt/bigfred/bin/bigfred-remote-icmp f 755 0 0 - - - - -
 	|xattr cap_net_raw+ep

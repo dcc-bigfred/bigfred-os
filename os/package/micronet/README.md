@@ -1,12 +1,13 @@
 # micronet (Buildroot package)
 
-Pulls [`ghcr.io/dcc-bigfred/micronet-linux-arm64`](https://github.com/dcc-bigfred/micronet)
-via ORAS and installs:
+Pulls [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet) binaries via
+shared `fetch-github-binaries.sh` (tip = Actions artifact; `v*` / `latest-release`
+= GitHub Release) and installs:
 
-- `/usr/sbin/configure-ethernet` — club Ethernet bring-up (`network` / microinit)
-- `/usr/sbin/configure-dhcp` — event WiFi DHCP when Omada (or other stack) detected
+- `/usr/sbin/configure-ethernet`
+- `/usr/sbin/configure-dhcp`
 
-Default OCI tag: `main` (override: `make image MICRONET_OCI_TAG=…` or
-`BR2_PACKAGE_MICRONET_OCI_TAG`).
+Requires `make ci-scripts` (clones `dcc-bigfred/.github` @ v2). Tip refs need a
+GitHub token in the environment.
 
-Source: https://github.com/dcc-bigfred/micronet
+Default ref: `main` (`MICRONET_OCI_TAG` / `BR2_PACKAGE_MICRONET_OCI_TAG`).
