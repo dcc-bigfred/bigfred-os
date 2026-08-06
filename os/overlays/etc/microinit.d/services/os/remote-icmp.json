@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "remote-icmp",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 15,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/remote-icmp",
+      "dependsOn": [
+        "network"
+      ]
+    }
+  ]
+}

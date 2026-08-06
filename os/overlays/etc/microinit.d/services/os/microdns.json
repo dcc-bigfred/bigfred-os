@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "microdns",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "always",
+      "restartBackoff": 60,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/microdns",
+      "dependsOn": [
+        "network"
+      ],
+      "securityContext": {
+        "runAsUser": "root"
+      }
+    }
+  ]
+}

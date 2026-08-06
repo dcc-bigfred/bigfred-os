@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "name": "cron",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 2,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/cron",
+      "dependsOn": []
+    }
+  ]
+}

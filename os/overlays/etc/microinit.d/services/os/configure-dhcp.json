@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "name": "configure-dhcp",
+      "enabled": true,
+      "daemon": false,
+      "cmd": "/etc/init.d/configure-dhcp",
+      "dependsOn": [
+        "network"
+      ],
+      "startWaitSecs": 5
+    }
+  ]
+}

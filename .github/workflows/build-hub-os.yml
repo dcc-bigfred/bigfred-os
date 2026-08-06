@@ -26,6 +26,10 @@ on:
         description: micronet GitHub ref (main | sha-<7> | v*)
         type: string
         default: main
+      microdns_oci_tag:
+        description: microdns mDNS OCI tag (main | sha-<7>)
+        type: string
+        default: main
 
 permissions:
   contents: read
@@ -45,6 +49,7 @@ jobs:
       BIGFRED_OCI_TAG: ${{ inputs.bigfred_oci_tag }}
       MICROINIT_OCI_TAG: ${{ inputs.microinit_oci_tag }}
       MICRONET_OCI_TAG: ${{ inputs.micronet_oci_tag }}
+      MICRODNS_OCI_TAG: ${{ inputs.microdns_oci_tag }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -108,7 +113,8 @@ jobs:
           make -C os image \
             BIGFRED_OCI_TAG="${BIGFRED_OCI_TAG}" \
             MICROINIT_OCI_TAG="${MICROINIT_OCI_TAG}" \
-            MICRONET_OCI_TAG="${MICRONET_OCI_TAG}"
+            MICRONET_OCI_TAG="${MICRONET_OCI_TAG}" \
+            MICRODNS_OCI_TAG="${MICRODNS_OCI_TAG}"
 
       - name: Save host toolchain to cache
         if: success()
@@ -139,6 +145,7 @@ jobs:
             echo "- BigFred ref: \`${{ inputs.bigfred_oci_tag }}\`"
             echo "- microinit ref: \`${{ inputs.microinit_oci_tag }}\`"
             echo "- micronet ref: \`${{ inputs.micronet_oci_tag }}\`"
+            echo "- microdns ref: \`${{ inputs.microdns_oci_tag }}\`"
             echo "- Artifact: \`bigfred-hub-nvme-${{ github.run_number }}\`"
             echo ""
             echo '```'

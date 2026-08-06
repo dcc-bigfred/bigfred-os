@@ -28,6 +28,7 @@ mkdir -p "${TARGET_DIR}/data/logs/alloy"
 mkdir -p "${TARGET_DIR}/data/etc"
 mkdir -p "${TARGET_DIR}/data/etc/microinit.d/services/infra"
 mkdir -p "${TARGET_DIR}/data/etc/microinit.d/services/dcc-bus"
+mkdir -p "${TARGET_DIR}/data/etc/microinit.d/services/os"
 # Persistent root SSH (bound over /root/.ssh at early-boot)
 mkdir -p "${TARGET_DIR}/data/root/.ssh"
 chmod 700 "${TARGET_DIR}/data/root/.ssh"

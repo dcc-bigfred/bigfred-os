@@ -1,0 +1,26 @@
+{
+  "services": [
+    {
+      "name": "alloy",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 30,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/alloy",
+      "dependsOn": [
+        "network"
+      ],
+      "securityContext": {
+        "runAsUser": "alloy"
+      },
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:12345/-/ready",
+        "httpAcceptedCodes": [
+          200
+        ],
+        "interval": 300
+      }
+    }
+  ]
+}
