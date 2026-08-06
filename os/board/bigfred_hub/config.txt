@@ -17,12 +17,12 @@ device_tree=bcm2712d0-rpi-5-b.dtb
 dtparam=pciex1_gen=3
 
 # Active cooler — kernel pwm-fan driver + thermal framework (hub spec §8.8).
-# fanctl is disabled in microinit.json; the kernel auto-controls the PWM via
-# cooling_device0 using the thresholds/speeds below (millidegrees Celsius,
-# PWM 0-255). Requires CONFIG_SENSORS_PWM_FAN=y (see configs/linux-hub.fragment).
-# Levels: <45 OFF | 45–60 LOW (75) | 60–70 MED (150) | >70 HIGH (255).
+# The kernel auto-controls the PWM via cooling_device0 using the
+# thresholds/speeds below (millidegrees Celsius, PWM 0-255).
+# Requires CONFIG_SENSORS_PWM_FAN=y (see configs/linux-hub.fragment).
+# Levels: <35 OFF | 35–60 LOW (75) | 60–70 MED (150) | >70 HIGH (255).
 dtparam=cooling_fan=on
-dtparam=fan_temp0=45000,fan_temp0_hyst=5000,fan_temp0_speed=75
+dtparam=fan_temp0=35000,fan_temp0_hyst=5000,fan_temp0_speed=75
 dtparam=fan_temp1=60000,fan_temp1_hyst=5000,fan_temp1_speed=150
 dtparam=fan_temp2=70000,fan_temp2_hyst=5000,fan_temp2_speed=255
 dtparam=fan_temp3=70000,fan_temp3_hyst=5000,fan_temp3_speed=255

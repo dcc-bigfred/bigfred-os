@@ -12,7 +12,8 @@ also install or override binaries under `/data/opt/bigfred` after flash.
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm) |
 | **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); `/usr/lib/bigfred/version/commit` = build git SHA |
-| **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, fanctl, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
+| **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
+| **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
 | **Init** | **microinit** as `/sbin/init` (OCI); `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
 
 ## Host requirements

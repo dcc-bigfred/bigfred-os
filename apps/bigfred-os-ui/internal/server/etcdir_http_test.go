@@ -16,7 +16,7 @@ import (
 
 func TestEtcFilesAPI(t *testing.T) {
 	etcRoot := t.TempDir()
-	if err := os.WriteFile(filepath.Join(etcRoot, "fanctl.conf"), []byte("old\n"), 0o640); err != nil {
+	if err := os.WriteFile(filepath.Join(etcRoot, "bigfred-os-ui.conf"), []byte("old\n"), 0o640); err != nil {
 		t.Fatal(err)
 	}
 
@@ -47,11 +47,11 @@ func TestEtcFilesAPI(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&list); err != nil {
 		t.Fatal(err)
 	}
-	if len(list) != 1 || list[0].Path != "fanctl.conf" {
+	if len(list) != 1 || list[0].Path != "bigfred-os-ui.conf" {
 		t.Fatalf("list: %+v", list)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/api/v1/etc/file?path=fanctl.conf", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/etc/file?path=bigfred-os-ui.conf", nil)
 	req.AddCookie(cookie)
 	rec = httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
@@ -59,7 +59,7 @@ func TestEtcFilesAPI(t *testing.T) {
 		t.Fatalf("read status: %d", rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodPut, "/api/v1/etc/file?path=fanctl.conf", strings.NewReader(`{"content":"new\n"}`))
+	req = httptest.NewRequest(http.MethodPut, "/api/v1/etc/file?path=bigfred-os-ui.conf", strings.NewReader(`{"content":"new\n"}`))
 	req.AddCookie(cookie)
 	rec = httptest.NewRecorder()
 	h.ServeHTTP(rec, req)

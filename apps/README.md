@@ -34,7 +34,6 @@ make -C apps clean
 |-----|------|------|
 | `bigfred-os-ui` | Go | Hub admin web UI (logs, services) |
 | `rotate-hub-logs` | Go | Log rotation under `/data/logs` |
-| `fanctl` | Go | Pi 5 active cooler (§8.8) |
 | `configure-ethernet` | Go | One-shot Ethernet `up` + `check` for microinit liveness |
 | `prepare-nvme` | Rust | Migrate `/data` to NVMe (GPT via gptman) and remount |
 

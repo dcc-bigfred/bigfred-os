@@ -150,16 +150,6 @@
       }
     },
     {
-      "name": "fanctl",
-      "enabled": false,
-      "daemon": true,
-      "restartPolicy": "onError",
-      "restartBackoff": 10,
-      "startWaitSecs": 1,
-      "cmd": "/etc/init.d/fanctl",
-      "dependsOn": []
-    },
-    {
       "name": "bigfred",
       "enabled": true,
       "daemon": true,
