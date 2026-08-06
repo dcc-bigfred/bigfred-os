@@ -86,13 +86,6 @@ if [ -f "${HUB}/board/bigfred_hub/bigfred-os-ui.conf" ]; then
 		"${TARGET_DIR}/etc/bigfred/bigfred-os-ui.conf"
 fi
 
-# fanctl seed (copied to /data/etc on first boot by early-boot.sh)
-if [ -f "${HUB}/board/bigfred_hub/fanctl.conf" ]; then
-	mkdir -p "${TARGET_DIR}/etc/bigfred"
-	install -m 0644 "${HUB}/board/bigfred_hub/fanctl.conf" \
-		"${TARGET_DIR}/etc/bigfred/fanctl.conf"
-fi
-
 # Default timezone (Europe/Warsaw); operator override lives on /data via early-boot bind.
 if [ -e "${TARGET_DIR}/usr/share/zoneinfo/Europe/Warsaw" ]; then
 	ln -sfn /usr/share/zoneinfo/Europe/Warsaw "${TARGET_DIR}/etc/localtime"
