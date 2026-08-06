@@ -3,6 +3,7 @@
 # BigFred (loco-server): package/bigfred — OCI tag via BR2_PACKAGE_BIGFRED_OCI_TAG
 # or make image BIGFRED_OCI_TAG=master|latest-release|v*.
 # microinit (PID 1): package/microinit — MICROINIT_OCI_TAG=main|sha-*.
+# microdns (mDNS): package/microdns — MICRODNS_OCI_TAG=main|sha-*.
 
 BR2_aarch64=y
 BR2_cortex_a76=y
@@ -93,6 +94,8 @@ BR2_PACKAGE_BIGFRED=y
 BR2_PACKAGE_BIGFRED_OCI_TAG="latest-release"
 BR2_PACKAGE_MICROINIT=y
 BR2_PACKAGE_MICROINIT_OCI_TAG="main"
+BR2_PACKAGE_MICRODNS=y
+BR2_PACKAGE_MICRODNS_OCI_TAG="main"
 BR2_PACKAGE_GRAFANA=y
 BR2_PACKAGE_VICTORIAMETRICS=y
 

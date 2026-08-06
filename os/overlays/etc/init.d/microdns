@@ -1,0 +1,49 @@
+#!/bin/sh
+# microdns — mDNS/DNS-SD advertiser (bigfred.local + optional dcc-bus discovery)
+
+MICRODNS_CONF=/data/etc/microdns.json
+DEFAULT_MICRODNS_CONF=/etc/microdns/microdns.json
+BIN=/usr/sbin/microdns
+
+ensure_microdns_conf() {
+	mkdir -p /data/etc
+	if [ -f "$DEFAULT_MICRODNS_CONF" ]; then
+		# Always overwrite from image template (operator edits are not preserved).
+		cp "$DEFAULT_MICRODNS_CONF" "$MICRODNS_CONF"
+		chmod 644 "$MICRODNS_CONF"
+		return 0
+	fi
+	if [ -f "$MICRODNS_CONF" ]; then
+		return 0
+	fi
+	cat >"$MICRODNS_CONF" <<'EOF'
+{
+  "services": [
+    { "name": "bigfred", "type": "_http._tcp", "protocol": "tcp", "port": 8080, "host": "bigfred", "txt": { "path": "/" } },
+    { "name": "bigfred-os-ui", "type": "_http._tcp", "protocol": "tcp", "port": 8090, "host": "bigfred", "txt": { "path": "/" } }
+  ],
+  "dccBus": { "enabled": true, "z21Port": 21105, "withrottlePort": 12090, "beacon": true },
+  "retry": { "microinitMs": 2000, "procMs": 2000, "mdnsMs": 3000, "ifaceMs": 5000 }
+}
+EOF
+	chmod 644 "$MICRODNS_CONF"
+}
+
+case "$1" in
+start)
+	[ -x "$BIN" ] || exit 0
+	ensure_microdns_conf
+	exec "$BIN" --config "$MICRODNS_CONF"
+	;;
+stop)
+	killall microdns 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

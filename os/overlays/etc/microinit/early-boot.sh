@@ -398,6 +398,12 @@ if [ -d /etc/bigfred ]; then
 	done
 fi
 seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
+# microdns config is regenerated every boot (operator edits not preserved by design).
+if [ -e /etc/microdns/microdns.json ]; then
+	mkdir -p "$DATA_ROOT/etc"
+	cp /etc/microdns/microdns.json "$DATA_ROOT/etc/microdns.json"
+	chmod 644 "$DATA_ROOT/etc/microdns.json"
+fi
 # Service list for microinit (PID 1); only seed if operator has not customized yet.
 # microinit.json stays root-owned (PID 1 reads/writes it); drop-ins under
 # microinit.d are chowned to bigfred below so loco-server can write them.
