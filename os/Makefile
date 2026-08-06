@@ -15,6 +15,8 @@ APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
 BIGFRED_OCI_TAG   ?= latest-release
 # microinit PID 1 OCI tag (also: BR2_PACKAGE_MICROINIT_OCI_TAG)
 MICROINIT_OCI_TAG ?= main
+# microdns OCI tag (also: BR2_PACKAGE_MICRODNS_OCI_TAG)
+MICRODNS_OCI_TAG  ?= main
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
@@ -43,6 +45,7 @@ help:
 	@echo "Artifact: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@echo "BigFred OCI tag: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
 	@echo "microinit OCI tag: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*)"
+	@echo "microdns OCI tag: MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG) (main|sha-*)"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)
@@ -76,7 +79,7 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG)
+	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "name": "redis",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 5,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/redis",
+      "dependsOn": [
+        "network"
+      ],
+      "securityContext": {
+        "runAsUser": "redis"
+      },
+      "livenessProbe": {
+        "tcpAddr": "127.0.0.1:6379",
+        "interval": 10
+      }
+    }
+  ]
+}

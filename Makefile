@@ -15,9 +15,11 @@ DOCKER_GID   ?= 1000
 BIGFRED_OCI_TAG ?= latest-release
 # microinit PID 1 OCI tag: main | sha-<7>
 MICROINIT_OCI_TAG ?= main
+# microdns mDNS advertiser OCI tag: main | sha-<7>
+MICRODNS_OCI_TAG ?= main
 
 image:
-	$(MAKE) -C os image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG)
+	$(MAKE) -C os image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
 
 docker-image:
 	docker build -t $(DOCKER_IMAGE) -f $(DOCKER_DIR)/Dockerfile $(REPO_ROOT)
@@ -51,9 +53,10 @@ image-using-docker: docker-image check-docker-rpath relocate-br-host
 		-e MAKEFLAGS="-j$$(nproc 2>/dev/null || echo 4)" \
 		-e BIGFRED_OCI_TAG="$(BIGFRED_OCI_TAG)" \
 		-e MICROINIT_OCI_TAG="$(MICROINIT_OCI_TAG)" \
+		-e MICRODNS_OCI_TAG="$(MICRODNS_OCI_TAG)" \
 		-e GITHUB_TOKEN \
 		-e GH_TOKEN \
 		-e BIGFRED_NATIVE_TOKEN \
 		-e GITHUB_ACTOR \
 		$(DOCKER_IMAGE) \
-		make image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG)
+		make image BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
