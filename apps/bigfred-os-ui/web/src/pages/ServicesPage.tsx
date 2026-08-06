@@ -8,8 +8,18 @@ import {
   type LogWSMessage,
   type ServiceAction,
 } from "../api/client";
+import ViewerToolbar, {
+  FONT_MAX,
+  FONT_MIN,
+  loadStoredBool,
+  loadStoredNumber,
+  storeBool,
+  storeNumber,
+  type StreamStatus,
+} from "../components/ViewerToolbar";
 
-type StreamStatus = "idle" | "connecting" | "connected" | "error";
+const FONT_KEY = "bigfred.services.fontSize";
+const WRAP_KEY = "bigfred.services.wrap";
 
 function badgeClass(state: string, running: boolean): string {
   const s = state.toLowerCase();
@@ -27,6 +37,13 @@ function badgeClass(state: string, running: boolean): string {
   return "unknown";
 }
 
+function streamStatusLabel(status: StreamStatus): string {
+  if (status === "connected") return "Connected — live stream";
+  if (status === "connecting") return "Connecting…";
+  if (status === "error") return "Stream error";
+  return "Disconnected";
+}
+
 export default function ServicesPage() {
   const [services, setServices] = useState<HubService[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +54,11 @@ export default function ServicesPage() {
   const [logService, setLogService] = useState<HubService | null>(null);
   const [lines, setLines] = useState<string[]>([]);
   const [streamStatus, setStreamStatus] = useState<StreamStatus>("idle");
+  const [fontSize, setFontSize] = useState(() => loadStoredNumber(FONT_KEY, 13, FONT_MIN, FONT_MAX));
+  const [wrap, setWrap] = useState(() => loadStoredBool(WRAP_KEY, true));
+  const [fullscreen, setFullscreen] = useState(false);
   const outputRef = useRef<HTMLPreElement>(null);
+  const viewerRef = useRef<HTMLElement>(null);
   const stickToBottom = useRef(true);
 
   const load = useCallback(async () => {
@@ -101,12 +122,53 @@ export default function ServicesPage() {
     el.scrollTop = el.scrollHeight;
   }, [lines]);
 
+  useEffect(() => {
+    const onFsChange = () => {
+      const el = viewerRef.current;
+      setFullscreen(!!el && document.fullscreenElement === el);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  useEffect(() => {
+    if (!logService && viewerRef.current && document.fullscreenElement === viewerRef.current) {
+      void document.exitFullscreen();
+    }
+  }, [logService]);
+
   const onScroll = () => {
     const el = outputRef.current;
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
     stickToBottom.current = nearBottom;
   };
+
+  const closeLogs = useCallback(() => {
+    setLogService(null);
+  }, []);
+
+  const onFontSizeChange = useCallback((size: number) => {
+    setFontSize(size);
+    storeNumber(FONT_KEY, size);
+  }, []);
+
+  const onWrapChange = useCallback((next: boolean) => {
+    setWrap(next);
+    storeBool(WRAP_KEY, next);
+  }, []);
+
+  const onFullscreenToggle = useCallback(() => {
+    const el = viewerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      void document.exitFullscreen();
+    } else {
+      void el.requestFullscreen().catch(() => {
+        /* ignore */
+      });
+    }
+  }, []);
 
   const runAction = async (id: string, action: ServiceAction) => {
     const key = `${id}:${action}`;
@@ -221,22 +283,35 @@ export default function ServicesPage() {
       </div>
 
       {logService ? (
-        <section className="services-logs-viewer logs-viewer">
-          <div className="logs-toolbar">
-            <span>
-              Logs — <strong>{logService.id}</strong>
-            </span>
-            <span className={`logs-status ${streamStatus}`}>
-              {streamStatus === "connected" && "Connected — live stream"}
-              {streamStatus === "connecting" && "Connecting…"}
-              {streamStatus === "error" && "Stream error"}
-              {streamStatus === "idle" && "Disconnected"}
-            </span>
-            <button type="button" className="btn-ghost" onClick={() => setLogService(null)}>
-              Close
-            </button>
-          </div>
-          <pre ref={outputRef} className="logs-output" onScroll={onScroll}>
+        <section
+          ref={viewerRef}
+          className={`services-logs-viewer logs-viewer${fullscreen ? " is-fullscreen" : ""}`}
+        >
+          <ViewerToolbar
+            status={streamStatus}
+            statusLabel={streamStatusLabel(streamStatus)}
+            fontSize={fontSize}
+            wrap={wrap}
+            fullscreen={fullscreen}
+            onFontSizeChange={onFontSizeChange}
+            onWrapChange={onWrapChange}
+            onFullscreenToggle={onFullscreenToggle}
+          >
+            <div className="services-logs-toolbar-left">
+              <span>
+                Logs — <strong>{logService.id}</strong>
+              </span>
+              <button type="button" className="btn-ghost" onClick={closeLogs}>
+                Close
+              </button>
+            </div>
+          </ViewerToolbar>
+          <pre
+            ref={outputRef}
+            className={`logs-output${wrap ? "" : " logs-output--nowrap"}`}
+            style={{ fontSize: `${fontSize}px` }}
+            onScroll={onScroll}
+          >
             {(lines ?? []).length === 0 ? "Waiting for data…" : (lines ?? []).join("\n")}
           </pre>
         </section>

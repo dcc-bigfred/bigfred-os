@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
   fetchEtcFile,
@@ -7,6 +7,17 @@ import {
   type EtcFile,
   type EtcFileContent,
 } from "../api/client";
+import ViewerToolbar, {
+  FONT_MAX,
+  FONT_MIN,
+  loadStoredBool,
+  loadStoredNumber,
+  storeBool,
+  storeNumber,
+} from "../components/ViewerToolbar";
+
+const FONT_KEY = "bigfred.config.fontSize";
+const WRAP_KEY = "bigfred.config.wrap";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -49,6 +60,11 @@ export default function ConfigPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  const [fontSize, setFontSize] = useState(() => loadStoredNumber(FONT_KEY, 13, FONT_MIN, FONT_MAX));
+  const [wrap, setWrap] = useState(() => loadStoredBool(WRAP_KEY, true));
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const editorRef = useRef<HTMLElement>(null);
 
   const grouped = useMemo(() => groupByDir(files), [files]);
   const dirty = content !== savedContent;
@@ -104,6 +120,37 @@ export default function ConfigPage() {
     }
     void loadFile(selectedPath);
   }, [loadFile, selectedPath]);
+
+  useEffect(() => {
+    const onFsChange = () => {
+      const el = editorRef.current;
+      setFullscreen(!!el && document.fullscreenElement === el);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const onFontSizeChange = useCallback((size: number) => {
+    setFontSize(size);
+    storeNumber(FONT_KEY, size);
+  }, []);
+
+  const onWrapChange = useCallback((next: boolean) => {
+    setWrap(next);
+    storeBool(WRAP_KEY, next);
+  }, []);
+
+  const onFullscreenToggle = useCallback(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      void document.exitFullscreen();
+    } else {
+      void el.requestFullscreen().catch(() => {
+        /* ignore */
+      });
+    }
+  }, []);
 
   const onSelect = (path: string) => {
     if (dirty && !window.confirm("Discard unsaved changes?")) return;
@@ -174,37 +221,50 @@ export default function ConfigPage() {
         ))}
       </aside>
 
-      <section className="etc-editor">
-        <div className="etc-toolbar">
+      <section
+        ref={editorRef}
+        className={`etc-editor${fullscreen ? " is-fullscreen" : ""}`}
+      >
+        <ViewerToolbar
+          fontSize={fontSize}
+          wrap={wrap}
+          fullscreen={fullscreen}
+          onFontSizeChange={onFontSizeChange}
+          onWrapChange={onWrapChange}
+          onFullscreenToggle={onFullscreenToggle}
+          actions={
+            <div className="etc-toolbar-actions">
+              {dirty ? <span className="etc-dirty">Unsaved changes</span> : null}
+              {saveOk ? <span className="etc-saved">Saved</span> : null}
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={onReload}
+                disabled={!selectedPath || fileLoading || saving}
+              >
+                Reload
+              </button>
+              <button
+                type="button"
+                className="btn-action"
+                onClick={() => void onSave()}
+                disabled={!selectedPath || !dirty || fileLoading || saving}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          }
+        >
           <span className="etc-path">{selectedPath ?? "Select a file"}</span>
-          <div className="etc-toolbar-actions">
-            {dirty ? <span className="etc-dirty">Unsaved changes</span> : null}
-            {saveOk ? <span className="etc-saved">Saved</span> : null}
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={onReload}
-              disabled={!selectedPath || fileLoading || saving}
-            >
-              Reload
-            </button>
-            <button
-              type="button"
-              className="btn-action"
-              onClick={() => void onSave()}
-              disabled={!selectedPath || !dirty || fileLoading || saving}
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </div>
+        </ViewerToolbar>
 
         {fileError ? <div className="etc-error">{fileError}</div> : null}
         {saveError ? <div className="etc-error">{saveError}</div> : null}
 
         {selectedPath ? (
           <textarea
-            className="etc-textarea"
+            className={`etc-textarea${wrap ? "" : " etc-textarea--nowrap"}`}
+            style={{ fontSize: `${fontSize}px` }}
             value={content}
             onChange={(e) => {
               setContent(e.target.value);

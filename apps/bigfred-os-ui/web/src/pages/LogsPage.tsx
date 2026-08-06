@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchLogs, logStreamURL, type LogEntry, type LogWSMessage } from "../api/client";
+import ViewerToolbar, {
+  FONT_MAX,
+  FONT_MIN,
+  loadStoredBool,
+  loadStoredNumber,
+  storeBool,
+  storeNumber,
+  type StreamStatus,
+} from "../components/ViewerToolbar";
 
-type StreamStatus = "idle" | "connecting" | "connected" | "error";
+const FONT_KEY = "bigfred.logs.fontSize";
+const WRAP_KEY = "bigfred.logs.wrap";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -19,13 +29,24 @@ function groupByRoot(entries: LogEntry[]): [string, LogEntry[]][] {
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
+function statusLabel(status: StreamStatus): string {
+  if (status === "connected") return "Connected — live stream";
+  if (status === "connecting") return "Connecting…";
+  if (status === "error") return "Stream error";
+  return "Disconnected";
+}
+
 export default function LogsPage() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [lines, setLines] = useState<string[]>([]);
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [listError, setListError] = useState<string | null>(null);
+  const [fontSize, setFontSize] = useState(() => loadStoredNumber(FONT_KEY, 13, FONT_MIN, FONT_MAX));
+  const [wrap, setWrap] = useState(() => loadStoredBool(WRAP_KEY, true));
+  const [fullscreen, setFullscreen] = useState(false);
   const outputRef = useRef<HTMLPreElement>(null);
+  const viewerRef = useRef<HTMLElement>(null);
   const stickToBottom = useRef(true);
 
   const grouped = useMemo(() => groupByRoot(entries), [entries]);
@@ -82,12 +103,43 @@ export default function LogsPage() {
     el.scrollTop = el.scrollHeight;
   }, [lines]);
 
+  useEffect(() => {
+    const onFsChange = () => {
+      const el = viewerRef.current;
+      setFullscreen(!!el && document.fullscreenElement === el);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
   const onScroll = () => {
     const el = outputRef.current;
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
     stickToBottom.current = nearBottom;
   };
+
+  const onFontSizeChange = useCallback((size: number) => {
+    setFontSize(size);
+    storeNumber(FONT_KEY, size);
+  }, []);
+
+  const onWrapChange = useCallback((next: boolean) => {
+    setWrap(next);
+    storeBool(WRAP_KEY, next);
+  }, []);
+
+  const onFullscreenToggle = useCallback(() => {
+    const el = viewerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      void document.exitFullscreen();
+    } else {
+      void el.requestFullscreen().catch(() => {
+        /* ignore — browser may deny */
+      });
+    }
+  }, []);
 
   const selected = entries.find((e) => e.id === selectedId);
 
@@ -120,21 +172,32 @@ export default function LogsPage() {
         ))}
       </aside>
 
-      <section className="logs-viewer">
-        <div className="logs-toolbar">
+      <section
+        ref={viewerRef}
+        className={`logs-viewer${fullscreen ? " is-fullscreen" : ""}`}
+      >
+        <ViewerToolbar
+          status={status}
+          statusLabel={statusLabel(status)}
+          fontSize={fontSize}
+          wrap={wrap}
+          fullscreen={fullscreen}
+          onFontSizeChange={onFontSizeChange}
+          onWrapChange={onWrapChange}
+          onFullscreenToggle={onFullscreenToggle}
+        >
           <span>
             {selected
               ? `${selected.root} — ${selected.service}/${selected.name} (${formatSize(selected.size)})`
               : "—"}
           </span>
-          <span className={`logs-status ${status}`}>
-            {status === "connected" && "Connected — live stream"}
-            {status === "connecting" && "Connecting…"}
-            {status === "error" && "Stream error"}
-            {status === "idle" && "Disconnected"}
-          </span>
-        </div>
-        <pre ref={outputRef} className="logs-output" onScroll={onScroll}>
+        </ViewerToolbar>
+        <pre
+          ref={outputRef}
+          className={`logs-output${wrap ? "" : " logs-output--nowrap"}`}
+          style={{ fontSize: `${fontSize}px` }}
+          onScroll={onScroll}
+        >
           {(lines ?? []).length === 0 ? "Waiting for data…" : (lines ?? []).join("\n")}
         </pre>
       </section>
