@@ -83,7 +83,7 @@
       "restartBackoff": 15,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/victoriametrics",
-      "dependsOn": [],
+      "dependsOn": ["network"],
       "securityContext": {
         "runAsUser": "metrics"
       }
@@ -142,7 +142,12 @@
       "restartBackoff": 10,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/bigfred-os-ui",
-      "dependsOn": ["network"]
+      "dependsOn": ["network"],
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:8090/healthz",
+        "httpAcceptedCodes": [200],
+        "interval": 60
+      }
     },
     {
       "name": "fanctl",

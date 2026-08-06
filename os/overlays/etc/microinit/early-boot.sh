@@ -321,7 +321,7 @@ fi
 
 # --- directories ---
 mkdir -p "$DATA_ROOT/etc" "$DATA_ROOT/logs" "$DATA_ROOT/run"
-mkdir -p "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db"
+mkdir -p "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred"
 mkdir -p "$DATA_ROOT/var/lib/alloy" \
 	"$DATA_ROOT/var/lib/victoriametrics" \
 	"$DATA_ROOT/var/lib/grafana/data" \
@@ -332,6 +332,17 @@ mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/allo
 mkdir -p "$DATA_ROOT/etc/microinit" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
+
+# Service $HOME on RO root: tmpfs so accidental writes to HOME do not fail
+# and do not pollute /data. No login shell (users.table: /bin/false).
+mkdir -p /home/bigfred
+if ! is_mounted /home/bigfred; then
+	mount -t tmpfs -o mode=0750,uid=0,gid=0,size=8m tmpfs /home/bigfred 2>/dev/null || true
+fi
+if id bigfred >/dev/null 2>&1 && is_mounted /home/bigfred; then
+	chown bigfred:bigfred /home/bigfred 2>/dev/null || true
+	chmod 0750 /home/bigfred 2>/dev/null || true
+fi
 
 # --- ownership for non-root services (best-effort if users exist) ---
 chown_if() {
@@ -346,12 +357,13 @@ chown_if alloy "$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/logs/alloy"
 chown_if metrics \
 	"$DATA_ROOT/var/lib/victoriametrics" \
 	"$DATA_ROOT/var/lib/grafana"
+# SQLite lives under var/db/bigfred/; chown the directory so WAL/SHM inherit.
 chown_if bigfred \
-	"$DATA_ROOT/var/db" \
+	"$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/logs/bigfred" \
 	"$DATA_ROOT/etc/microinit.d"
-chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/lib/alloy" \
-	"$DATA_ROOT/var/lib/victoriametrics" "$DATA_ROOT/var/db" 2>/dev/null || true
+chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred" \
+	"$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/var/lib/victoriametrics" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/etc/microinit.d" "$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
 if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
@@ -360,9 +372,9 @@ if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
 		chown root:redis "$DATA_ROOT/etc/redis.conf" 2>/dev/null || true
 	fi
 fi
-if [ -f "$DATA_ROOT/var/db/bigfred.sqlite3" ] && id bigfred >/dev/null 2>&1; then
-	chown bigfred:bigfred "$DATA_ROOT/var/db/bigfred.sqlite3"* 2>/dev/null || true
-	chmod 0640 "$DATA_ROOT/var/db/bigfred.sqlite3" 2>/dev/null || true
+if [ -f "$DATA_ROOT/var/db/bigfred/bigfred.sqlite3" ] && id bigfred >/dev/null 2>&1; then
+	chown bigfred:bigfred "$DATA_ROOT/var/db/bigfred"/bigfred.sqlite3* 2>/dev/null || true
+	chmod 0640 "$DATA_ROOT/var/db/bigfred"/bigfred.sqlite3* 2>/dev/null || true
 fi
 
 # --- seed configs from image if missing ---
@@ -387,6 +399,8 @@ if [ -d /etc/bigfred ]; then
 fi
 seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
 # Service list for microinit (PID 1); only seed if operator has not customized yet.
+# microinit.json stays root-owned (PID 1 reads/writes it); drop-ins under
+# microinit.d are chowned to bigfred below so loco-server can write them.
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json" 644
 seed /etc/microinit/microinit.json "$DATA_ROOT/etc/microinit.json.example" 644
 seed /etc/microinit/otel.env.example "$DATA_ROOT/etc/otel.env.example" 644

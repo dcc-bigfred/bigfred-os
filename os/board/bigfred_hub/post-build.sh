@@ -8,13 +8,18 @@ HUB="${BR2_EXTERNAL_BIGFRED_HUB_PATH:-$(dirname "$0")/../..}"
 # Mount point for RW data partition (ext4 LABEL=bigfred-data on SD or NVMe)
 mkdir -p "${TARGET_DIR}/data"
 
-# Persistent log and application state directories (on /data at runtime)
+# Persistent log and application state directories (on /data at runtime).
+# Modes here are placeholders; early-boot.sh applies 0750 + service chown
+# after users.table accounts exist (makeusers runs after post-build).
 mkdir -p "${TARGET_DIR}/data/var/db/redis"
+mkdir -p "${TARGET_DIR}/data/var/db/bigfred"
 mkdir -p "${TARGET_DIR}/data/var/lib/alloy"
 mkdir -p "${TARGET_DIR}/data/var/lib/victoriametrics"
 mkdir -p "${TARGET_DIR}/data/var/lib/grafana/data"
 mkdir -p "${TARGET_DIR}/data/var/lib/grafana/log"
 mkdir -p "${TARGET_DIR}/data/var/lib/grafana/plugins"
+# bigfred $HOME (tmpfs mounted at early-boot on RO root)
+mkdir -p "${TARGET_DIR}/home/bigfred"
 # Override path for BigFred binary (/usr/bin/bigfred prefers this over /opt)
 mkdir -p "${TARGET_DIR}/data/opt/bigfred/bin"
 mkdir -p "${TARGET_DIR}/data/logs/bigfred"

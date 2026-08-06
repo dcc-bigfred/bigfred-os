@@ -71,6 +71,12 @@ if is_mounted "$DATA_ROOT"; then
 	try_umount "$DATA_ROOT" || log "WARNING: could not umount $DATA_ROOT"
 fi
 
+# Service $HOME tmpfs (not on /data)
+if is_mounted /home/bigfred; then
+	log "umount /home/bigfred"
+	try_umount /home/bigfred || log "WARNING: could not umount /home/bigfred"
+fi
+
 # --- 3) root: cannot umount while PID 1 runs; remount RO is the goal ---
 log "remount,ro /"
 mount -o remount,ro / 2>/dev/null || true

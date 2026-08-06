@@ -209,12 +209,13 @@ CLI on device: `microinit list`, `microinit start redis`, `microinit logs --foll
 Init scripts: `bigfred` with `taskset` on cores 2,3. `remote-icmp` starts the
 ICMP helper.
 
-Databases: SQLite `/data/var/db/bigfred.sqlite3`, Redis `/data/var/db/redis/`
+Databases: SQLite `/data/var/db/bigfred/bigfred.sqlite3`, Redis `/data/var/db/redis/`
 (config `/data/etc/redis.conf`, default RDB `save 60 100`).
 
 Service accounts (non-root): `redis`, `alloy`, `bigfred` (also in `dialout`),
 `metrics` (VictoriaMetrics + Grafana). `bigfred-os-ui` stays root.
-microinit IPC: `socketAllowUsers: ["bigfred"]` (socket `0660`).
+`bigfred` home is `/home/bigfred` (tmpfs, no login shell). microinit IPC:
+`socketAllowUsers: ["bigfred"]` (socket `0660`).
 
 Monitoring: Grafana (`http://:3000`, admin/bigfred) with VictoriaMetrics datasource
 (`:8428`). Data: `/data/var/lib/grafana`, `/data/var/lib/victoriametrics`,
