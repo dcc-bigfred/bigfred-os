@@ -54,6 +54,27 @@ config BR2_PACKAGE_MICROINIT_OCI_TAG
 
 endif
 
+config BR2_PACKAGE_MICRONET
+	bool "micronet (configure-ethernet + configure-dhcp from GHCR OCI)"
+	default y
+	help
+	  Pull ghcr.io/dcc-bigfred/micronet-linux-arm64 via oras and
+	  install /usr/sbin/configure-ethernet and /usr/sbin/configure-dhcp.
+
+	  https://github.com/dcc-bigfred/micronet
+
+if BR2_PACKAGE_MICRONET
+
+config BR2_PACKAGE_MICRONET_OCI_TAG
+	string "OCI tag (main | sha-<7> | v*)"
+	default "main"
+	help
+	  Tag of ghcr.io/dcc-bigfred/micronet-linux-arm64.
+	  Override: make image MICRONET_OCI_TAG=main
+	  Floating tags are re-pulled each download.
+
+endif
+
 config BR2_PACKAGE_GRAFANA
 	bool "Grafana OSS (prebuilt binary)"
 	default y

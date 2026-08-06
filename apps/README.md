@@ -34,9 +34,11 @@ make -C apps clean
 |-----|------|------|
 | `bigfred-os-ui` | Go | Hub admin web UI (logs, services) |
 | `rotate-hub-logs` | Go | Log rotation under `/data/logs` |
-| `configure-ethernet` | Go | One-shot Ethernet `up` + `check` for microinit liveness |
-| `configure-dhcp` | Rust (source in `networking/configure-dhcp`) | Event DHCP via dnsmasq when Omada stack detected; microinit after `network` |
 | `prepare-nvme` | Rust | Migrate `/data` to NVMe (GPT via gptman) and remount |
+
+Network tools (`configure-ethernet`, `configure-dhcp`) ship via Buildroot package
+`package/micronet` (OCI from [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet)),
+not under `apps/`.
 
 Init/PID 1 is **microinit** (OCI package), not under `apps/`. The SysV-style
 `shutdown` CLI ships with that same OCI bundle (`/usr/sbin/shutdown`).
