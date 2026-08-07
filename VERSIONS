@@ -1,0 +1,12 @@
+# Hub package GitHub refs for package/*/fetch.sh
+# (tip: main|master|sha-*; release: latest-release|v*)
+#
+# Included by the root Makefile and os/Makefile.
+# Override without editing this file:
+#   make image BIGFRED_REF=master
+#   BIGFRED_REF=v1.2.3 make image-using-docker
+#
+BIGFRED_REF ?= latest-release
+MICROINIT_REF ?= main
+MICRONET_REF ?= main
+MICRODNS_REF ?= main

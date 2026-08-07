@@ -11,11 +11,9 @@ DOCKER_DIR   := $(abspath docker)
 # Match host ownership of os/output/ (override: make image-using-docker DOCKER_UID=$(id -u))
 DOCKER_UID   ?= 1000
 DOCKER_GID   ?= 1000
-# GitHub refs for package/*/fetch.sh (tip: main|master|sha-*; release: latest-release|v*)
-BIGFRED_REF    ?= latest-release
-MICROINIT_REF  ?= main
-MICRONET_REF   ?= main
-MICRODNS_REF   ?= main
+
+# Defaults from VERSIONS; CLI/env still override (make BIGFRED_REF=… / env).
+include $(REPO_ROOT)/VERSIONS
 
 image:
 	$(MAKE) -C os image \

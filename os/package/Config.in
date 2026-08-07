@@ -25,6 +25,7 @@ config BR2_PACKAGE_BIGFRED_REF
 	default "latest-release"
 	help
 	  Ref for dcc-bigfred/bigfred binaries.
+	  Default: repo-root VERSIONS (BIGFRED_REF).
 	  Override: make image BIGFRED_REF=master
 	  Tip refs need GITHUB_TOKEN; Releases usually do not.
 

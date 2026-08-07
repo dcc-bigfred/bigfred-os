@@ -1,7 +1,7 @@
 # BigFred hub OS — Raspberry Pi 5 (based on upstream raspberrypi5_defconfig)
 # Documentation: modelarstwo/rb/docs/loconet-adapter/08-hub-os-image.md
 # Hub binaries via package/*/fetch.sh (GitHub Actions tip or Releases).
-# Override: make image BIGFRED_REF=… MICROINIT_REF=… MICRONET_REF=… MICRODNS_REF=…
+# Defaults: repo-root VERSIONS. Override: make image BIGFRED_REF=… etc.
 
 BR2_aarch64=y
 BR2_cortex_a76=y
