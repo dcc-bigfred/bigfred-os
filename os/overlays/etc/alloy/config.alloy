@@ -2,5 +2,5 @@
 // State directory: /data/var/lib/alloy
 
 logging {
-  level = "info"
+  level = "warn"
 }

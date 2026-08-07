@@ -20,7 +20,9 @@ supervised no
 dir /data/var/db/redis
 dbfilename dump.rdb
 appendonly no
-save 60 100
+save 120 100
+rdbcompression yes
+stop-writes-on-bgsave-error no
 logfile /data/logs/redis/redis.log
 notify-keyspace-events "KA"
 EOF

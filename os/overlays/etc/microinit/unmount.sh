@@ -63,6 +63,12 @@ if is_mounted /root/.ssh; then
 	try_umount /root/.ssh || log "WARNING: could not umount /root/.ssh"
 fi
 
+# Service logs tmpfs stacked on /data — must go before remount/umount of /data.
+if [ "$DATA_ROOT" = /data ] && is_mounted /data/logs; then
+	log "umount /data/logs"
+	try_umount /data/logs || log "WARNING: could not umount /data/logs"
+fi
+
 # --- 2) persistent data root (mmcblk0p3 or NVMe after prepare-nvme) ---
 if is_mounted "$DATA_ROOT"; then
 	log "remount,ro $DATA_ROOT"
