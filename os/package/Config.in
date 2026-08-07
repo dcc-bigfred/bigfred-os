@@ -22,11 +22,11 @@ if BR2_PACKAGE_BIGFRED
 
 config BR2_PACKAGE_BIGFRED_REF
 	string "GitHub ref (master | latest-release | v* | sha-*)"
-	default "latest-release"
+	default "master"
 	help
 	  Ref for dcc-bigfred/bigfred binaries.
 	  Default: repo-root VERSIONS (BIGFRED_REF).
-	  Override: make image BIGFRED_REF=master
+	  Override: make image BIGFRED_REF=latest-release
 	  Tip refs need GITHUB_TOKEN; Releases usually do not.
 
 endif

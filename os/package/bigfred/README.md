@@ -4,7 +4,8 @@ Pulls [dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred) hub linux/ar
 binaries via shared GitHub fetch and installs loco-server + remote-icmp under
 `/opt/bigfred/bin/` with `/usr/bin` wrappers.
 
-Default ref: `latest-release` (falls back to `master` if no release exists).
-Tip/`master` needs a GitHub token; public Releases usually do not.
+Default ref: `master` (repo-root `VERSIONS` / `BIGFRED_REF`). Tip/`master`
+needs a GitHub token; public Releases usually do not.
 
 Requires Go on the host (`go run github.com/dcc-bigfred/common/cmd/fetch@latest`).
+Every `make image` re-fetches the binaries (same as microinit/micronet/microdns).

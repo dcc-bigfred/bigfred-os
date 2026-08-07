@@ -10,7 +10,7 @@ ifeq ($(BIGFRED_VERSION),)
 BIGFRED_VERSION = $(call qstrip,$(BR2_PACKAGE_BIGFRED_REF))
 endif
 ifeq ($(BIGFRED_VERSION),)
-BIGFRED_VERSION = latest-release
+BIGFRED_VERSION = master
 endif
 
 BIGFRED_VERSION_SAFE = $(subst /,_,$(BIGFRED_VERSION))
@@ -20,12 +20,10 @@ BIGFRED_SITE = https://github.com/dcc-bigfred/bigfred
 BIGFRED_LICENSE = proprietary
 BIGFRED_DEPENDENCIES = host-libcap
 
+# Always re-fetch: tip refs and floating tags change under the same filename.
 define BIGFRED_FETCH_GITHUB
 	mkdir -p $(BIGFRED_DL_DIR)
-	case "$(BIGFRED_VERSION)" in \
-		master|main|latest-release|sha-*) \
-			rm -f "$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)" ;; \
-	esac
+	rm -f "$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)"
 	$(BIGFRED_PKGDIR)/fetch.sh "$(BIGFRED_VERSION)" \
 		"$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)"
 endef
@@ -53,3 +51,9 @@ define BIGFRED_PERMISSIONS
 endef
 
 $(eval $(generic-package))
+
+# Force the download step to re-run on every `make image`: without this,
+# .stamp_downloaded stays present after the first build and Buildroot skips
+# PRE_DOWNLOAD_HOOKS, so a re-pushed tip would never be re-fetched.
+.PHONY: BIGFRED_FORCE_REDOWNLOAD
+$(BIGFRED_DIR)/.stamp_downloaded: BIGFRED_FORCE_REDOWNLOAD
