@@ -6,7 +6,7 @@
 #   make image BIGFRED_REF=master
 #   BIGFRED_REF=v1.2.3 make image-using-docker
 #
-BIGFRED_REF ?= latest-release
+BIGFRED_REF ?= master
 MICROINIT_REF ?= main
 MICRONET_REF ?= main
 MICRODNS_REF ?= main
