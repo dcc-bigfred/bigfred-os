@@ -16,7 +16,7 @@ command -v go >/dev/null 2>&1 || {
 }
 
 export GOPROXY="${GOPROXY:-direct}"
-FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@latest}"
+FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@v0.1.3}"
 
 REPO="${MICRONET_GITHUB_REPO:-dcc-bigfred/micronet}"
 ARTIFACT="${MICRONET_ARTIFACT_NAME:-binaries-arm64}"
