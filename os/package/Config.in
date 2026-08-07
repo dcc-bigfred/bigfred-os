@@ -74,10 +74,10 @@ config BR2_PACKAGE_MICRONET_OCI_TAG
 endif
 
 config BR2_PACKAGE_MICRODNS
-	bool "microdns (mDNS advertiser from GHCR OCI)"
+	bool "microdns (mDNS advertiser from GitHub)"
 	default y
 	help
-	  Pull ghcr.io/dcc-bigfred/microdns-linux-arm64 via oras and
+	  Pull microdns from GitHub (Actions tip or Releases) and
 	  install /usr/sbin/microdns. Advertises bigfred.local and optional
 	  dcc-bus handset discovery.
 
@@ -86,12 +86,11 @@ config BR2_PACKAGE_MICRODNS
 if BR2_PACKAGE_MICRODNS
 
 config BR2_PACKAGE_MICRODNS_OCI_TAG
-	string "OCI tag (main | sha-<7>)"
+	string "GitHub ref (main | sha-<7> | v*)"
 	default "main"
 	help
-	  Tag of ghcr.io/dcc-bigfred/microdns-linux-arm64.
+	  Ref for dcc-bigfred/microdns binaries.
 	  Override: make image MICRODNS_OCI_TAG=main
-	  Floating tags (main, sha-*) are re-pulled each download.
 
 endif
 

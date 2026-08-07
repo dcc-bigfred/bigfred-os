@@ -173,21 +173,21 @@ Kernel options: `CONFIG_USB_SERIAL_CP210X`, `FTDI_SIO`, `CH341`, `PL2303`,
 
 ## BigFred (loco-server)
 
-Buildroot package `package/bigfred` pulls
-`ghcr.io/dcc-bigfred/bigfred-hub-linux-arm64` (ORAS) and installs:
+Buildroot package `package/bigfred` pulls hub linux/arm64 binaries from GitHub
+via `go run github.com/dcc-bigfred/common/cmd/fetch@latest` and installs:
 
 - `/opt/bigfred/bin/bigfred` — binary (`dcc-bus` is a subcommand of the same binary)
 - `/opt/bigfred/bin/bigfred-remote-icmp`
 - `/usr/bin/bigfred` — wrapper: prefers `/data/opt/bigfred`, then `/opt/bigfred`
 
-OCI tag: `make image BIGFRED_OCI_TAG=master` (or `latest-release`, `v1.2.3`).
-Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires host `oras` (see
+Ref: `make image BIGFRED_OCI_TAG=master` (or `latest-release`, `v1.2.3`).
+Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires Go on the host (see
 `docker/install-buildroot-deps.sh`). Details: `package/bigfred/README.md`.
 
 ## microinit (PID 1)
 
-Buildroot package `package/microinit` pulls
-`ghcr.io/dcc-bigfred/microinit-linux-arm64` (ORAS) and installs `/sbin/init`,
+Buildroot package `package/microinit` pulls linux/arm64 binaries from GitHub
+via the same fetch tool and installs `/sbin/init`,
 `/usr/sbin/microinit`, and `/usr/sbin/shutdown` (SysV-style ordered
 poweroff/reboot/halt). Init system is `BR2_INIT_NONE` (BusyBox stays for
 utilities; it does not own `/sbin/init`).
