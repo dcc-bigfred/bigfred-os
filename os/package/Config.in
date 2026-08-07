@@ -20,12 +20,12 @@ config BR2_PACKAGE_BIGFRED
 
 if BR2_PACKAGE_BIGFRED
 
-config BR2_PACKAGE_BIGFRED_OCI_TAG
+config BR2_PACKAGE_BIGFRED_REF
 	string "GitHub ref (master | latest-release | v* | sha-*)"
 	default "latest-release"
 	help
 	  Ref for dcc-bigfred/bigfred binaries.
-	  Override: make image BIGFRED_OCI_TAG=master
+	  Override: make image BIGFRED_REF=master
 	  Tip refs need GITHUB_TOKEN; Releases usually do not.
 
 endif
@@ -43,12 +43,12 @@ config BR2_PACKAGE_MICROINIT
 
 if BR2_PACKAGE_MICROINIT
 
-config BR2_PACKAGE_MICROINIT_OCI_TAG
+config BR2_PACKAGE_MICROINIT_REF
 	string "GitHub ref (main | sha-<7> | v*)"
 	default "main"
 	help
 	  Ref for dcc-bigfred/microinit binaries.
-	  Override: make image MICROINIT_OCI_TAG=main
+	  Override: make image MICROINIT_REF=main
 	  Tip refs need GITHUB_TOKEN.
 
 endif
@@ -64,12 +64,12 @@ config BR2_PACKAGE_MICRONET
 
 if BR2_PACKAGE_MICRONET
 
-config BR2_PACKAGE_MICRONET_OCI_TAG
+config BR2_PACKAGE_MICRONET_REF
 	string "GitHub ref (main | sha-<7> | v*)"
 	default "main"
 	help
 	  Ref for dcc-bigfred/micronet binaries.
-	  Override: make image MICRONET_OCI_TAG=main
+	  Override: make image MICRONET_REF=main
 
 endif
 
@@ -85,12 +85,12 @@ config BR2_PACKAGE_MICRODNS
 
 if BR2_PACKAGE_MICRODNS
 
-config BR2_PACKAGE_MICRODNS_OCI_TAG
+config BR2_PACKAGE_MICRODNS_REF
 	string "GitHub ref (main | sha-<7> | v*)"
 	default "main"
 	help
 	  Ref for dcc-bigfred/microdns binaries.
-	  Override: make image MICRODNS_OCI_TAG=main
+	  Override: make image MICRODNS_REF=main
 
 endif
 

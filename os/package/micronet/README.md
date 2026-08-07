@@ -10,4 +10,4 @@ Pulls [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet) binaries v
 Requires Go on the host (`install-go.sh` / Docker image). Tip refs need a
 GitHub token in the environment.
 
-Default ref: `main` (`MICRONET_OCI_TAG` / `BR2_PACKAGE_MICRONET_OCI_TAG`).
+Default ref: `main` (`MICRONET_REF` / `BR2_PACKAGE_MICRONET_REF`).

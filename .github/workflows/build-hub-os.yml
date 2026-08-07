@@ -14,20 +14,20 @@ on:
         description: Skip Go unit tests for hub apps
         type: boolean
         default: false
-      bigfred_oci_tag:
+      bigfred_ref:
         description: BigFred GitHub ref (master | latest-release | v*)
         type: string
         default: latest-release
-      microinit_oci_tag:
+      microinit_ref:
         description: microinit GitHub ref (main | sha-<7> | v*)
         type: string
         default: main
-      micronet_oci_tag:
+      micronet_ref:
         description: micronet GitHub ref (main | sha-<7> | v*)
         type: string
         default: main
-      microdns_oci_tag:
-        description: microdns mDNS OCI tag (main | sha-<7>)
+      microdns_ref:
+        description: microdns GitHub ref (main | sha-<7> | v*)
         type: string
         default: main
 
@@ -46,10 +46,10 @@ jobs:
 
     env:
       MAKEFLAGS: -j$(( $(nproc) ))
-      BIGFRED_OCI_TAG: ${{ inputs.bigfred_oci_tag }}
-      MICROINIT_OCI_TAG: ${{ inputs.microinit_oci_tag }}
-      MICRONET_OCI_TAG: ${{ inputs.micronet_oci_tag }}
-      MICRODNS_OCI_TAG: ${{ inputs.microdns_oci_tag }}
+      BIGFRED_REF: ${{ inputs.bigfred_ref }}
+      MICROINIT_REF: ${{ inputs.microinit_ref }}
+      MICRONET_REF: ${{ inputs.micronet_ref }}
+      MICRODNS_REF: ${{ inputs.microdns_ref }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -111,10 +111,10 @@ jobs:
       - name: Build hub OS image
         run: |
           make -C os image \
-            BIGFRED_OCI_TAG="${BIGFRED_OCI_TAG}" \
-            MICROINIT_OCI_TAG="${MICROINIT_OCI_TAG}" \
-            MICRONET_OCI_TAG="${MICRONET_OCI_TAG}" \
-            MICRODNS_OCI_TAG="${MICRODNS_OCI_TAG}"
+            BIGFRED_REF="${BIGFRED_REF}" \
+            MICROINIT_REF="${MICROINIT_REF}" \
+            MICRONET_REF="${MICRONET_REF}" \
+            MICRODNS_REF="${MICRODNS_REF}"
 
       - name: Save host toolchain to cache
         if: success()
@@ -142,10 +142,10 @@ jobs:
             echo ""
             echo "- Run: \`${{ github.run_number }}\`"
             echo "- Commit: \`${{ github.sha }}\`"
-            echo "- BigFred ref: \`${{ inputs.bigfred_oci_tag }}\`"
-            echo "- microinit ref: \`${{ inputs.microinit_oci_tag }}\`"
-            echo "- micronet ref: \`${{ inputs.micronet_oci_tag }}\`"
-            echo "- microdns ref: \`${{ inputs.microdns_oci_tag }}\`"
+            echo "- BigFred ref: \`${{ inputs.bigfred_ref }}\`"
+            echo "- microinit ref: \`${{ inputs.microinit_ref }}\`"
+            echo "- micronet ref: \`${{ inputs.micronet_ref }}\`"
+            echo "- microdns ref: \`${{ inputs.microdns_ref }}\`"
             echo "- Artifact: \`bigfred-hub-nvme-${{ github.run_number }}\`"
             echo ""
             echo '```'

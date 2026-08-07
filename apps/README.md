@@ -37,11 +37,11 @@ make -C apps clean
 | `prepare-nvme` | Rust | Migrate `/data` to NVMe (GPT via gptman) and remount |
 
 Network tools (`configure-ethernet`, `configure-dhcp`) ship via Buildroot package
-`package/micronet` (OCI from [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet)),
+`package/micronet` (GitHub fetch from [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet)),
 not under `apps/`.
 
-Init/PID 1 is **microinit** (OCI package), not under `apps/`. The SysV-style
-`shutdown` CLI ships with that same OCI bundle (`/usr/sbin/shutdown`).
+Init/PID 1 is **microinit** (`package/microinit`), not under `apps/`. The SysV-style
+`shutdown` CLI ships with that same package (`/usr/sbin/shutdown`).
 
 ## Adding an app
 

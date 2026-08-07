@@ -14,11 +14,11 @@ Config is regenerated every boot from the rootfs overlay into
 Default: `main` (also published as `sha-<7>` from microdns CI).
 
 ```bash
-make image MICRODNS_OCI_TAG=main
-# or pin: MICRODNS_OCI_TAG=sha-abcdef0
+make image MICRODNS_REF=main
+# or pin: MICRODNS_REF=sha-abcdef0
 ```
 
-Menuconfig: `BR2_PACKAGE_MICRODNS_OCI_TAG`.
+Menuconfig: `BR2_PACKAGE_MICRODNS_REF`.
 
 Requires Go on the host (`install-go.sh` / Docker image). Tip refs need a
 GitHub token in the environment.
