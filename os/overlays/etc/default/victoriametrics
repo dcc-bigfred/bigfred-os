@@ -3,7 +3,9 @@
 
 STORAGE_DATA_PATH=/data/var/lib/victoriametrics
 HTTP_LISTEN_ADDR=:8428
-RETENTION_PERIOD=12
+# 3-day retention (suffix d); soft ~32MB target at low hub ingestion rates.
+# Single-node has no native max-size flag — retention is the primary lever.
+RETENTION_PERIOD=3d
 # Flush in-memory data to disk periodically instead of every 5s (upstream default).
 # Larger values reduce flash wear; data in RAM may be lost on unclean shutdown.
 INMEMORY_DATA_FLUSH_INTERVAL=10m

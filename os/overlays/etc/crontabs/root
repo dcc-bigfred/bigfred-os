@@ -1,6 +1,5 @@
-# Hub log rotation (§8.9)
-0  9  *   *   *     /usr/sbin/rotate-hub-logs
-15 15 *   *   *     /usr/sbin/rotate-hub-logs
+# Hub log rotation (§8.9) — hourly; /data/logs is tmpfs 64m
+0  *  *   *   *     /usr/sbin/rotate-hub-logs
 
 # Persist wall clock (no RTC); restored by early-boot.sh
-*/10 * * * * date -u +%s > /data/etc/fake-hwclock 2>/dev/null
+*/30 * * * * date -u +%s > /data/etc/fake-hwclock 2>/dev/null

@@ -12,7 +12,7 @@ start)
 		exit 1
 	fi
 	[ -f "$GRAFANA_CFG" ] || exit 1
-	mkdir -p /data/var/lib/grafana/data /data/var/lib/grafana/log /data/var/lib/grafana/plugins
+	mkdir -p /data/var/lib/grafana/data /data/logs/grafana /data/var/lib/grafana/plugins
 	exec "$GRAFANA_BIN" server \
 		--homepath="$GRAFANA_HOME" \
 		--config="$GRAFANA_CFG"

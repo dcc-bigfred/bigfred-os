@@ -262,23 +262,26 @@ mount_data() {
 	if is_mounted /data; then
 		return 0
 	fi
+	# Shared mount options: noatime + commit=15 (batch journal flushes;
+	# 15s avoids stacking with SQLite/Redis write windows on hard power loss).
+	_data_opts="rw,noatime,commit=15"
 	# 1) NVMe p1 (ext4 + marker) — migrated data lives here.
 	_nvme=$(nvme_data_part || true)
 	if [ -n "$_nvme" ] && [ -b "$_nvme" ]; then
 		log "mounting NVMe data partition: $_nvme"
-		mount -t ext4 -o rw,noatime "$_nvme" /data && return 0
+		mount -t ext4 -o "$_data_opts" "$_nvme" /data && return 0
 		log "WARNING: NVMe marker present but mount failed — trying SD"
 	fi
 	# 2) microSD data partition by label, then by device.
 	if command -v findfs >/dev/null 2>&1; then
 		_dev=$(findfs LABEL=bigfred-data 2>/dev/null || true)
 		if [ -n "${_dev:-}" ] && [ -b "$_dev" ]; then
-			mount -t ext4 "$_dev" /data && return 0
+			mount -t ext4 -o "$_data_opts" "$_dev" /data && return 0
 		fi
 	fi
 	for _dev in /dev/disk/by-label/bigfred-data /dev/mmcblk0p3; do
 		if [ -b "$_dev" ] || [ -e "$_dev" ]; then
-			if mount -t ext4 "$_dev" /data 2>/dev/null; then
+			if mount -t ext4 -o "$_data_opts" "$_dev" /data 2>/dev/null; then
 				return 0
 			fi
 		fi
@@ -290,7 +293,7 @@ mount_data() {
 			if [ -z "$_fstype" ]; then
 				log "formatting $_dev as ext4 (LABEL=bigfred-data)"
 				mkfs.ext4 -F -L bigfred-data "$_dev"
-				mount -t ext4 "$_dev" /data && return 0
+				mount -t ext4 -o "$_data_opts" "$_dev" /data && return 0
 			fi
 		fi
 	done
@@ -312,6 +315,13 @@ if [ "$DATA_ROOT" = /data ]; then
 		/usr/sbin/prepare-nvme || _rc=$?
 		if [ "$_rc" -ne 0 ]; then
 			log "WARNING: prepare-nvme failed (exit $_rc) — keeping current /data"
+		elif is_mounted /data; then
+			# prepare-nvme remounts /data with rw,noatime only; re-apply
+			# commit=15 so the ext4 journal window stays aligned with the
+			# vm.dirty_* sysctl tuning for the rest of this boot.
+			log "re-applying commit=15 on /data after NVMe migration"
+			mount -o remount,rw,noatime,commit=15 /data 2>/dev/null \
+				|| log "WARNING: could not remount /data with commit=15"
 		fi
 	fi
 else
@@ -325,10 +335,25 @@ mkdir -p "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred"
 mkdir -p "$DATA_ROOT/var/lib/alloy" \
 	"$DATA_ROOT/var/lib/victoriametrics" \
 	"$DATA_ROOT/var/lib/grafana/data" \
-	"$DATA_ROOT/var/lib/grafana/log" \
 	"$DATA_ROOT/var/lib/grafana/plugins"
 mkdir -p "$DATA_ROOT/opt/bigfred/bin"
-mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy"
+# Service logs live on tmpfs under /data/logs (RAM; lost on reboot) to
+# avoid SD wear. Mount after /data so the mountpoint exists on the RW
+# partition. Cap at 64m; rotate-hub-logs enforces size/retention.
+if [ "$DATA_ROOT" = /data ] && is_mounted /data && ! is_mounted /data/logs; then
+	log "mounting tmpfs /data/logs (64m)"
+	if ! mount -t tmpfs -o mode=0755,size=64m tmpfs /data/logs 2>/tmp/tmpfs-logs.err; then
+		# Do NOT swallow this silently: a failed tmpfs mount means service
+		# logs would land on the ext4 /data partition and silently defeat
+		# the SD-wear reduction goal. Surface the error so the operator
+		# can fix it, but keep booting (logs are non-fatal).
+		log "WARNING: tmpfs /data/logs mount failed — logs will be written"
+		log "WARNING: to persistent /data/logs (SD wear!). err: $(cat /tmp/tmpfs-logs.err 2>/dev/null)"
+	fi
+	rm -f /tmp/tmpfs-logs.err
+fi
+mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" \
+	"$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/grafana"
 mkdir -p "$DATA_ROOT/etc/microinit" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus" \
@@ -357,7 +382,8 @@ chown_if redis "$DATA_ROOT/var/db/redis" "$DATA_ROOT/logs/redis"
 chown_if alloy "$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/logs/alloy"
 chown_if metrics \
 	"$DATA_ROOT/var/lib/victoriametrics" \
-	"$DATA_ROOT/var/lib/grafana"
+	"$DATA_ROOT/var/lib/grafana" \
+	"$DATA_ROOT/logs/grafana"
 # SQLite lives under var/db/bigfred/; chown the directory so WAL/SHM inherit.
 # Only loco-server-managed drop-in groups are bigfred-owned; OS services stay root.
 chown_if bigfred \
@@ -367,7 +393,7 @@ chown_if bigfred \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
 chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/var/lib/victoriametrics" 2>/dev/null || true
-chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" 2>/dev/null || true
+chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/grafana" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/etc/microinit.d" "$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus" 2>/dev/null || true

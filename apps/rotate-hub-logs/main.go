@@ -17,14 +17,20 @@ import (
 const (
 	defaultLogRoot       = "/data/logs"
 	defaultRetentionDays = 14
-	defaultMaxBytes      = 512 * 1024 * 1024
-	defaultRotateSize    = 10 * 1024 * 1024
+	// defaultMaxBytes caps compressed archives (.gz). defaultTotalBytes
+	// caps live .log + .gz together so steady-state usage stays under the
+	// 64 MiB tmpfs on /data/logs (leaves headroom for new entries between
+	// hourly rotation runs).
+	defaultMaxBytes   = 32 * 1024 * 1024
+	defaultTotalBytes   = 56 * 1024 * 1024
+	defaultRotateSize    = 5 * 1024 * 1024
 )
 
 type config struct {
 	logRoot       string
 	retentionDays int
 	maxBytes      int64
+	totalBytes    int64
 	rotateSize    int64
 }
 
@@ -33,11 +39,13 @@ func main() {
 		logRoot:       defaultLogRoot,
 		retentionDays: defaultRetentionDays,
 		maxBytes:      defaultMaxBytes,
+		totalBytes:    defaultTotalBytes,
 		rotateSize:    defaultRotateSize,
 	}
 	flag.StringVar(&cfg.logRoot, "logroot", cfg.logRoot, "root directory for service logs")
 	flag.IntVar(&cfg.retentionDays, "retention-days", cfg.retentionDays, "delete .gz files older than this many days")
 	flag.Int64Var(&cfg.maxBytes, "max-bytes", cfg.maxBytes, "maximum total size of all .gz under logroot")
+	flag.Int64Var(&cfg.totalBytes, "total-bytes", cfg.totalBytes, "maximum total size of all .log + .gz under logroot (tmpfs headroom)")
 	flag.Int64Var(&cfg.rotateSize, "rotate-size", cfg.rotateSize, "rotate .log files when larger than this many bytes")
 	flag.Parse()
 
@@ -78,7 +86,93 @@ func run(cfg config) error {
 		}
 	}
 
-	return enforceMaxGzipTotal(cfg.logRoot, cfg.maxBytes)
+	return enforceMaxGzipTotal(cfg.logRoot, cfg.maxBytes, cfg.totalBytes)
+}
+
+// enforceMaxGzipTotal caps compressed archives at maxBytes and then, if the
+// combined size of live .log and .gz files exceeds totalBytes, deletes
+// the oldest .gz until the budget is met. totalBytes should be sized
+// below the tmpfs holding logRoot so steady-state usage cannot fill
+// the volume between hourly rotation runs.
+func enforceMaxGzipTotal(logRoot string, maxBytes, totalBytes int64) error {
+	if err := enforceMaxGzipArchives(logRoot, maxBytes); err != nil {
+		return err
+	}
+	return enforceMaxTotal(logRoot, totalBytes)
+}
+
+// enforceMaxGzipArchives deletes oldest .gz files until total .gz size <= maxBytes.
+func enforceMaxGzipArchives(logRoot string, maxBytes int64) error {
+	files, total, err := collectGzipFiles(logRoot)
+	if err != nil {
+		return err
+	}
+	if total <= maxBytes {
+		return nil
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].mod.Before(files[j].mod) })
+	for _, f := range files {
+		if total <= maxBytes {
+			break
+		}
+		if err := os.Remove(f.path); err != nil {
+			return err
+		}
+		total -= f.size
+	}
+	return nil
+}
+
+// enforceMaxTotal deletes oldest .gz files until the combined size of all
+// .log and .gz files under logRoot is <= totalBytes.
+func enforceMaxTotal(logRoot string, totalBytes int64) error {
+	type fileInfo struct {
+		path string
+		mod  time.Time
+		size int64
+	}
+	var files []fileInfo
+	var total int64
+	err := filepath.WalkDir(logRoot, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := d.Name()
+		if !strings.HasSuffix(name, ".log") && !strings.HasSuffix(name, ".gz") {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		files = append(files, fileInfo{path: path, mod: info.ModTime(), size: info.Size()})
+		total += info.Size()
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if total <= totalBytes {
+		return nil
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].mod.Before(files[j].mod) })
+	for _, f := range files {
+		if total <= totalBytes {
+			break
+		}
+		if !strings.HasSuffix(f.path, ".gz") {
+			// Only delete .gz files to avoid nuking an active live log.
+			continue
+		}
+		if err := os.Remove(f.path); err != nil {
+			return err
+		}
+		total -= f.size
+	}
+	return nil
 }
 
 func rotateLogsInDir(dir string, rotateSize int64) error {
@@ -215,29 +309,4 @@ func collectGzipFiles(logRoot string) ([]gzipFileInfo, int64, error) {
 		return nil
 	})
 	return files, total, err
-}
-
-func enforceMaxGzipTotal(logRoot string, maxBytes int64) error {
-	files, total, err := collectGzipFiles(logRoot)
-	if err != nil {
-		return err
-	}
-	if total <= maxBytes {
-		return nil
-	}
-
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].mod.Before(files[j].mod)
-	})
-
-	for _, f := range files {
-		if total <= maxBytes {
-			break
-		}
-		if err := os.Remove(f.path); err != nil {
-			return err
-		}
-		total -= f.size
-	}
-	return nil
 }
