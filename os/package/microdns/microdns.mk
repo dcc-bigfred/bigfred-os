@@ -5,10 +5,10 @@
 #
 ################################################################################
 
-# Prefer Makefile override (make image MICRODNS_OCI_TAG=main), else Kconfig.
-MICRODNS_VERSION = $(call qstrip,$(MICRODNS_OCI_TAG))
+# Prefer Makefile override (make image MICRODNS_REF=main), else Kconfig.
+MICRODNS_VERSION = $(call qstrip,$(MICRODNS_REF))
 ifeq ($(MICRODNS_VERSION),)
-MICRODNS_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRODNS_OCI_TAG))
+MICRODNS_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRODNS_REF))
 endif
 ifeq ($(MICRODNS_VERSION),)
 MICRODNS_VERSION = main

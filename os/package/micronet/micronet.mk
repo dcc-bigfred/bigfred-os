@@ -5,9 +5,9 @@
 #
 ################################################################################
 
-MICRONET_VERSION = $(call qstrip,$(MICRONET_OCI_TAG))
+MICRONET_VERSION = $(call qstrip,$(MICRONET_REF))
 ifeq ($(MICRONET_VERSION),)
-MICRONET_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRONET_OCI_TAG))
+MICRONET_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRONET_REF))
 endif
 ifeq ($(MICRONET_VERSION),)
 MICRONET_VERSION = main

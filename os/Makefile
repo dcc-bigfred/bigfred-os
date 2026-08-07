@@ -12,11 +12,9 @@ BUILDROOT_DIR     ?= $(CURDIR)/buildroot
 OUTPUT_DIR        ?= $(CURDIR)/output
 DEFCONFIG         ?= bigfred_hub_rpi5_defconfig
 APPS_BIN_DIR      := $(REPO_ROOT)/apps/.bin
-# GitHub refs for package fetch (also BR2_PACKAGE_*_OCI_TAG in menuconfig)
-BIGFRED_OCI_TAG   ?= latest-release
-MICROINIT_OCI_TAG ?= main
-MICRONET_OCI_TAG  ?= main
-MICRODNS_OCI_TAG  ?= main
+
+# Defaults from repo-root VERSIONS; CLI/env still override.
+include $(REPO_ROOT)/VERSIONS
 
 BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
@@ -43,10 +41,11 @@ help:
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
-	@echo "BigFred ref: BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) (master|latest-release|v*)"
-	@echo "microinit ref: MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) (main|sha-*|v*)"
-	@echo "micronet ref: MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) (main|sha-*|v*)"
-	@echo "microdns ref: MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG) (main|sha-*|v*)"
+	@echo "Refs from $(REPO_ROOT)/VERSIONS (override: make image BIGFRED_REF=…)"
+	@echo "  BigFred:    BIGFRED_REF=$(BIGFRED_REF) (master|latest-release|v*|sha-*)"
+	@echo "  microinit:  MICROINIT_REF=$(MICROINIT_REF) (main|sha-*|v*|latest-release)"
+	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (main|sha-*|v*|latest-release)"
+	@echo "  microdns:   MICRODNS_REF=$(MICRODNS_REF) (main|sha-*|v*|latest-release)"
 	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
 	@echo "Binary fetch: go run github.com/dcc-bigfred/common/cmd/fetch@latest"
 
@@ -83,7 +82,7 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_OCI_TAG=$(BIGFRED_OCI_TAG) MICROINIT_OCI_TAG=$(MICROINIT_OCI_TAG) MICRONET_OCI_TAG=$(MICRONET_OCI_TAG) MICRODNS_OCI_TAG=$(MICRODNS_OCI_TAG)
+	$(BR2_MAKE) BIGFRED_REF=$(BIGFRED_REF) MICROINIT_REF=$(MICROINIT_REF) MICRONET_REF=$(MICRONET_REF) MICRODNS_REF=$(MICRODNS_REF)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

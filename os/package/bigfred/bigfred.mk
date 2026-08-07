@@ -5,9 +5,9 @@
 #
 ################################################################################
 
-BIGFRED_VERSION = $(call qstrip,$(BIGFRED_OCI_TAG))
+BIGFRED_VERSION = $(call qstrip,$(BIGFRED_REF))
 ifeq ($(BIGFRED_VERSION),)
-BIGFRED_VERSION = $(call qstrip,$(BR2_PACKAGE_BIGFRED_OCI_TAG))
+BIGFRED_VERSION = $(call qstrip,$(BR2_PACKAGE_BIGFRED_REF))
 endif
 ifeq ($(BIGFRED_VERSION),)
 BIGFRED_VERSION = latest-release

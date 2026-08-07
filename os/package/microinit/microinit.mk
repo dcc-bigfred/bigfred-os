@@ -5,9 +5,9 @@
 #
 ################################################################################
 
-MICROINIT_VERSION = $(call qstrip,$(MICROINIT_OCI_TAG))
+MICROINIT_VERSION = $(call qstrip,$(MICROINIT_REF))
 ifeq ($(MICROINIT_VERSION),)
-MICROINIT_VERSION = $(call qstrip,$(BR2_PACKAGE_MICROINIT_OCI_TAG))
+MICROINIT_VERSION = $(call qstrip,$(BR2_PACKAGE_MICROINIT_REF))
 endif
 ifeq ($(MICROINIT_VERSION),)
 MICROINIT_VERSION = main

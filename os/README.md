@@ -1,9 +1,10 @@
 # BigFred hub OS (Buildroot)
 
 This directory is the **BR2_EXTERNAL** tree. BigFred (`loco-server`, `dcc-bus` as a
-subcommand) is installed into the image via `package/bigfred`, which pulls the
-hub OCI bundle from GHCR (`BIGFRED_OCI_TAG`, default `latest-release`). You can
-also install or override binaries under `/data/opt/bigfred` after flash.
+subcommand) is installed into the image via `package/bigfred`, which pulls hub
+binaries from GitHub (default ref from repo-root `VERSIONS`, usually
+`latest-release`). You can also install or override binaries under
+`/data/opt/bigfred` after flash.
 
 ## Image contents
 
@@ -14,7 +15,7 @@ also install or override binaries under `/data/opt/bigfred` after flash.
 | **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); `/usr/lib/bigfred/version/commit` = build git SHA |
 | **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
 | **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
-| **Init** | **microinit** as `/sbin/init` (OCI); `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
+| **Init** | **microinit** as `/sbin/init`; `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
 
 ## Host requirements
 
@@ -28,8 +29,8 @@ From the repository root (recommended):
 ```bash
 make image                  # on host (requires Buildroot dependencies)
 make image-using-docker     # Ubuntu 24.04 in Docker (uid/gid 1000:1000)
-# Optional OCI pins:
-# make image BIGFRED_OCI_TAG=master MICROINIT_OCI_TAG=main
+# Defaults live in repo-root VERSIONS. Optional pins:
+# make image BIGFRED_REF=master MICROINIT_REF=main MICRONET_REF=main MICRODNS_REF=main
 ```
 
 Docker mounts the repo at the **same absolute path** as on the host. Host tools with
@@ -180,8 +181,9 @@ via `go run github.com/dcc-bigfred/common/cmd/fetch@latest` and installs:
 - `/opt/bigfred/bin/bigfred-remote-icmp`
 - `/usr/bin/bigfred` — wrapper: prefers `/data/opt/bigfred`, then `/opt/bigfred`
 
-Ref: `make image BIGFRED_OCI_TAG=master` (or `latest-release`, `v1.2.3`).
-Menuconfig: `BR2_PACKAGE_BIGFRED_OCI_TAG`. Requires Go on the host (see
+Ref: defaults in repo-root `VERSIONS`; override with
+`make image BIGFRED_REF=master` (or `latest-release`, `v1.2.3`).
+Menuconfig: `BR2_PACKAGE_BIGFRED_REF`. Requires Go on the host (see
 `docker/install-buildroot-deps.sh`). Details: `package/bigfred/README.md`.
 
 ## microinit (PID 1)
@@ -202,8 +204,9 @@ utilities; it does not own `/sbin/init`).
   (includes **udevd** early; `bigfred` `dependsOn` includes `udevd`)
 - Scripts under `overlays/etc/init.d/` remain as `cmd` backends
 
-OCI tag: `make image MICROINIT_OCI_TAG=main` (or `sha-<7>`).
-Menuconfig: `BR2_PACKAGE_MICROINIT_OCI_TAG`. Details: `package/microinit/README.md`.
+Ref: defaults in repo-root `VERSIONS`; override with
+`make image MICROINIT_REF=main` (or `sha-<7>`, `v*`, `latest-release`).
+Menuconfig: `BR2_PACKAGE_MICROINIT_REF`. Details: `package/microinit/README.md`.
 
 CLI on device: `microinit list`, `microinit start redis`, `microinit logs --follow`.
 
