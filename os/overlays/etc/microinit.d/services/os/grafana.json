@@ -20,7 +20,8 @@
           200
         ],
         "interval": 300
-      }
+      },
+      "orderPriority": 400
     }
   ]
 }

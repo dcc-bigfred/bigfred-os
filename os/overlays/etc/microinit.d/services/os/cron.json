@@ -8,7 +8,8 @@
       "restartBackoff": 2,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/cron",
-      "dependsOn": []
+      "dependsOn": [],
+      "orderPriority": 50
     }
   ]
 }

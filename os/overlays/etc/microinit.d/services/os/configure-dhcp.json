@@ -8,7 +8,8 @@
       "dependsOn": [
         "network"
       ],
-      "startWaitSecs": 5
+      "startWaitSecs": 5,
+      "orderPriority": 40
     }
   ]
 }
