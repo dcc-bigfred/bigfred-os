@@ -221,6 +221,13 @@ Service accounts (non-root): `redis`, `alloy`, `bigfred` (also in `dialout`),
 `bigfred` home is `/home/bigfred` (tmpfs, no login shell). microinit IPC:
 `socketAllowUsers: ["bigfred"]` (socket `0660`).
 
+microinit drop-in layout under `/data/etc/microinit.d/` (set each boot by
+early-boot): parents `microinit.d/` and `services/` are `root:bigfred` mode
+`0750` (loco-server may traverse, not create/delete sibling groups);
+`services/infra/` and `services/dcc-bus/` are `bigfred:bigfred` `0750`
+(loco-server writes drop-ins); `services/os/` stays `root:root` `0755`
+(image-managed).
+
 Monitoring: Grafana (`http://:3000`, admin/bigfred) with VictoriaMetrics datasource
 (`:8428`). Data: `/data/var/lib/grafana`, `/data/var/lib/victoriametrics`,
 Alloy `/data/var/lib/alloy`.

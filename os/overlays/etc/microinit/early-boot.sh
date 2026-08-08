@@ -386,11 +386,19 @@ chown_if metrics \
 	"$DATA_ROOT/logs/grafana"
 # SQLite lives under var/db/bigfred/; chown the directory so WAL/SHM inherit.
 # Only loco-server-managed drop-in groups are bigfred-owned; OS services stay root.
+# Parents microinit.d/ and services/ stay root-owned but group bigfred so the
+# loco-server can traverse (r-x) without being able to create/delete sibling
+# groups such as os/ (no group write on parents).
 chown_if bigfred \
 	"$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/logs/bigfred" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
+if id bigfred >/dev/null 2>&1; then
+	chown root:bigfred \
+		"$DATA_ROOT/etc/microinit.d" \
+		"$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
+fi
 chmod 0750 "$DATA_ROOT/var/db/redis" "$DATA_ROOT/var/db/bigfred" \
 	"$DATA_ROOT/var/lib/alloy" "$DATA_ROOT/var/lib/victoriametrics" 2>/dev/null || true
 chmod 0750 "$DATA_ROOT/logs/redis" "$DATA_ROOT/logs/alloy" "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/grafana" 2>/dev/null || true
@@ -470,6 +478,11 @@ if [ -f "$DATA_ROOT/etc/redis.conf" ]; then
 	fi
 fi
 if id bigfred >/dev/null 2>&1; then
+	# Re-assert after OS drop-in refresh: parents stay root:bigfred (traverse),
+	# loco-server groups stay bigfred-owned.
+	chown root:bigfred \
+		"$DATA_ROOT/etc/microinit.d" \
+		"$DATA_ROOT/etc/microinit.d/services" 2>/dev/null || true
 	chown -R bigfred:bigfred \
 		"$DATA_ROOT/etc/microinit.d/services/infra" \
 		"$DATA_ROOT/etc/microinit.d/services/dcc-bus" 2>/dev/null || true
