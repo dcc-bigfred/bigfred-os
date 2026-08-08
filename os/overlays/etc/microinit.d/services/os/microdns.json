@@ -13,7 +13,8 @@
       ],
       "securityContext": {
         "runAsUser": "root"
-      }
+      },
+      "orderPriority": 110
     }
   ]
 }

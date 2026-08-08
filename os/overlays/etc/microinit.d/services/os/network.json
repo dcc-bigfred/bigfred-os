@@ -13,7 +13,8 @@
           0
         ],
         "interval": 30
-      }
+      },
+      "orderPriority": 30
     }
   ]
 }

@@ -202,6 +202,8 @@ utilities; it does not own `/sbin/init`).
 
 - Service list seed: `overlays/etc/microinit/microinit.json` → `/data/etc/microinit.json`
   (includes **udevd** early; `bigfred` `dependsOn` includes `udevd`)
+- OS drop-in `orderPriority` bands: see
+  `overlays/etc/microinit.d/services/os/README.md`
 - Scripts under `overlays/etc/init.d/` remain as `cmd` backends
 
 Ref: defaults in repo-root `VERSIONS`; override with

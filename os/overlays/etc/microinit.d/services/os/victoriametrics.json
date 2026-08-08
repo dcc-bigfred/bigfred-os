@@ -13,7 +13,8 @@
       ],
       "securityContext": {
         "runAsUser": "metrics"
-      }
+      },
+      "orderPriority": 120
     }
   ]
 }

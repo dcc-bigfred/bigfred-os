@@ -8,7 +8,8 @@
       "restartBackoff": 5,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/watchdog",
-      "dependsOn": []
+      "dependsOn": [],
+      "orderPriority": 20
     }
   ]
 }

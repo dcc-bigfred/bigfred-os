@@ -10,7 +10,8 @@
       "cmd": "/etc/init.d/remote-icmp",
       "dependsOn": [
         "network"
-      ]
+      ],
+      "orderPriority": 210
     }
   ]
 }

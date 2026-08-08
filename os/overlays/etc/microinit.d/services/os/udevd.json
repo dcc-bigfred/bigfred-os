@@ -8,7 +8,8 @@
       "restartBackoff": 2,
       "startWaitSecs": 2,
       "cmd": "/etc/init.d/udevd",
-      "dependsOn": []
+      "dependsOn": [],
+      "orderPriority": 15
     }
   ]
 }
