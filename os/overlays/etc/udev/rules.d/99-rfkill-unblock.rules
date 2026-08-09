@@ -1,0 +1,11 @@
+# BigFred OS — unblock the on-board wireless radio at boot.
+# Requires: udevd microinit service + kernel cfg80211 + rfkill + brcmfmac.
+#
+# The hub never joins a WiFi network for internet access; the radio is an
+# exclusive, on-demand resource held only while wireless-programmer runs a
+# programming job (associating to a device config AP such as a NewHeiko
+# WiFred). Make sure rfkill is not soft-blocked at boot so nl80211 can bring
+# the interface up on demand. Writes 0 to the device's "soft" file directly
+# (no userspace rfkill binary needed).
+
+SUBSYSTEM=="rfkill", ACTION=="add", RUN+="/bin/sh -c 'echo 0 > /sys/class/rfkill/%k/soft'"

@@ -1,0 +1,26 @@
+#!/bin/sh
+# wireless-programmer — discovers and programs physical throttle hardware.
+# Driven by bigfred / bigfred-wizard over a Unix socket.
+
+BIN=/usr/sbin/wireless-programmer
+SOCK=/data/run/wireless-programmer.sock
+
+case "$1" in
+start)
+	[ -x "$BIN" ] || exit 0
+	mkdir -p /data/run
+	# -F: stay in the foreground so microinit can track the PID.
+	exec "$BIN" --socket "$SOCK"
+	;;
+stop)
+	killall wireless-programmer 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac
