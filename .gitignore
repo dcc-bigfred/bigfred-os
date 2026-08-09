@@ -1,5 +1,6 @@
 apps/.bin/
 apps/prepare-nvme/target/
+apps/factory-reset/target/
 
 go/
 os/.cache/

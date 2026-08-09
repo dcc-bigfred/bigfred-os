@@ -1,23 +1,17 @@
 [package]
-name = "prepare-nvme"
+name = "factory-reset"
 version = "0.1.0"
 edition = "2021"
-description = "Migrate hub /data from microSD onto NVMe (GPT via gptman)"
+description = "Destructive NVMe wipe + reformat for BigFred OS (operator tool)"
 license = "MIT"
 publish = false
 
-[lib]
-name = "prepare_nvme"
-path = "src/lib.rs"
-
 [[bin]]
-name = "prepare-nvme"
+name = "factory-reset"
 path = "src/main.rs"
 
 [dependencies]
-gptman = "3"
-getrandom = "0.3"
-thiserror = "2"
+prepare-nvme = { path = "../prepare-nvme" }
 
 [profile.release]
 lto = true

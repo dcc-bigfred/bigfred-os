@@ -8,10 +8,13 @@ Written in **Rust**. GPT creation uses [`gptman`](https://crates.io/crates/gptma
 (pure Rust + Linux `BLKRRPART` ioctl). Format / mount / copy still use image
 helpers (`mkfs.ext4`, `mount`, `cp`, `blkid`, optional `partprobe`).
 
-Linux only. Installed to `/usr/sbin/prepare-nvme` by `post-build.sh`.
+Linux only. Installed to `/usr/sbin/prepare-nvme` by `post-build.d/20-apps.sh`.
 
 Refuses to run unless `/var/lib/bigfred` exists (OS marker created at image
-build time alongside `/usr/lib/bigfred/version/commit`).
+build time alongside `/etc/lsb-release` and `/usr/lib/bigfred/version/commit`).
+
+The crate also exposes a `prepare_nvme` library used by `factory-reset` for
+shared NVMe discovery / GPT / format helpers.
 
 ## Why
 

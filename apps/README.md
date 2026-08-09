@@ -35,6 +35,7 @@ make -C apps clean
 | `bigfred-os-ui` | Go | Hub admin web UI (logs, services) |
 | `rotate-hub-logs` | Go | Log rotation under `/data/logs` |
 | `prepare-nvme` | Rust | Migrate `/data` to NVMe (GPT via gptman) and remount |
+| `factory-reset` | Rust | Destructive NVMe wipe + reformat (operator tool) |
 
 Network tools (`configure-ethernet`, `configure-dhcp`) ship via Buildroot package
 `package/micronet` (GitHub fetch from [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet)),
