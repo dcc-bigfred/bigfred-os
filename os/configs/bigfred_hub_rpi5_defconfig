@@ -53,9 +53,11 @@ BR2_PACKAGE_RPI_FIRMWARE_CONFIG_FILE="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/big
 BR2_PACKAGE_RPI_FIRMWARE_CMDLINE_FILE="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/bigfred_hub/cmdline.txt"
 BR2_PACKAGE_RPI_FIRMWARE_INSTALL_DTB_OVERLAYS=y
 
-# WiFi firmware for the on-board SDIO chip (brcmfmac). Loaded from
-# /lib/firmware/brcm + /lib/firmware/cypress by the kernel when
-# wireless-programmer brings the interface up to reach a device config AP.
+# WiFi firmware for the on-board SDIO chip (brcmfmac, BCM43455). The .bin and
+# .clm_blob come from the Cypress package (brcmfmac falls back to cypress/);
+# BRCM_BCM43XXX ships NVRAM for Pi 3B+/Pi 4. post-build.sh symlinks the Pi 5
+# board NVRAM to the Pi 4 file (same silicon) and exposes the Cypress .bin
+# under brcm/ so both firmware paths resolve on Pi 5.
 BR2_PACKAGE_LINUX_FIRMWARE=y
 BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XXX=y
 BR2_PACKAGE_LINUX_FIRMWARE_CYPRESS_CYW43XXX=y

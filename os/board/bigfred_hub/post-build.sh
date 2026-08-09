@@ -116,4 +116,29 @@ chmod 0644 "${TARGET_DIR}/usr/lib/bigfred/version/commit"
 mkdir -p "${TARGET_DIR}/var/lib/bigfred"
 echo "bigfred-os commit: ${COMMIT}"
 
+# WiFi firmware for Raspberry Pi 5 (BCM43455 SDIO, same silicon as Pi 3B+/Pi 4).
+# linux-firmware's BRCM_BCM43XXX ships NVRAM for Pi 3B+ and Pi 4 but not Pi 5;
+# CYPRESS_CYW43XXX ships the .bin/.clm_blob under cypress/ (brcmfmac falls back
+# to that path). Symlink the Pi 5 board NVRAM to the Pi 4 NVRAM and expose the
+# Cypress .bin under brcm/ so the primary firmware path also resolves.
+FW_BRCM="${TARGET_DIR}/lib/firmware/brcm"
+FW_CYP="${TARGET_DIR}/lib/firmware/cypress"
+if [ -d "${FW_BRCM}" ]; then
+	if [ -f "${FW_BRCM}/brcmfmac43455-sdio.raspberrypi,4-model-b.txt" ] && \
+	   [ ! -e "${FW_BRCM}/brcmfmac43455-sdio.raspberrypi,5-model-b.txt" ]; then
+		ln -sf "brcmfmac43455-sdio.raspberrypi,4-model-b.txt" \
+			"${FW_BRCM}/brcmfmac43455-sdio.raspberrypi,5-model-b.txt"
+	fi
+	if [ -f "${FW_CYP}/cyfmac43455-sdio.bin" ] && \
+	   [ ! -e "${FW_BRCM}/brcmfmac43455-sdio.bin" ]; then
+		ln -sf "../cypress/cyfmac43455-sdio.bin" \
+			"${FW_BRCM}/brcmfmac43455-sdio.bin"
+	fi
+	if [ -f "${FW_CYP}/cyfmac43455-sdio.clm_blob" ] && \
+	   [ ! -e "${FW_BRCM}/brcmfmac43455-sdio.clm_blob" ]; then
+		ln -sf "../cypress/cyfmac43455-sdio.clm_blob" \
+			"${FW_BRCM}/brcmfmac43455-sdio.clm_blob"
+	fi
+fi
+
 exit 0
