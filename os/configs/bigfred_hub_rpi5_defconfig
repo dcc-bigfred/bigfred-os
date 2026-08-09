@@ -53,6 +53,13 @@ BR2_PACKAGE_RPI_FIRMWARE_CONFIG_FILE="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/big
 BR2_PACKAGE_RPI_FIRMWARE_CMDLINE_FILE="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/bigfred_hub/cmdline.txt"
 BR2_PACKAGE_RPI_FIRMWARE_INSTALL_DTB_OVERLAYS=y
 
+# WiFi firmware for the on-board SDIO chip (brcmfmac). Loaded from
+# /lib/firmware/brcm + /lib/firmware/cypress by the kernel when
+# wireless-programmer brings the interface up to reach a device config AP.
+BR2_PACKAGE_LINUX_FIRMWARE=y
+BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XXX=y
+BR2_PACKAGE_LINUX_FIRMWARE_CYPRESS_CYW43XXX=y
+
 # Core userspace
 BR2_PACKAGE_BUSYBOX=y
 BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/configs/busybox-hub.fragment"

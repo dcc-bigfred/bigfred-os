@@ -27,3 +27,19 @@ CONFIG_THERMAL=y
 
 # ext4 for RO root and RW /data
 CONFIG_EXT4_FS=y
+
+# Wireless — used by wireless-programmer to associate to device config APs
+# (e.g. NewHeiko WiFred). The hub never joins a WiFi network for internet
+# access; the radio is an exclusive, on-demand resource held only while a
+# programming job runs. cfg80211 + brcmfmac cover the Pi 3B+/Pi 5 SDIO chip.
+CONFIG_WIRELESS=y
+CONFIG_CFG80211=y
+# nl80211 userspace (wl-nl80211) needs netlink; build the in-tree vendor
+# split rather than a full mac80211 stack (we do not act as a softap/station
+# for general traffic — only OpenSystem association to config APs).
+# CONFIG_MAC80211 is not set
+CONFIG_RFKILL=y
+CONFIG_RFKILL_INPUT=y
+CONFIG_BRCMFMAC=y
+CONFIG_BRCMFMAC_SDIO=y
+# brcmfmac loads firmware/nvram from /lib/firmware/brcm (linux-firmware pkg).
