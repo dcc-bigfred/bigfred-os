@@ -212,6 +212,14 @@ Menuconfig: `BR2_PACKAGE_MICROINIT_REF`. Details: `package/microinit/README.md`.
 
 CLI on device: `microinit list`, `microinit start redis`, `microinit logs --follow`.
 
+Operator disk tools (installed under `/usr/sbin/`):
+
+| Tool | Role |
+|------|------|
+| `prepare-nvme` | Migrate `/data` from microSD onto NVMe (safe/empty format + copy) |
+| `factory-reset` | Unmount nested mounts under `/data`, delete `/data` contents, reboot |
+| `bigfred-set-time` / `bigfred-set-timezone` | Persist time/timezone under `/data` |
+
 Init scripts: `bigfred` with `taskset` on cores 2,3. `remote-icmp` starts the
 ICMP helper.
 

@@ -6,6 +6,10 @@ description = "Migrate hub /data from microSD onto NVMe (GPT via gptman)"
 license = "MIT"
 publish = false
 
+[lib]
+name = "prepare_nvme"
+path = "src/lib.rs"
+
 [[bin]]
 name = "prepare-nvme"
 path = "src/main.rs"

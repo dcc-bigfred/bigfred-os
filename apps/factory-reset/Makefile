@@ -1,4 +1,4 @@
-# prepare-nvme — Rust (gptman), static aarch64 musl → apps/.bin/prepare-nvme
+# factory-reset — Rust, static aarch64 musl → apps/.bin/factory-reset
 
 ROOT    := $(abspath ../..)
 BIN_DIR ?= $(ROOT)/apps/.bin
@@ -26,13 +26,13 @@ build:
 		exit 127; \
 	}
 	@mkdir -p "$(BIN_DIR)"
-	@echo "==> apps/prepare-nvme (Rust $(TARGET))"
+	@echo "==> apps/factory-reset (Rust $(TARGET))"
 	CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER="$(LINKER)" \
 	RUSTFLAGS='-C target-feature=+crt-static' \
 		$(CARGO) build --release --target $(TARGET)
-	cp -f "$(or $(CARGO_TARGET_DIR),target)/$(TARGET)/release/prepare-nvme" "$(BIN_DIR)/prepare-nvme"
-	chmod 755 "$(BIN_DIR)/prepare-nvme"
-	@echo "wrote $(BIN_DIR)/prepare-nvme"
+	cp -f "$(or $(CARGO_TARGET_DIR),target)/$(TARGET)/release/factory-reset" "$(BIN_DIR)/factory-reset"
+	chmod 755 "$(BIN_DIR)/factory-reset"
+	@echo "wrote $(BIN_DIR)/factory-reset"
 
 # Native build + unit tests (no block devices required).
 test host:
@@ -40,4 +40,4 @@ test host:
 
 clean:
 	$(CARGO) clean
-	rm -f "$(BIN_DIR)/prepare-nvme"
+	rm -f "$(BIN_DIR)/factory-reset"
