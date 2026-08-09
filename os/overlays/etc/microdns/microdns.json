@@ -28,5 +28,6 @@
     "procMs": 2000,
     "mdnsMs": 3000,
     "ifaceMs": 5000
-  }
+  },
+  "skipInterfaces": ["wlan"]
 }
