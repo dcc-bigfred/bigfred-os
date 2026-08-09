@@ -12,7 +12,7 @@ binaries from GitHub (default ref from repo-root `VERSIONS`, usually
 |-------|-------------|
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm) |
-| **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); `/usr/lib/bigfred/version/commit` = build git SHA |
+| **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); OS identity via `/etc/lsb-release` (`DISTRIB_ID=bigfred-os`), `/etc/os-release`, and `/usr/lib/bigfred/version/commit` |
 | **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, Dropbear, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), optional Alloy |
 | **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
 | **Init** | **microinit** as `/sbin/init`; `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
@@ -242,7 +242,7 @@ Admin panel: `bigfred-os-ui` (`http://:8090`, config in `/data/etc/bigfred-os-ui
 ```text
 os/
 ├── configs/           # defconfig, kernel and BusyBox fragments
-├── board/bigfred_hub/ # cmdline, config.txt, genimage, post-*.sh
+├── board/bigfred_hub/ # cmdline, config.txt, genimage, post-build.sh + post-build.d/
 ├── overlays/          # fstab, init.d, redis, crontab, udev
 ├── kernel/            # (fragments in configs/linux-hub.fragment)
 ├── package/           # bigfred, alloy, grafana, victoriametrics (hub apps: ../apps/)
