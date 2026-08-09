@@ -37,3 +37,9 @@ define WIRELESS_PROGRAMMER_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(generic-package))
+
+# Force the download step to re-run on every `make image`: without this,
+# .stamp_downloaded stays present after the first build and Buildroot skips
+# PRE_DOWNLOAD_HOOKS, so a re-pushed tip would never be re-fetched.
+.PHONY: WIRELESS_PROGRAMMER_FORCE_REDOWNLOAD
+$(WIRELESS_PROGRAMMER_DIR)/.stamp_downloaded: WIRELESS_PROGRAMMER_FORCE_REDOWNLOAD
