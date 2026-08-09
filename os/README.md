@@ -217,7 +217,7 @@ Operator disk tools (installed under `/usr/sbin/`):
 | Tool | Role |
 |------|------|
 | `prepare-nvme` | Migrate `/data` from microSD onto NVMe (safe/empty format + copy) |
-| `factory-reset` | Destructive NVMe wipe + GPT/ext4 reformat (requires `DISTRIB_ID=bigfred-os`) |
+| `factory-reset` | Unmount nested mounts under `/data`, delete `/data` contents, reboot |
 | `bigfred-set-time` / `bigfred-set-timezone` | Persist time/timezone under `/data` |
 
 Init scripts: `bigfred` with `taskset` on cores 2,3. `remote-icmp` starts the

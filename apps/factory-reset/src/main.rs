@@ -1,23 +1,21 @@
-//! factory-reset — destructive NVMe wipe + ext4 reformat for BigFred OS.
+//! factory-reset — wipe hub `/data` contents and reboot on BigFred OS.
 //!
-//! Operator tool: destroys all data on the local NVMe disk, writes a fresh
-//! GPT + single ext4 partition (`LABEL=bigfred-data`), and does **not** write
-//! the `.bigfred-nvme` migration marker so the next boot falls back to microSD
-//! `/data`. Re-run `prepare-nvme` to migrate again.
+//! `/data` itself stays mounted (busy). Nested mounts under `/data/…`
+//! (notably tmpfs `/data/logs`) are unmounted first, then every entry under
+//! `/data` is removed. Finally `shutdown -r now` so early-boot reseeds layout.
 
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
-use std::process;
+use std::process::{self, Command};
 
-use prepare_nvme::{
-    find_nvme_disk, is_mounted, log_disk_info, log_mounts_relevant, mount_source, same_device,
-    unmount_disk_mounts, wipe_format_data_partition, BIGFRED_MARKER, DATA_MOUNT,
-};
-
+const DATA_MOUNT: &str = "/data";
 const LSB_RELEASE: &str = "/etc/lsb-release";
+const BIGFRED_MARKER: &str = "/var/lib/bigfred";
 const EXPECTED_DISTRIB_ID: &str = "bigfred-os";
+const UMOUNT_BIN: &str = "/bin/umount";
+const SHUTDOWN_BIN: &str = "/usr/sbin/shutdown";
 
 #[derive(Debug, Default)]
 struct Args {
@@ -47,83 +45,107 @@ fn main() {
 
     if let Err(e) = run(args) {
         eprintln!("factory-reset: ERROR: {e}");
-        log_mounts_relevant();
         process::exit(1);
     }
 }
 
 fn run(args: Args) -> Result<(), String> {
-    let disk = find_nvme_disk().map_err(|e| e.to_string())?;
-    let Some(disk) = disk else {
-        eprintln!("factory-reset: no NVMe disk under /sys/block/nvme* — nothing to do");
-        return Ok(());
-    };
+    if !Path::new(DATA_MOUNT).is_dir() {
+        return Err(format!("{DATA_MOUNT} is missing"));
+    }
 
-    eprintln!("factory-reset: target disk {disk}");
-    log_disk_info(&disk);
-    log_mounts_relevant();
+    let nested = nested_mounts_under(DATA_MOUNT)?;
+    eprintln!("factory-reset: nested mounts under {DATA_MOUNT}: {nested:?}");
 
     if args.dry_run {
         eprintln!(
-            "factory-reset: dry-run — would DESTROY all data on {disk}, \
-             create a new GPT partition, format ext4 (LABEL=bigfred-data), \
-             and leave no .bigfred-nvme marker"
+            "factory-reset: dry-run — would umount nested mounts, \
+             delete all entries under {DATA_MOUNT}, then `{SHUTDOWN_BIN} -r now`"
         );
-        if is_mounted(DATA_MOUNT) {
-            let src = mount_source(DATA_MOUNT);
-            eprintln!(
-                "factory-reset: dry-run — current {DATA_MOUNT} is on {src} ({})",
-                if src_is_under_disk(&src, &disk) {
-                    "would unmount first"
-                } else {
-                    "leave mounted (not on NVMe)"
-                }
-            );
-        }
         return Ok(());
     }
 
     if !args.yes {
-        confirm_wipe(&disk)?;
+        confirm_wipe()?;
     }
 
-    // Tear down NVMe mounts (including /data when it lives on NVMe).
-    if is_mounted(DATA_MOUNT) {
-        let src = mount_source(DATA_MOUNT);
-        if src_is_under_disk(&src, &disk) {
-            eprintln!("factory-reset: {DATA_MOUNT} is on {src} — unmounting NVMe mounts");
-        } else {
-            eprintln!(
-                "factory-reset: {DATA_MOUNT} is on {src} (not NVMe) — leaving it mounted"
-            );
-        }
+    for mp in &nested {
+        eprintln!("factory-reset: umount {mp}");
+        umount(mp)?;
     }
-    unmount_disk_mounts(&disk).map_err(|e| e.to_string())?;
 
-    let part = wipe_format_data_partition(&disk).map_err(|e| e.to_string())?;
-    eprintln!(
-        "factory-reset: {disk} wiped and reformatted ({part}, ext4, LABEL=bigfred-data)."
-    );
-    eprintln!(
-        "factory-reset: reboot to return to microSD {DATA_MOUNT}. \
-         Run prepare-nvme to re-migrate."
-    );
+    wipe_data_contents(DATA_MOUNT)?;
+    eprintln!("factory-reset: {DATA_MOUNT} cleared");
+
+    eprintln!("factory-reset: rebooting (`{SHUTDOWN_BIN} -r now`)");
+    reboot_now()?;
     Ok(())
 }
 
-fn src_is_under_disk(src: &str, disk: &str) -> bool {
-    if src.is_empty() {
-        return false;
+/// Mountpoints strictly under `root/` (not `root` itself), longest first.
+fn nested_mounts_under(root: &str) -> Result<Vec<String>, String> {
+    let content = fs::read_to_string("/proc/mounts")
+        .map_err(|e| format!("read /proc/mounts: {e}"))?;
+    let prefix = format!("{root}/");
+    let mut out: Vec<String> = Vec::new();
+    for line in content.lines() {
+        let mut fields = line.split_whitespace();
+        let Some(_dev) = fields.next() else { continue };
+        let Some(mp) = fields.next() else { continue };
+        if mp.starts_with(&prefix) && !out.iter().any(|m| m == mp) {
+            out.push(mp.to_string());
+        }
     }
-    same_device(src, disk) || src.starts_with(&format!("{disk}p"))
+    out.sort_by_key(|m| std::cmp::Reverse(m.len()));
+    Ok(out)
 }
 
-fn confirm_wipe(disk: &str) -> Result<(), String> {
+fn umount(mp: &str) -> Result<(), String> {
+    let status = Command::new(UMOUNT_BIN)
+        .arg(mp)
+        .status()
+        .map_err(|e| format!("umount {mp}: {e}"))?;
+    if !status.success() {
+        return Err(format!("umount {mp}: exit {:?}", status.code()));
+    }
+    Ok(())
+}
+
+fn wipe_data_contents(root: &str) -> Result<(), String> {
+    let entries = fs::read_dir(root).map_err(|e| format!("read_dir {root}: {e}"))?;
+    for ent in entries {
+        let ent = ent.map_err(|e| format!("read_dir {root}: {e}"))?;
+        let path = ent.path();
+        eprintln!("factory-reset: remove {}", path.display());
+        if ent.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+            fs::remove_dir_all(&path)
+                .map_err(|e| format!("remove_dir_all {}: {e}", path.display()))?;
+        } else {
+            fs::remove_file(&path).map_err(|e| format!("remove_file {}: {e}", path.display()))?;
+        }
+    }
+    Ok(())
+}
+
+fn reboot_now() -> Result<(), String> {
+    let status = Command::new(SHUTDOWN_BIN)
+        .args(["-r", "now"])
+        .status()
+        .map_err(|e| format!("{SHUTDOWN_BIN} -r now: {e}"))?;
+    if !status.success() {
+        return Err(format!(
+            "{SHUTDOWN_BIN} -r now: exit {:?}",
+            status.code()
+        ));
+    }
+    Ok(())
+}
+
+fn confirm_wipe() -> Result<(), String> {
     let mut stderr = io::stderr().lock();
     writeln!(
         stderr,
-        "WARNING: this will DESTROY ALL DATA on {disk}.\n\
-         Current {DATA_MOUNT} will fall back to microSD on next boot.\n\
+        "WARNING: this will DESTROY ALL DATA under {DATA_MOUNT} and reboot.\n\
          Type \"yes\" to continue:"
     )
     .map_err(|e| e.to_string())?;
@@ -140,7 +162,6 @@ fn confirm_wipe(disk: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Refuse to run unless this looks like a BigFred OS image.
 fn require_bigfred_os(lsb_path: &str, marker_dir: &str) -> Result<(), String> {
     let body = fs::read_to_string(lsb_path).map_err(|_| {
         format!("{lsb_path} not found — refusing to run outside BigFred OS")
@@ -190,10 +211,9 @@ where
 fn usage() {
     let prog = env::args().next().unwrap_or_else(|| "factory-reset".into());
     eprintln!("usage: {prog} [--yes] [--dry-run]");
-    eprintln!("  Destructive wipe of the local NVMe disk (GPT + ext4 LABEL=bigfred-data).");
-    eprintln!("  Does not write .bigfred-nvme — next boot uses microSD /data.");
+    eprintln!("  Unmount nested filesystems under {DATA_MOUNT}, delete its contents, reboot.");
     eprintln!("  --yes       skip interactive confirmation");
-    eprintln!("  --dry-run   print what would happen, do not modify disks");
+    eprintln!("  --dry-run   print what would happen, do not modify or reboot");
 }
 
 #[cfg(test)]
@@ -242,10 +262,25 @@ mod tests {
     }
 
     #[test]
-    fn src_is_under_disk_paths() {
-        assert!(src_is_under_disk("/dev/nvme0n1p1", "/dev/nvme0n1"));
-        assert!(!src_is_under_disk("/dev/mmcblk0p3", "/dev/nvme0n1"));
-        assert!(!src_is_under_disk("", "/dev/nvme0n1"));
+    fn wipe_data_contents_removes_entries() {
+        let dir = tempfile_dir();
+        fs::create_dir(dir.join("etc")).unwrap();
+        fs::write(dir.join("marker"), b"x").unwrap();
+        wipe_data_contents(dir.to_str().unwrap()).unwrap();
+        assert!(fs::read_dir(&dir).unwrap().next().is_none());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn nested_mounts_sorts_longest_first() {
+        let mut out = vec![
+            "/data/a".to_string(),
+            "/data/a/b/c".to_string(),
+            "/data/logs".to_string(),
+        ];
+        out.sort_by_key(|m| std::cmp::Reverse(m.len()));
+        assert_eq!(out[0], "/data/a/b/c");
+        assert!(out[1].len() >= out[2].len());
     }
 
     fn tempfile_dir() -> PathBuf {

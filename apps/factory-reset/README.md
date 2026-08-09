@@ -1,12 +1,11 @@
 # factory-reset
 
-Destructive operator tool: wipe the local NVMe disk on a BigFred hub, write a
-fresh GPT with one Linux FS partition, and format it as ext4
-(`LABEL=bigfred-data`).
+Operator tool: wipe hub writable state under `/data` and reboot.
 
-Does **not** copy `/data` and does **not** write the `.bigfred-nvme` migration
-marker. After a wipe, the next boot falls back to microSD `/data`. Re-run
-[`prepare-nvme`](../prepare-nvme/) to migrate again.
+`/data` itself cannot be unmounted while services hold it. Nested mounts under
+`/data/…` (notably tmpfs `/data/logs`) are unmounted first, then every entry
+under `/data` is deleted. Finally `shutdown -r now` so early-boot reseeds the
+layout on the next boot.
 
 Linux only. Installed to `/usr/sbin/factory-reset` by `post-build.d/20-apps.sh`.
 
@@ -20,7 +19,7 @@ Refuses to run unless:
 ## Usage
 
 ```bash
-/usr/sbin/factory-reset --dry-run   # print plan, no disk changes
+/usr/sbin/factory-reset --dry-run   # print plan, no changes
 /usr/sbin/factory-reset             # interactive: type "yes" to confirm
 /usr/sbin/factory-reset --yes       # skip confirmation (scripts / recovery)
 ```
@@ -31,6 +30,3 @@ Refuses to run unless:
 make -C apps factory-reset          # cross → apps/.bin/factory-reset (aarch64 musl)
 make -C apps/factory-reset test     # host unit tests
 ```
-
-Shares NVMe helpers with `prepare-nvme` via a path dependency on that crate's
-library (`prepare_nvme`).

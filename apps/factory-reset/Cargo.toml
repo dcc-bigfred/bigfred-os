@@ -2,16 +2,13 @@
 name = "factory-reset"
 version = "0.1.0"
 edition = "2021"
-description = "Destructive NVMe wipe + reformat for BigFred OS (operator tool)"
+description = "Wipe /data contents and reboot on BigFred OS (operator tool)"
 license = "MIT"
 publish = false
 
 [[bin]]
 name = "factory-reset"
 path = "src/main.rs"
-
-[dependencies]
-prepare-nvme = { path = "../prepare-nvme" }
 
 [profile.release]
 lto = true

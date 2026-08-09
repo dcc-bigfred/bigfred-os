@@ -13,8 +13,8 @@ Linux only. Installed to `/usr/sbin/prepare-nvme` by `post-build.d/20-apps.sh`.
 Refuses to run unless `/var/lib/bigfred` exists (OS marker created at image
 build time alongside `/etc/lsb-release` and `/usr/lib/bigfred/version/commit`).
 
-The crate also exposes a `prepare_nvme` library used by `factory-reset` for
-shared NVMe discovery / GPT / format helpers.
+The crate also exposes a `prepare_nvme` library used by unit tests and the
+`prepare-nvme` binary for shared NVMe discovery / GPT / format helpers.
 
 ## Why
 

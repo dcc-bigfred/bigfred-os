@@ -60,52 +60,6 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Unmount every mount whose device path starts with `disk` (e.g. `/dev/nvme0n1`).
-/// Best-effort; returns first hard error if umount fails for a matching mount.
-pub fn unmount_disk_mounts(disk: &str) -> Result<()> {
-    let Ok(content) = fs::read_to_string("/proc/mounts") else {
-        logf!("cannot read /proc/mounts — skipping unmount_disk_mounts");
-        return Ok(());
-    };
-
-    let part_prefix = format!("{disk}p");
-    let mut mountpoints: Vec<String> = Vec::new();
-    for line in content.lines() {
-        let mut fields = line.split_whitespace();
-        let Some(dev) = fields.next() else { continue };
-        let Some(mp) = fields.next() else { continue };
-        if dev == disk || dev.starts_with(&part_prefix) {
-            if !mountpoints.iter().any(|m| m == mp) {
-                mountpoints.push(mp.to_string());
-            }
-        }
-    }
-
-    // Longest mountpoint first so nested mounts are torn down before parents.
-    mountpoints.sort_by_key(|m| std::cmp::Reverse(m.len()));
-
-    for mp in &mountpoints {
-        logf!("umount {mp} (device under {disk})");
-        run_cmd(UMOUNT_BIN, &[mp]).map_err(|e| {
-            Error::Msg(format!("umount {mp} (disk {disk}): {e}"))
-        })?;
-    }
-    Ok(())
-}
-
-/// Force a fresh single GPT partition on `disk` (destroys existing table), wait
-/// for it, format ext4. Does NOT copy data and does NOT write the `.bigfred-nvme`
-/// marker.
-pub fn wipe_format_data_partition(disk: &str) -> Result<String> {
-    logf!("wipe_format_data_partition: {disk}");
-    create_single_partition(disk)?;
-    // partprobe / reread already attempted inside create_single_partition
-    let part = wait_for_partition(disk, Duration::from_secs(10))?;
-    logf!("wipe: formatting {part} as ext4 (LABEL=bigfred-data)");
-    format_ext4(&part)?;
-    Ok(part)
-}
-
 pub fn find_nvme_disk() -> Result<Option<String>> {
     let entries = match fs::read_dir("/sys/block") {
         Ok(e) => e,
