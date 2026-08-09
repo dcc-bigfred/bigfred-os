@@ -2,10 +2,12 @@
 
 Operator tool: wipe hub writable state under `/data` and reboot.
 
-`/data` itself cannot be unmounted while services hold it. Nested mounts under
-`/data/…` (notably tmpfs `/data/logs`) are unmounted first, then every entry
-under `/data` is deleted. Finally `shutdown -r now` so early-boot reseeds the
-layout on the next boot.
+`/data` itself cannot be unmounted while services hold it. Redis is stopped
+best-effort first (via `microinit stop redis`, falling back to `killall`) so its
+SIGTERM save handler cannot recreate `dump.rdb` under `/data`. Nested mounts
+under `/data/…` (notably tmpfs `/data/logs`) are unmounted next, then every
+entry under `/data` is deleted. Finally `shutdown -r now` so early-boot reseeds
+the layout on the next boot.
 
 Linux only. Installed to `/usr/sbin/factory-reset` by `post-build.d/20-apps.sh`.
 

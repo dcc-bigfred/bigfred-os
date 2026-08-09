@@ -3,6 +3,10 @@
 //! `/data` itself stays mounted (busy). Nested mounts under `/data/…`
 //! (notably tmpfs `/data/logs`) are unmounted first, then every entry under
 //! `/data` is removed. Finally `shutdown -r now` so early-boot reseeds layout.
+//!
+//! Redis (`dir /data/var/db/redis`, `save 120 100`) is stopped best-effort
+//! before the wipe so its SIGTERM save handler cannot recreate `dump.rdb`
+//! under `/data` during shutdown.
 
 use std::env;
 use std::fs;
@@ -16,6 +20,10 @@ const BIGFRED_MARKER: &str = "/var/lib/bigfred";
 const EXPECTED_DISTRIB_ID: &str = "bigfred-os";
 const UMOUNT_BIN: &str = "/bin/umount";
 const SHUTDOWN_BIN: &str = "/usr/sbin/shutdown";
+const MICROINIT_BIN: &str = "/usr/sbin/microinit";
+const REDIS_SERVICE: &str = "redis";
+const KILLALL_BIN: &str = "/usr/bin/killall";
+const REDIS_PROCESS: &str = "redis-server";
 
 #[derive(Debug, Default)]
 struct Args {
@@ -59,8 +67,9 @@ fn run(args: Args) -> Result<(), String> {
 
     if args.dry_run {
         eprintln!(
-            "factory-reset: dry-run — would umount nested mounts, \
-             delete all entries under {DATA_MOUNT}, then `{SHUTDOWN_BIN} -r now`"
+            "factory-reset: dry-run — would stop {REDIS_SERVICE} best-effort, \
+             umount nested mounts, delete all entries under {DATA_MOUNT}, \
+             then `{SHUTDOWN_BIN} -r now`"
         );
         return Ok(());
     }
@@ -68,6 +77,8 @@ fn run(args: Args) -> Result<(), String> {
     if !args.yes {
         confirm_wipe()?;
     }
+
+    stop_redis_best_effort();
 
     for mp in &nested {
         eprintln!("factory-reset: umount {mp}");
@@ -84,8 +95,8 @@ fn run(args: Args) -> Result<(), String> {
 
 /// Mountpoints strictly under `root/` (not `root` itself), longest first.
 fn nested_mounts_under(root: &str) -> Result<Vec<String>, String> {
-    let content = fs::read_to_string("/proc/mounts")
-        .map_err(|e| format!("read /proc/mounts: {e}"))?;
+    let content =
+        fs::read_to_string("/proc/mounts").map_err(|e| format!("read /proc/mounts: {e}"))?;
     let prefix = format!("{root}/");
     let mut out: Vec<String> = Vec::new();
     for line in content.lines() {
@@ -98,6 +109,34 @@ fn nested_mounts_under(root: &str) -> Result<Vec<String>, String> {
     }
     out.sort_by_key(|m| std::cmp::Reverse(m.len()));
     Ok(out)
+}
+
+/// Best-effort: ask microinit to stop Redis, then killall as fallback.
+/// Never returns an error — a failure to stop Redis must not abort the reset.
+fn stop_redis_best_effort() {
+    if let Ok(status) = Command::new(MICROINIT_BIN)
+        .arg("stop")
+        .arg(REDIS_SERVICE)
+        .status()
+    {
+        if status.success() {
+            eprintln!("factory-reset: {REDIS_SERVICE} stopped via microinit");
+            return;
+        }
+        eprintln!(
+            "factory-reset: microinit stop {REDIS_SERVICE} exit {:?} — trying fallback",
+            status.code()
+        );
+    } else {
+        eprintln!("factory-reset: microinit not available — trying fallback");
+    }
+    match Command::new(KILLALL_BIN).arg(REDIS_PROCESS).status() {
+        Ok(status) => eprintln!(
+            "factory-reset: killall {REDIS_PROCESS} exit {:?}",
+            status.code()
+        ),
+        Err(e) => eprintln!("factory-reset: killall {REDIS_PROCESS} failed (non-fatal): {e}"),
+    }
 }
 
 fn umount(mp: &str) -> Result<(), String> {
@@ -133,10 +172,7 @@ fn reboot_now() -> Result<(), String> {
         .status()
         .map_err(|e| format!("{SHUTDOWN_BIN} -r now: {e}"))?;
     if !status.success() {
-        return Err(format!(
-            "{SHUTDOWN_BIN} -r now: exit {:?}",
-            status.code()
-        ));
+        return Err(format!("{SHUTDOWN_BIN} -r now: exit {:?}", status.code()));
     }
     Ok(())
 }
@@ -163,9 +199,8 @@ fn confirm_wipe() -> Result<(), String> {
 }
 
 fn require_bigfred_os(lsb_path: &str, marker_dir: &str) -> Result<(), String> {
-    let body = fs::read_to_string(lsb_path).map_err(|_| {
-        format!("{lsb_path} not found — refusing to run outside BigFred OS")
-    })?;
+    let body = fs::read_to_string(lsb_path)
+        .map_err(|_| format!("{lsb_path} not found — refusing to run outside BigFred OS"))?;
     if !distrib_id_is(&body, EXPECTED_DISTRIB_ID) {
         return Err(format!(
             "{lsb_path} DISTRIB_ID is not {EXPECTED_DISTRIB_ID} — refusing to run"
@@ -211,7 +246,8 @@ where
 fn usage() {
     let prog = env::args().next().unwrap_or_else(|| "factory-reset".into());
     eprintln!("usage: {prog} [--yes] [--dry-run]");
-    eprintln!("  Unmount nested filesystems under {DATA_MOUNT}, delete its contents, reboot.");
+    eprintln!("  Stop Redis best-effort, unmount nested filesystems under {DATA_MOUNT},");
+    eprintln!("  delete its contents, reboot.");
     eprintln!("  --yes       skip interactive confirmation");
     eprintln!("  --dry-run   print what would happen, do not modify or reboot");
 }
@@ -273,7 +309,7 @@ mod tests {
 
     #[test]
     fn nested_mounts_sorts_longest_first() {
-        let mut out = vec![
+        let mut out = [
             "/data/a".to_string(),
             "/data/a/b/c".to_string(),
             "/data/logs".to_string(),
