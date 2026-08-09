@@ -3,12 +3,12 @@
 # Driven by bigfred / bigfred-wizard over a Unix socket.
 
 BIN=/usr/sbin/wireless-programmer
-SOCK=/data/run/wireless-programmer.sock
+SOCK=/data/run/wireless-programmer/wireless-programmer.sock
 
 case "$1" in
 start)
 	[ -x "$BIN" ] || exit 0
-	mkdir -p /data/run
+	mkdir -p /data/run/wireless-programmer
 	# -F: stay in the foreground so microinit can track the PID.
 	exec "$BIN" --socket "$SOCK"
 	;;
