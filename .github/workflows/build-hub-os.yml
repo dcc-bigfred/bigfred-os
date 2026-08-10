@@ -30,6 +30,10 @@ on:
         description: microdns GitHub ref (empty = VERSIONS)
         type: string
         default: ""
+      wireless_programmer_ref:
+        description: wireless-programmer GitHub ref (empty = VERSIONS)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -52,6 +56,7 @@ jobs:
       INPUT_MICROINIT_REF: ${{ inputs.microinit_ref }}
       INPUT_MICRONET_REF: ${{ inputs.micronet_ref }}
       INPUT_MICRODNS_REF: ${{ inputs.microdns_ref }}
+      INPUT_WIRELESS_PROGRAMMER_REF: ${{ inputs.wireless_programmer_ref }}
 
     steps:
       - name: Checkout
@@ -118,15 +123,18 @@ jobs:
           MICROINIT_REF="${INPUT_MICROINIT_REF:-$MICROINIT_REF}"
           MICRONET_REF="${INPUT_MICRONET_REF:-$MICRONET_REF}"
           MICRODNS_REF="${INPUT_MICRODNS_REF:-$MICRODNS_REF}"
+          WIRELESS_PROGRAMMER_REF="${INPUT_WIRELESS_PROGRAMMER_REF:-$WIRELESS_PROGRAMMER_REF}"
           echo "BIGFRED_REF=${BIGFRED_REF}"
           echo "MICROINIT_REF=${MICROINIT_REF}"
           echo "MICRONET_REF=${MICRONET_REF}"
           echo "MICRODNS_REF=${MICRODNS_REF}"
+          echo "WIRELESS_PROGRAMMER_REF=${WIRELESS_PROGRAMMER_REF}"
           make -C os image \
             BIGFRED_REF="${BIGFRED_REF}" \
             MICROINIT_REF="${MICROINIT_REF}" \
             MICRONET_REF="${MICRONET_REF}" \
-            MICRODNS_REF="${MICRODNS_REF}"
+            MICRODNS_REF="${MICRODNS_REF}" \
+            WIRELESS_PROGRAMMER_REF="${WIRELESS_PROGRAMMER_REF}"
 
       - name: Save host toolchain to cache
         if: success()
@@ -155,6 +163,7 @@ jobs:
           MICROINIT_REF="${INPUT_MICROINIT_REF:-$MICROINIT_REF}"
           MICRONET_REF="${INPUT_MICRONET_REF:-$MICRONET_REF}"
           MICRODNS_REF="${INPUT_MICRODNS_REF:-$MICRODNS_REF}"
+          WIRELESS_PROGRAMMER_REF="${INPUT_WIRELESS_PROGRAMMER_REF:-$WIRELESS_PROGRAMMER_REF}"
           {
             echo "### Hub OS build"
             echo ""
@@ -164,6 +173,7 @@ jobs:
             echo "- microinit ref: \`${MICROINIT_REF}\`"
             echo "- micronet ref: \`${MICRONET_REF}\`"
             echo "- microdns ref: \`${MICRODNS_REF}\`"
+            echo "- wireless-programmer ref: \`${WIRELESS_PROGRAMMER_REF}\`"
             echo "- Artifact: \`bigfred-hub-nvme-${{ github.run_number }}\`"
             echo ""
             echo '```'

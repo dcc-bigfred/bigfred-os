@@ -46,6 +46,7 @@ help:
 	@echo "  microinit:  MICROINIT_REF=$(MICROINIT_REF) (main|sha-*|v*|latest-release)"
 	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (main|sha-*|v*|latest-release)"
 	@echo "  microdns:   MICRODNS_REF=$(MICRODNS_REF) (main|sha-*|v*|latest-release)"
+	@echo "  wp:         WIRELESS_PROGRAMMER_REF=$(WIRELESS_PROGRAMMER_REF) (main|sha-*|v*|latest-release)"
 	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
 	@echo "Binary fetch: go run github.com/dcc-bigfred/common/cmd/fetch@latest"
 
@@ -82,7 +83,7 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
-	$(BR2_MAKE) BIGFRED_REF=$(BIGFRED_REF) MICROINIT_REF=$(MICROINIT_REF) MICRONET_REF=$(MICRONET_REF) MICRODNS_REF=$(MICRODNS_REF)
+	$(BR2_MAKE) BIGFRED_REF=$(BIGFRED_REF) MICROINIT_REF=$(MICROINIT_REF) MICRONET_REF=$(MICRONET_REF) MICRODNS_REF=$(MICRODNS_REF) WIRELESS_PROGRAMMER_REF=$(WIRELESS_PROGRAMMER_REF)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"
 	@ls -lh "$(OUTPUT_DIR)/images/hub-nvme.img" 2>/dev/null || true

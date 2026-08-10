@@ -95,6 +95,29 @@ config BR2_PACKAGE_MICRODNS_REF
 
 endif
 
+config BR2_PACKAGE_WIRELESS_PROGRAMMER
+	bool "wireless-programmer (device discovery + programming from GitHub)"
+	default y
+	help
+	  Pull wireless-programmer from GitHub (Actions tip or Releases)
+	  and install /usr/sbin/wireless-programmer. Discovers and programs
+	  physical throttle hardware (e.g. NewHeiko WiFred) over WiFi config
+	  APs, driven by bigfred / bigfred-wizard via a Unix socket. Needs
+	  cfg80211 + brcmfmac + rfkill (see os/configs/linux-hub.fragment).
+
+	  https://github.com/dcc-bigfred/wireless-programmer
+
+if BR2_PACKAGE_WIRELESS_PROGRAMMER
+
+config BR2_PACKAGE_WIRELESS_PROGRAMMER_REF
+	string "GitHub ref (main | sha-<7> | v*)"
+	default "main"
+	help
+	  Ref for dcc-bigfred/wireless-programmer binaries.
+	  Override: make image WIRELESS_PROGRAMMER_REF=main
+
+endif
+
 config BR2_PACKAGE_GRAFANA
 	bool "Grafana OSS (prebuilt binary)"
 	default y

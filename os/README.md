@@ -30,7 +30,7 @@ From the repository root (recommended):
 make image                  # on host (requires Buildroot dependencies)
 make image-using-docker     # Ubuntu 24.04 in Docker (uid/gid 1000:1000)
 # Defaults live in repo-root VERSIONS. Optional pins:
-# make image BIGFRED_REF=master MICROINIT_REF=main MICRONET_REF=main MICRODNS_REF=main
+# make image BIGFRED_REF=master MICROINIT_REF=main MICRONET_REF=main MICRODNS_REF=main WIRELESS_PROGRAMMER_REF=main
 ```
 
 Docker mounts the repo at the **same absolute path** as on the host. Host tools with
