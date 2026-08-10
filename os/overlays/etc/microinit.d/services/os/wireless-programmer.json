@@ -9,7 +9,8 @@
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/wireless-programmer",
       "dependsOn": [
-        "network"
+        "network",
+        "udevd"
       ],
       "securityContext": {
         "runAsUser": "root"

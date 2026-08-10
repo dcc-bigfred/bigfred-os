@@ -5,7 +5,11 @@
 # exclusive, on-demand resource held only while wireless-programmer runs a
 # programming job (associating to a device config AP such as a NewHeiko
 # WiFred). Make sure rfkill is not soft-blocked at boot so nl80211 can bring
-# the interface up on demand. Writes 0 to the device's "soft" file directly
-# (no userspace rfkill binary needed).
+# the interface up on demand.
+#
+# ATTR{soft} is udev's own sysfs write: no /bin/sh fork per rfkill device, and
+# it fails quietly if the attribute is absent. Devices that appeared before
+# udevd started are covered by the coldplug `udevadm trigger --action=add` in
+# /etc/init.d/udevd.
 
-SUBSYSTEM=="rfkill", ACTION=="add", RUN+="/bin/sh -c 'echo 0 > /sys/class/rfkill/%k/soft'"
+SUBSYSTEM=="rfkill", ACTION=="add", ATTR{soft}="0"

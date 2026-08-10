@@ -9,7 +9,14 @@ case "$1" in
 start)
 	[ -x "$BIN" ] || exit 0
 	mkdir -p /data/run/wireless-programmer
-	# -F: stay in the foreground so microinit can track the PID.
+	# Belt and braces: the udev rule normally clears the soft block at boot,
+	# but if udevd is degraded a job would fail with a confusing radioBlocked
+	# instead of just working. Best-effort, so no failure if rfkill is absent.
+	for rf in /sys/class/rfkill/rfkill*/soft; do
+		[ -w "$rf" ] && echo 0 >"$rf" 2>/dev/null
+	done
+	# The daemon has no daemonize path; it stays in the foreground so microinit
+	# can track the PID.
 	exec "$BIN" --socket "$SOCK"
 	;;
 stop)
