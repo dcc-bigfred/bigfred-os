@@ -38,6 +38,13 @@ endef
 
 $(eval $(generic-package))
 
+# The tarball name is keyed on the ref, not a commit, so a tip ref such as
+# `main` would otherwise be downloaded once and then pinned forever by
+# .stamp_downloaded. Force the pre-download hook to run on every build, as
+# microinit/micronet/microdns/bigfred do.
+.PHONY: WIRELESS_PROGRAMMER_FORCE_REDOWNLOAD
+$(WIRELESS_PROGRAMMER_DIR)/.stamp_downloaded: WIRELESS_PROGRAMMER_FORCE_REDOWNLOAD
+
 # Force the download step to re-run on every `make image`: without this,
 # .stamp_downloaded stays present after the first build and Buildroot skips
 # PRE_DOWNLOAD_HOOKS, so a re-pushed tip would never be re-fetched.
