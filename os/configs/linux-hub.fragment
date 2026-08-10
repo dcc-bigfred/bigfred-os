@@ -27,3 +27,24 @@ CONFIG_THERMAL=y
 
 # ext4 for RO root and RW /data
 CONFIG_EXT4_FS=y
+
+# Wireless — used by wireless-programmer to associate to device config APs
+# (e.g. NewHeiko WiFred). The hub never joins a WiFi network for internet
+# access; the radio is an exclusive, on-demand resource held only while a
+# programming job runs.
+#
+# brcmfmac is a FullMAC driver: it talks to cfg80211 directly, so no mac80211
+# is needed for what we do (OpenSystem association to a config AP). MAC80211 is
+# deliberately left at whatever the bcm2712 base defconfig sets rather than
+# overridden here — turning it off would also disable any SoftMAC USB adapter a
+# user plugs in, for a saving we do not need.
+CONFIG_WIRELESS=y
+CONFIG_CFG80211=y
+# rfkill for /sys/class/rfkill/*/soft, which the udev rule clears at boot.
+# RFKILL_INPUT is not enabled: it only handles kill-switch key events, and the
+# hub has no such switch.
+CONFIG_RFKILL=y
+# CYW43455 over SDIO on the Pi 5 (bcm2712, the only defconfig in-tree).
+CONFIG_BRCMFMAC=y
+CONFIG_BRCMFMAC_SDIO=y
+# brcmfmac loads firmware/nvram from /lib/firmware/brcm (linux-firmware pkg).
