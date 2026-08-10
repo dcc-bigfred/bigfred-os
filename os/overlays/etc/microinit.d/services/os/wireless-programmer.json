@@ -1,0 +1,21 @@
+{
+  "services": [
+    {
+      "name": "wireless-programmer",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "always",
+      "restartBackoff": 60,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/wireless-programmer",
+      "dependsOn": [
+        "network",
+        "udevd"
+      ],
+      "securityContext": {
+        "runAsUser": "root"
+      },
+      "orderPriority": 120
+    }
+  ]
+}
