@@ -141,6 +141,31 @@ config BR2_PACKAGE_BIGFRED_WIZARD_REF
 
 endif
 
+config BR2_PACKAGE_MICROWAF
+	bool "microwaf (host WAF from GitHub)"
+	default y
+	help
+	  Pull microwaf from GitHub (Actions tip or Releases) and install
+	  /usr/sbin/microwaf. Host-side WAF for HTTP/WebSocket/Z21/WiThrottle
+	  and generic UDP/TCP. The microinit service is installed but
+	  disabled at boot (enabled: false). Start until next reboot with
+	  `microinit start microwaf`. Persistent enable: set enabled true
+	  in overlays/etc/microinit.d/services/os/microwaf.json and rebuild.
+
+	  https://github.com/dcc-bigfred/microwaf
+
+if BR2_PACKAGE_MICROWAF
+
+config BR2_PACKAGE_MICROWAF_REF
+	string "GitHub ref (main | sha-<7> | v*)"
+	default "main"
+	help
+	  Ref for dcc-bigfred/microwaf binaries.
+	  Override: make image MICROWAF_REF=main
+	  Tip refs need GITHUB_TOKEN.
+
+endif
+
 config BR2_PACKAGE_GRAFANA
 	bool "Grafana OSS (prebuilt binary)"
 	default y

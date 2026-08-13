@@ -13,7 +13,7 @@ binaries from GitHub (default ref from repo-root `VERSIONS`, usually
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
 | **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm) |
 | **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); OS identity via `/etc/lsb-release` (`DISTRIB_ID=bigfred-os`), `/etc/os-release`, and `/usr/lib/bigfred/version/commit` |
-| **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, **bigfred-wizard**, Dropbear, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), wireless-programmer, optional Alloy |
+| **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, **bigfred-wizard**, Dropbear, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), wireless-programmer, **microwaf** (installed, disabled at boot), optional Alloy |
 | **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
 | **Init** | **microinit** as `/sbin/init`; `/etc/init.d/*` scripts as backends; early-boot runs `fsck -y` then mounts `/data` |
 
@@ -30,7 +30,7 @@ From the repository root (recommended):
 make image                  # on host (requires Buildroot dependencies)
 make image-using-docker     # Ubuntu 24.04 in Docker (uid/gid 1000:1000)
 # Defaults live in repo-root VERSIONS. Optional pins:
-# make image BIGFRED_REF=master MICROINIT_REF=main MICRONET_REF=main MICRODNS_REF=main WIRELESS_PROGRAMMER_REF=main
+# make image BIGFRED_REF=master MICROINIT_REF=main MICRONET_REF=main MICRODNS_REF=main WIRELESS_PROGRAMMER_REF=main MICROWAF_REF=main
 ```
 
 Docker mounts the repo at the **same absolute path** as on the host. Host tools with

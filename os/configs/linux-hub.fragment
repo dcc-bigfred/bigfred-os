@@ -48,3 +48,9 @@ CONFIG_RFKILL=y
 CONFIG_BRCMFMAC=y
 CONFIG_BRCMFMAC_SDIO=y
 # brcmfmac loads firmware/nvram from /lib/firmware/brcm (linux-firmware pkg).
+
+# MicroWAF — AF_PACKET sniff + optional XDP enforce (aya).
+CONFIG_PACKET=y
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_BPF_JIT=y

@@ -1,0 +1,26 @@
+#!/bin/sh
+# microwaf — host-side WAF (disabled by default in microinit).
+
+BIN=/usr/sbin/microwaf
+
+case "$1" in
+start)
+	[ -x "$BIN" ] || exit 0
+	export DATA_DIR=/data
+	export BIGFRED_DATA_DIR=/data
+	mkdir -p /data/run/microwaf /data/etc/microwaf /data/logs/microwaf
+	# Foreground under microinit; daemon seeds missing YAML on first start.
+	exec "$BIN" --config-dir /data/etc/microwaf
+	;;
+stop)
+	killall microwaf 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

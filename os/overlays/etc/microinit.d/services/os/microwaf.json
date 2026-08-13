@@ -1,0 +1,21 @@
+{
+  "services": [
+    {
+      "name": "microwaf",
+      "enabled": false,
+      "daemon": true,
+      "restartPolicy": "always",
+      "restartBackoff": 60,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/microwaf",
+      "dependsOn": [
+        "network",
+        "redis"
+      ],
+      "securityContext": {
+        "runAsUser": "root"
+      },
+      "orderPriority": 140
+    }
+  ]
+}
