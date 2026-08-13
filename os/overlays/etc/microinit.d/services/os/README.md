@@ -48,6 +48,7 @@ Bands used on the hub (leave gaps so new services fit between):
 | remote-icmp | 210 | network |
 | bigfred-os-ui | 220 | network |
 | bigfred | 300 | network, redis, udevd |
+| bigfred-wizard | 310 | network, bigfred |
 | grafana | 400 | victoriametrics |
 
 Runtime `dcc-bus-*` drop-ins (written by BigFred) use **350** on the same scale.

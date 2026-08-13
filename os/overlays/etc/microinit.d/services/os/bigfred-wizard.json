@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "name": "bigfred-wizard",
+      "enabled": true,
+      "daemon": true,
+      "restartPolicy": "onError",
+      "restartBackoff": 10,
+      "startWaitSecs": 1,
+      "cmd": "/etc/init.d/bigfred-wizard",
+      "dependsOn": [
+        "network",
+        "bigfred"
+      ],
+      "livenessProbe": {
+        "httpUrl": "http://127.0.0.1:8091/healthz",
+        "httpAcceptedCodes": [
+          200
+        ],
+        "interval": 60
+      },
+      "orderPriority": 310
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+#!/bin/sh
+# bigfred-wizard — party/event kiosk on the hub tablet (:8091)
+
+if [ -x /data/opt/bigfred/bin/bigfred-wizard ]; then
+	WIZARD_BIN=/data/opt/bigfred/bin/bigfred-wizard
+else
+	WIZARD_BIN=/usr/sbin/bigfred-wizard
+fi
+
+case "$1" in
+start)
+	[ -x "$WIZARD_BIN" ] || exit 0
+	export DATA_DIR=/data
+	exec "$WIZARD_BIN"
+	;;
+stop)
+	killall bigfred-wizard 2>/dev/null
+	;;
+restart)
+	$0 stop
+	$0 start
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac

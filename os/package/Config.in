@@ -118,6 +118,29 @@ config BR2_PACKAGE_WIRELESS_PROGRAMMER_REF
 
 endif
 
+config BR2_PACKAGE_BIGFRED_WIZARD
+	bool "bigfred-wizard (party kiosk from GitHub)"
+	default y
+	help
+	  Pull bigfred-wizard from GitHub (Actions tip or Releases) and
+	  install /usr/sbin/bigfred-wizard. Fullscreen kiosk for accounts,
+	  handset pairing, and CV programming on the hub tablet (:8091).
+	  Config under /data/etc/bigfred/wizard/; proxies BigFred on loopback.
+
+	  https://github.com/dcc-bigfred/bigfred-wizard
+
+if BR2_PACKAGE_BIGFRED_WIZARD
+
+config BR2_PACKAGE_BIGFRED_WIZARD_REF
+	string "GitHub ref (main | sha-<7> | v*)"
+	default "main"
+	help
+	  Ref for dcc-bigfred/bigfred-wizard binaries.
+	  Override: make image BIGFRED_WIZARD_REF=main
+	  Tip refs need GITHUB_TOKEN.
+
+endif
+
 config BR2_PACKAGE_GRAFANA
 	bool "Grafana OSS (prebuilt binary)"
 	default y

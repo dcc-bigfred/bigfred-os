@@ -15,6 +15,14 @@
       "port": 8090,
       "host": "bigfred",
       "txt": { "path": "/" }
+    },
+    {
+      "name": "bigfred-wizard",
+      "type": "_http._tcp",
+      "protocol": "tcp",
+      "port": 8091,
+      "host": "bigfred",
+      "txt": { "path": "/" }
     }
   ],
   "dccBus": {

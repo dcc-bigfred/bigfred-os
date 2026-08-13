@@ -20,7 +20,8 @@ ensure_microdns_conf() {
 {
   "services": [
     { "name": "bigfred", "type": "_http._tcp", "protocol": "tcp", "port": 8080, "host": "bigfred", "txt": { "path": "/" } },
-    { "name": "bigfred-os-ui", "type": "_http._tcp", "protocol": "tcp", "port": 8090, "host": "bigfred", "txt": { "path": "/" } }
+    { "name": "bigfred-os-ui", "type": "_http._tcp", "protocol": "tcp", "port": 8090, "host": "bigfred", "txt": { "path": "/" } },
+    { "name": "bigfred-wizard", "type": "_http._tcp", "protocol": "tcp", "port": 8091, "host": "bigfred", "txt": { "path": "/" } }
   ],
   "dccBus": { "enabled": true, "z21Port": 21105, "withrottlePort": 12090, "beacon": true },
   "retry": { "microinitMs": 2000, "procMs": 2000, "mdnsMs": 3000, "ifaceMs": 5000 }
