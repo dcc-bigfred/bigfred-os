@@ -357,7 +357,9 @@ mkdir -p "$DATA_ROOT/logs/bigfred" "$DATA_ROOT/logs/redis" \
 mkdir -p "$DATA_ROOT/etc/microinit" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus" \
-	"$DATA_ROOT/etc/microinit.d/services/os"
+	"$DATA_ROOT/etc/microinit.d/services/os" \
+	"$DATA_ROOT/etc/grafana/dashboards/bigfred" \
+	"$DATA_ROOT/etc/grafana/dashboards/microinit"
 
 # Service $HOME on RO root: tmpfs so accidental writes to HOME do not fail
 # and do not pollute /data. No login shell (users.table: /bin/false).
@@ -462,6 +464,29 @@ if [ -d "$OS_DROPINS_SRC" ]; then
 		cp "$f" "$OS_DROPINS_DST/"
 		chmod 644 "$OS_DROPINS_DST/$(basename "$f")"
 	done
+fi
+# Grafana dashboards: refresh stock JSON from image; keep operator-added files.
+GRAFANA_DASH_SRC=/usr/share/grafana/dashboards
+GRAFANA_DASH_DST="$DATA_ROOT/etc/grafana/dashboards"
+if [ -d "$GRAFANA_DASH_SRC" ]; then
+	mkdir -p "$GRAFANA_DASH_DST"
+	for sub in bigfred microinit; do
+		[ -d "$GRAFANA_DASH_SRC/$sub" ] || continue
+		mkdir -p "$GRAFANA_DASH_DST/$sub"
+		for f in "$GRAFANA_DASH_SRC/$sub"/*.json; do
+			[ -e "$f" ] || continue
+			cp "$f" "$GRAFANA_DASH_DST/$sub/"
+			chmod 644 "$GRAFANA_DASH_DST/$sub/$(basename "$f")"
+		done
+		for f in "$GRAFANA_DASH_DST/$sub"/*.json; do
+			[ -e "$f" ] || continue
+			base=$(basename "$f")
+			[ -f "$GRAFANA_DASH_SRC/$sub/$base" ] || rm -f "$f"
+		done
+	done
+	chown_if metrics "$GRAFANA_DASH_DST"
+	chmod 0755 "$GRAFANA_DASH_DST" 2>/dev/null || true
+	chmod -R a+rX "$GRAFANA_DASH_DST" 2>/dev/null || true
 fi
 # Main microinit.json keeps globals only (services[] empty in the image template).
 # Seed only if missing so operator customizations of logs/socket/otel remain.
