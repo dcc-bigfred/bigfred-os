@@ -24,7 +24,13 @@
         ],
         "interval": 60
       },
-      "orderPriority": 300
+      "orderPriority": 300,
+      "labels": {
+        "microdns-port": "8080",
+        "microdns-type": "_http._tcp",
+        "microdns-host": "bigfred",
+        "microdns-txt-path": "/"
+      }
     }
   ]
 }

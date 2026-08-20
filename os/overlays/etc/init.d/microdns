@@ -18,13 +18,12 @@ ensure_microdns_conf() {
 	fi
 	cat >"$MICRODNS_CONF" <<'EOF'
 {
-  "services": [
-    { "name": "bigfred", "type": "_http._tcp", "protocol": "tcp", "port": 8080, "host": "bigfred", "txt": { "path": "/" } },
-    { "name": "bigfred-os-ui", "type": "_http._tcp", "protocol": "tcp", "port": 8090, "host": "bigfred", "txt": { "path": "/" } },
-    { "name": "bigfred-wizard", "type": "_http._tcp", "protocol": "tcp", "port": 8091, "host": "bigfred", "txt": { "path": "/" } }
-  ],
-  "dccBus": { "enabled": true, "z21Port": 21105, "withrottlePort": 12090, "beacon": true },
-  "retry": { "microinitMs": 2000, "procMs": 2000, "mdnsMs": 3000, "ifaceMs": 5000 }
+  "services": [],
+  "bigfred": { "enabled": true },
+  "microinit": { "enabled": true },
+  "dccBus": { "beacon": true },
+  "retry": { "bigfredMs": 45000, "pollMs": 25000, "mdnsMs": 3000, "ifaceMs": 5000, "microinitReconnectMs": 3000 },
+  "skipInterfaces": ["wlan"]
 }
 EOF
 	chmod 644 "$MICRODNS_CONF"
