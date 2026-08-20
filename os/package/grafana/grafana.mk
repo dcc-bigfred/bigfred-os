@@ -43,12 +43,11 @@ define GRAFANA_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/share/grafana/
 	$(GRAFANA_PKGDIR)/fetch-dashboards.sh \
 		"$(GRAFANA_BIGFRED_REF)" "$(GRAFANA_MICROINIT_REF)" "$(@D)/dashboards"
-	mkdir -p $(TARGET_DIR)/usr/share/grafana/dashboards/bigfred \
-		$(TARGET_DIR)/usr/share/grafana/dashboards/microinit
-	cp -a $(@D)/dashboards/bigfred/. \
-		$(TARGET_DIR)/usr/share/grafana/dashboards/bigfred/
-	cp -a $(@D)/dashboards/microinit/. \
-		$(TARGET_DIR)/usr/share/grafana/dashboards/microinit/
+	# Replace, don't merge: a removed upstream dashboard must leave the image.
+	rm -rf $(TARGET_DIR)/usr/share/grafana/dashboards
+	mkdir -p $(TARGET_DIR)/usr/share/grafana/dashboards
+	cp -a $(@D)/dashboards/bigfred $(@D)/dashboards/microinit \
+		$(TARGET_DIR)/usr/share/grafana/dashboards/
 	chmod -R a+rX $(TARGET_DIR)/usr/share/grafana/dashboards
 endef
 

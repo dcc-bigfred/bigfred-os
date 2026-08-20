@@ -87,7 +87,7 @@ def fetch_repo_dashboards(repo: str, repo_path: str, ref: str, out_dir: Path) ->
         raise RuntimeError(f"{repo}@{resolved}: expected directory listing, got object")
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    count = 0
+    fetched: set[str] = set()
     for entry in payload:
         if not isinstance(entry, dict):
             continue
@@ -100,10 +100,13 @@ def fetch_repo_dashboards(repo: str, repo_path: str, ref: str, out_dir: Path) ->
         if not dl:
             raise RuntimeError(f"{repo}/{filename}: missing download_url")
         out_dir.joinpath(filename).write_bytes(download_url(dl))
-        count += 1
-    if count == 0:
+        fetched.add(filename)
+    if not fetched:
         raise RuntimeError(f"{repo}@{resolved}: no *.json in {repo_path}")
-    return count
+    for leftover in out_dir.glob("*.json"):
+        if leftover.name not in fetched:
+            leftover.unlink()
+    return len(fetched)
 
 
 def main() -> int:
