@@ -16,7 +16,7 @@ command -v go >/dev/null 2>&1 || {
 }
 
 export GOPROXY="${GOPROXY:-direct}"
-FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@v0.1.3}"
+FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@v0.1.4}"
 
 REPO="${BIGFRED_GITHUB_REPO:-dcc-bigfred/bigfred}"
 ARTIFACT="${BIGFRED_ARTIFACT_NAME:-binaries}"
