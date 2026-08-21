@@ -8,7 +8,7 @@
 #
 BIGFRED_REF ?= master
 MICROINIT_REF ?= main
-MICRONET_REF ?= main
+MICRONET_REF ?= feat/micronet-daemon
 MICRODNS_REF ?= main
 WIRELESS_PROGRAMMER_REF ?= main
 BIGFRED_WIZARD_REF ?= main

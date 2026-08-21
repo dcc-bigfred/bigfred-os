@@ -3,16 +3,20 @@
     {
       "name": "network",
       "enabled": true,
-      "daemon": false,
+      "daemon": true,
       "cmd": "/etc/init.d/network",
       "dependsOn": [],
-      "startWaitSecs": 10,
+      "startWaitSecs": 15,
+      "shutdownWaitSecs": 5,
+      "restartPolicy": "onError",
+      "restartBackoff": 5,
+      "restartCmd": "/bin/false",
       "livenessProbe": {
-        "cmd": "/usr/sbin/configure-ethernet check",
+        "cmd": "/usr/sbin/micronet check",
         "successExitCodes": [
           0
         ],
-        "interval": 30
+        "interval": 20
       },
       "orderPriority": 30
     }

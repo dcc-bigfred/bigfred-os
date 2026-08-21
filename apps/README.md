@@ -37,7 +37,7 @@ make -C apps clean
 | `prepare-nvme` | Rust | Migrate `/data` to NVMe (GPT via gptman) and remount |
 | `factory-reset` | Rust | Wipe `/data` contents + reboot (operator tool) |
 
-Network tools (`configure-ethernet`, `configure-dhcp`) ship via Buildroot package
+Network daemon (`micronet`) ships via Buildroot package
 `package/micronet` (GitHub fetch from [dcc-bigfred/micronet](https://github.com/dcc-bigfred/micronet)),
 not under `apps/`.
 

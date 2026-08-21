@@ -1,7 +1,6 @@
 ################################################################################
 #
-# micronet — configure-ethernet + configure-dhcp from GitHub
-# (Actions tip / Releases)
+# micronet — network daemon from GitHub (Actions tip / Releases)
 #
 ################################################################################
 
@@ -10,7 +9,7 @@ ifeq ($(MICRONET_VERSION),)
 MICRONET_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRONET_REF))
 endif
 ifeq ($(MICRONET_VERSION),)
-MICRONET_VERSION = main
+MICRONET_VERSION = feat/micronet-daemon
 endif
 
 MICRONET_VERSION_SAFE = $(subst /,_,$(MICRONET_VERSION))
@@ -18,6 +17,7 @@ MICRONET_VERSION_SAFE = $(subst /,_,$(MICRONET_VERSION))
 MICRONET_SOURCE = micronet-linux-arm64-$(MICRONET_VERSION_SAFE).tar
 MICRONET_SITE = https://github.com/dcc-bigfred/micronet
 MICRONET_LICENSE = MIT
+MICRONET_DEPENDENCIES = dnsmasq dhcp iproute2
 
 define MICRONET_FETCH_GITHUB
 	mkdir -p $(MICRONET_DL_DIR)
@@ -32,10 +32,11 @@ define MICRONET_EXTRACT_CMDS
 endef
 
 define MICRONET_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/bin/configure-ethernet \
-		$(TARGET_DIR)/usr/sbin/configure-ethernet
-	$(INSTALL) -D -m 0755 $(@D)/bin/configure-dhcp \
-		$(TARGET_DIR)/usr/sbin/configure-dhcp
+	test -x $(@D)/bin/micronet
+	$(INSTALL) -D -m 0755 $(@D)/bin/micronet \
+		$(TARGET_DIR)/usr/sbin/micronet
+	ln -sf micronet $(TARGET_DIR)/usr/sbin/configure-ethernet
+	ln -sf micronet $(TARGET_DIR)/usr/sbin/configure-dhcp
 endef
 
 $(eval $(generic-package))
