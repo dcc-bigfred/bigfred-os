@@ -72,10 +72,10 @@ if BR2_PACKAGE_MICRONET
 
 config BR2_PACKAGE_MICRONET_REF
 	string "GitHub ref (main | sha-<7> | v* | branch)"
-	default "feat/micronet-daemon"
+	default "main"
 	help
 	  Ref for dcc-bigfred/micronet binaries.
-	  Override: make image MICRONET_REF=feat/micronet-daemon
+	  Override: make image MICRONET_REF=main
 	  Until the daemon lands on main, pin to that branch
 	  (artifact micronet-linux-arm64). Tip refs need GITHUB_TOKEN.
 

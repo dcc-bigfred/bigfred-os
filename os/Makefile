@@ -45,7 +45,7 @@ help:
 	@echo "Refs from $(REPO_ROOT)/VERSIONS (override: make image BIGFRED_REF=…)"
 	@echo "  BigFred:    BIGFRED_REF=$(BIGFRED_REF) (master|latest-release|v*|sha-*)"
 	@echo "  microinit:  MICROINIT_REF=$(MICROINIT_REF) (main|sha-*|v*|latest-release)"
-	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (feat/micronet-daemon until on main | sha-* | v*)"
+	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (main | sha-* | v*)"
 	@echo "  microdns:   MICRODNS_REF=$(MICRODNS_REF) (main|sha-*|v*|latest-release)"
 	@echo "  wp:         WIRELESS_PROGRAMMER_REF=$(WIRELESS_PROGRAMMER_REF) (main|sha-*|v*|latest-release)"
 	@echo "  wizard:     BIGFRED_WIZARD_REF=$(BIGFRED_WIZARD_REF) (main|sha-*|v*|latest-release)"

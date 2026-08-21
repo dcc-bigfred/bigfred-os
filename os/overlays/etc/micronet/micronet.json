@@ -1,8 +1,8 @@
 {
   "interface": null,
   "gateway": {
-    "ip": "10.0.10.1",
-    "subnet": "10.0.10.0/24",
+    "ip": "192.168.0.1",
+    "subnet": "192.168.0.0/24",
     "staticHost": 252
   },
   "dhcp": {

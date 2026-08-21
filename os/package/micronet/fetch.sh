@@ -4,8 +4,7 @@
 #
 # Required artifact: binaries-arm64 / ci.yml → micronet-linux-arm64
 # (no fallback to legacy configure-ethernet / configure-dhcp names).
-# Pin MICRONET_REF to a ref that publishes that artifact (feat/micronet-daemon
-# until it lands on main).
+# Default MICRONET_REF is main (Actions artifact binaries-arm64 / ci.yml).
 #
 # Env overrides: MICRONET_GITHUB_REPO, MICRONET_ARTIFACT_NAME,
 #                MICRONET_CI_WORKFLOW, MICRONET_FILES

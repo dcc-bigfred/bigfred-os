@@ -9,7 +9,7 @@ ifeq ($(MICRONET_VERSION),)
 MICRONET_VERSION = $(call qstrip,$(BR2_PACKAGE_MICRONET_REF))
 endif
 ifeq ($(MICRONET_VERSION),)
-MICRONET_VERSION = feat/micronet-daemon
+MICRONET_VERSION = main
 endif
 
 MICRONET_VERSION_SAFE = $(subst /,_,$(MICRONET_VERSION))
