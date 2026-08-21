@@ -1,7 +1,6 @@
 ################################################################################
 #
-# micronet — configure-ethernet + configure-dhcp from GitHub
-# (Actions tip / Releases)
+# micronet — network daemon from GitHub (Actions tip / Releases)
 #
 ################################################################################
 
@@ -32,10 +31,10 @@ define MICRONET_EXTRACT_CMDS
 endef
 
 define MICRONET_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/bin/configure-ethernet \
-		$(TARGET_DIR)/usr/sbin/configure-ethernet
-	$(INSTALL) -D -m 0755 $(@D)/bin/configure-dhcp \
-		$(TARGET_DIR)/usr/sbin/configure-dhcp
+	$(INSTALL) -D -m 0755 $(@D)/bin/micronet \
+		$(TARGET_DIR)/usr/sbin/micronet
+	ln -sf micronet $(TARGET_DIR)/usr/sbin/configure-ethernet
+	ln -sf micronet $(TARGET_DIR)/usr/sbin/configure-dhcp
 endef
 
 $(eval $(generic-package))

@@ -1,0 +1,14 @@
+{
+  "interface": null,
+  "gateway": {
+    "ip": "10.0.10.1",
+    "subnet": "10.0.10.0/24",
+    "staticHost": 252
+  },
+  "dhcp": {
+    "rangeStart": 50,
+    "rangeEnd": 200,
+    "sticky": "7d"
+  },
+  "probeTimeoutSecs": 5
+}

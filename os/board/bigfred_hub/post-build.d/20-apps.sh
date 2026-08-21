@@ -13,8 +13,8 @@ if [ -d "${APPS_BIN}" ]; then
 				# Replaced by microinit (package/microinit)
 				continue
 				;;
-			configure-ethernet|configure-dhcp)
-				# Replaced by micronet (package/micronet)
+			configure-ethernet|configure-dhcp|micronet)
+				# Shipped by package/micronet
 				continue
 				;;
 		esac

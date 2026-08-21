@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch micronet linux/arm64 binaries (configure-dhcp + configure-ethernet).
+# Fetch micronet linux/arm64 binary.
 # Usage: fetch.sh <ref> <output.tar>
 #
 # Env overrides: MICRONET_GITHUB_REPO, MICRONET_ARTIFACT_NAME,
@@ -21,7 +21,7 @@ FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@v0.1.3}"
 REPO="${MICRONET_GITHUB_REPO:-dcc-bigfred/micronet}"
 ARTIFACT="${MICRONET_ARTIFACT_NAME:-binaries-arm64}"
 WORKFLOW="${MICRONET_CI_WORKFLOW:-ci.yml}"
-FILES="${MICRONET_FILES:-configure-dhcp-linux-arm64:bin/configure-dhcp,configure-ethernet-linux-arm64:bin/configure-ethernet}"
+FILES="${MICRONET_FILES:-micronet-linux-arm64:bin/micronet}"
 
 exec go run "${FETCH_PKG}" \
 	--repo="${REPO}" \

@@ -440,6 +440,8 @@ if [ -d /etc/bigfred ]; then
 	done
 fi
 seed /etc/redis/redis.conf "$DATA_ROOT/etc/redis.conf" 640
+# micronet: seed event subnet once; operator edits in $DATA_DIR survive.
+seed /etc/micronet/micronet.json "$DATA_ROOT/etc/micronet.json" 644
 # microdns config is regenerated every boot (operator edits not preserved by design).
 if [ -e /etc/microdns/microdns.json ]; then
 	mkdir -p "$DATA_ROOT/etc"

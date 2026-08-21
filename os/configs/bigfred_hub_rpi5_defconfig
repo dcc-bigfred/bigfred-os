@@ -74,7 +74,7 @@ BR2_PACKAGE_SQLITE=y
 BR2_PACKAGE_REDIS=y
 BR2_PACKAGE_HTOP=y
 BR2_PACKAGE_IOTOP=y
-# Full `ip` from iproute2 (also used by network / configure-ethernet)
+# Full `ip` from iproute2 (also used by micronet)
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_ETHTOOL=y
 BR2_PACKAGE_LIBCURL=y

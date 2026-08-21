@@ -55,11 +55,11 @@ config BR2_PACKAGE_MICROINIT_REF
 endif
 
 config BR2_PACKAGE_MICRONET
-	bool "micronet (configure-ethernet + configure-dhcp from GitHub)"
+	bool "micronet (network daemon from GitHub)"
 	default y
 	help
-	  Pull configure-ethernet and configure-dhcp from GitHub
-	  (Actions tip or Releases) into /usr/sbin/.
+	  Pull micronet from GitHub (Actions tip or Releases)
+	  into /usr/sbin/micronet.
 
 	  https://github.com/dcc-bigfred/micronet
 

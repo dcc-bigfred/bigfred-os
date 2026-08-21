@@ -25,7 +25,7 @@ Bands used on the hub (leave gaps so new services fit between):
 | Band | Range | Purpose |
 |------|-------|---------|
 | Host prep | 10–29 | sysctl, udevd, watchdog |
-| Network | 30–49 | network, configure-dhcp |
+| Network | 30–49 | network |
 | Housekeeping | 50–99 | cron |
 | Infra | 100–149 | redis, microdns, victoriametrics, alloy, microwaf |
 | Access / ops | 200–249 | dropbear, remote-icmp, bigfred-os-ui |
@@ -38,7 +38,6 @@ Bands used on the hub (leave gaps so new services fit between):
 | udevd | 15 | — |
 | watchdog | 20 | — |
 | network | 30 | — |
-| configure-dhcp | 40 | network |
 | cron | 50 | — |
 | redis | 100 | network |
 | microdns | 110 | network |

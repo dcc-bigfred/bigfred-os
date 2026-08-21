@@ -1,7 +1,7 @@
 #!/bin/sh
-# Ethernet: one-shot configure-ethernet (static / DHCP)
+# Ethernet daemon: micronet serve (DHCP-detect / gateway / static)
 
-CONFIGURE=/usr/sbin/configure-ethernet
+MICRONET=/usr/sbin/micronet
 IP=/sbin/ip
 
 case "$1" in
@@ -9,14 +9,16 @@ start)
 	# Redis and local services bind 127.0.0.1 — loopback must be up first.
 	"$IP" link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null || true
 
-	if [ ! -x "$CONFIGURE" ]; then
-		echo "network: $CONFIGURE missing" >&2
+	if [ ! -x "$MICRONET" ]; then
+		echo "network: $MICRONET missing" >&2
 		exit 1
 	fi
-	exec "$CONFIGURE" up
+	exec "$MICRONET" serve
 	;;
 stop)
+	killall micronet 2>/dev/null
 	killall dhclient 2>/dev/null
+	killall dnsmasq 2>/dev/null
 	for iface in /sys/class/net/*; do
 		[ -d "$iface" ] || continue
 		name=$(basename "$iface")
