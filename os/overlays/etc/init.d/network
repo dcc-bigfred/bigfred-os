@@ -16,16 +16,12 @@ start)
 	exec "$MICRONET" serve
 	;;
 stop)
+	# Non-destructive: only stop the daemon and its dnsmasq. Leave
+	# dhclient and any acquired lease in place so a liveness restart
+	# does not tear down a working DHCP client (micronet reconciles
+	# on the next serve).
 	killall micronet 2>/dev/null
-	killall dhclient 2>/dev/null
 	killall dnsmasq 2>/dev/null
-	for iface in /sys/class/net/*; do
-		[ -d "$iface" ] || continue
-		name=$(basename "$iface")
-		[ "$name" = "lo" ] && continue
-		[ -d "$iface/wireless" ] && continue
-		"$IP" addr flush dev "$name" 2>/dev/null || true
-	done
 	;;
 restart)
 	$0 stop
