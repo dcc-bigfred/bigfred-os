@@ -7,6 +7,10 @@
       "cmd": "/etc/init.d/network",
       "dependsOn": [],
       "startWaitSecs": 15,
+      "shutdownWaitSecs": 5,
+      "restartPolicy": "onError",
+      "restartBackoff": 5,
+      "restartCmd": "/bin/false",
       "livenessProbe": {
         "cmd": "/usr/sbin/micronet check",
         "successExitCodes": [

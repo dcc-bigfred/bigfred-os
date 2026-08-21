@@ -1,6 +1,6 @@
 # BigFred OS — top-level build entrypoints
 
-.PHONY: image image-using-docker docker-image check-docker-rpath relocate-br-host
+.PHONY: image image-using-docker docker-image check-docker-rpath relocate-br-host check
 
 relocate-br-host:
 	@bash "$(REPO_ROOT)/scripts/relocate-br-host.sh"
@@ -14,6 +14,9 @@ DOCKER_GID   ?= 1000
 
 # Defaults from VERSIONS; CLI/env still override (make BIGFRED_REF=… / env).
 include $(REPO_ROOT)/VERSIONS
+
+check:
+	bash "$(REPO_ROOT)/scripts/check-os.sh"
 
 image:
 	$(MAKE) -C os image \

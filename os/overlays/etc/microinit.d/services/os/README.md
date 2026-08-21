@@ -52,3 +52,10 @@ Bands used on the hub (leave gaps so new services fit between):
 | grafana | 400 | victoriametrics |
 
 Runtime `dcc-bus-*` drop-ins (written by BigFred) use **350** on the same scale.
+
+## `network`
+
+`livenessProbe` is `micronet check`. `stop` (and therefore a failed liveness
+recycle) runs `micronet teardown` then killalls. `restartCmd` is `/bin/false`
+so `microinit restart network` does a full stop then a tracked start instead of
+`{cmd} restart` (which would `exec serve` and lose the PID).

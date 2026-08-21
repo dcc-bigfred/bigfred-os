@@ -20,7 +20,7 @@ BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
 .PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash \
-	apps-build apps-clean
+	apps-build apps-clean check
 
 all: image
 
@@ -38,19 +38,23 @@ help:
 	@echo "  make menuconfig  — customize Buildroot"
 	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
 	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
+	@echo "  make check       — overlay JSON / shell / micronet packaging checks"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
 	@echo "Refs from $(REPO_ROOT)/VERSIONS (override: make image BIGFRED_REF=…)"
 	@echo "  BigFred:    BIGFRED_REF=$(BIGFRED_REF) (master|latest-release|v*|sha-*)"
 	@echo "  microinit:  MICROINIT_REF=$(MICROINIT_REF) (main|sha-*|v*|latest-release)"
-	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (main|sha-*|v*|latest-release)"
+	@echo "  micronet:   MICRONET_REF=$(MICRONET_REF) (feat/micronet-daemon until on main | sha-* | v*)"
 	@echo "  microdns:   MICRODNS_REF=$(MICRODNS_REF) (main|sha-*|v*|latest-release)"
 	@echo "  wp:         WIRELESS_PROGRAMMER_REF=$(WIRELESS_PROGRAMMER_REF) (main|sha-*|v*|latest-release)"
 	@echo "  wizard:     BIGFRED_WIZARD_REF=$(BIGFRED_WIZARD_REF) (main|sha-*|v*|latest-release)"
 	@echo "  microwaf:   MICROWAF_REF=$(MICROWAF_REF) (main|sha-*|v*|latest-release)"
 	@echo "Tip refs need GITHUB_TOKEN / GH_TOKEN / BIGFRED_NATIVE_TOKEN"
 	@echo "Binary fetch: go run github.com/dcc-bigfred/common/cmd/fetch@latest"
+
+check:
+	bash "$(REPO_ROOT)/scripts/check-os.sh"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)

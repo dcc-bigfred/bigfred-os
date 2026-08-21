@@ -2,6 +2,11 @@
 # Fetch micronet linux/arm64 binary.
 # Usage: fetch.sh <ref> <output.tar>
 #
+# Required artifact: binaries-arm64 / ci.yml → micronet-linux-arm64
+# (no fallback to legacy configure-ethernet / configure-dhcp names).
+# Pin MICRONET_REF to a ref that publishes that artifact (feat/micronet-daemon
+# until it lands on main).
+#
 # Env overrides: MICRONET_GITHUB_REPO, MICRONET_ARTIFACT_NAME,
 #                MICRONET_CI_WORKFLOW, MICRONET_FILES
 # Token: BIGFRED_NATIVE_TOKEN / GH_TOKEN / GITHUB_TOKEN (required for tip refs)

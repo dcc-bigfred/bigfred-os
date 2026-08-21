@@ -57,20 +57,27 @@ endif
 config BR2_PACKAGE_MICRONET
 	bool "micronet (network daemon from GitHub)"
 	default y
+	select BR2_PACKAGE_DNSMASQ
+	select BR2_PACKAGE_DHCP
+	select BR2_PACKAGE_DHCP_CLIENT
+	select BR2_PACKAGE_IPROUTE2
 	help
 	  Pull micronet from GitHub (Actions tip or Releases)
-	  into /usr/sbin/micronet.
+	  into /usr/sbin/micronet. Runtime: /usr/sbin/dnsmasq,
+	  /sbin/dhclient, /sbin/ip.
 
 	  https://github.com/dcc-bigfred/micronet
 
 if BR2_PACKAGE_MICRONET
 
 config BR2_PACKAGE_MICRONET_REF
-	string "GitHub ref (main | sha-<7> | v*)"
-	default "main"
+	string "GitHub ref (main | sha-<7> | v* | branch)"
+	default "feat/micronet-daemon"
 	help
 	  Ref for dcc-bigfred/micronet binaries.
-	  Override: make image MICRONET_REF=main
+	  Override: make image MICRONET_REF=feat/micronet-daemon
+	  Until the daemon lands on main, pin to that branch
+	  (artifact micronet-linux-arm64). Tip refs need GITHUB_TOKEN.
 
 endif
 

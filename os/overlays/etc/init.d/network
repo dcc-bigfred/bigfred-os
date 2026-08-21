@@ -16,12 +16,14 @@ start)
 	exec "$MICRONET" serve
 	;;
 stop)
-	# Non-destructive: only stop the daemon and its dnsmasq. Leave
-	# dhclient and any acquired lease in place so a liveness restart
-	# does not tear down a working DHCP client (micronet reconciles
-	# on the next serve).
+	# Full teardown: stop managed dnsmasq/dhclient and flush the iface.
+	# microinit liveness recycle also hits stop then start.
+	if [ -x "$MICRONET" ]; then
+		"$MICRONET" teardown 2>/dev/null || true
+	fi
 	killall micronet 2>/dev/null
 	killall dnsmasq 2>/dev/null
+	killall dhclient 2>/dev/null
 	;;
 restart)
 	$0 stop
