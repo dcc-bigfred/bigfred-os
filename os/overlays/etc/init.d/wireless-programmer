@@ -9,6 +9,7 @@ case "$1" in
 start)
 	[ -x "$BIN" ] || exit 0
 	mkdir -p /data/run/wireless-programmer
+	modprobe brcmfmac 2>/dev/null || true
 	# Belt and braces: the udev rule normally clears the soft block at boot,
 	# but if udevd is degraded a job would fail with a confusing radioBlocked
 	# instead of just working. Best-effort, so no failure if rfkill is absent.

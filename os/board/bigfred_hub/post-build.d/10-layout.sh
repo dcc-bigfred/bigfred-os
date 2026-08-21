@@ -31,5 +31,18 @@ chmod 700 "${TARGET_DIR}/data/root/.ssh"
 mkdir -p "${TARGET_DIR}/root/.ssh"
 chmod 700 "${TARGET_DIR}/root/.ssh"
 
+# Dropbear host keys. On a RO rootfs Buildroot replaces /etc/dropbear with a
+# symlink to /var/run/dropbear (tmpfs). That directory is empty after boot
+# and our overlay init does not run Buildroot's S50dropbear mkdir, so
+# `dropbear -R` cannot write keys and never binds :22. Persist keys on /data
+# (same pattern as /root/.ssh); /etc/dropbear is a bind-mount point.
+if [ -L "${TARGET_DIR}/etc/dropbear" ]; then
+	rm -f "${TARGET_DIR}/etc/dropbear"
+fi
+mkdir -p "${TARGET_DIR}/etc/dropbear"
+chmod 700 "${TARGET_DIR}/etc/dropbear"
+mkdir -p "${TARGET_DIR}/data/etc/dropbear"
+chmod 700 "${TARGET_DIR}/data/etc/dropbear"
+
 # Placeholder for BigFred (installed separately by operator)
 mkdir -p "${TARGET_DIR}/usr/share/bigfred/web"

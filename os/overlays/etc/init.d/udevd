@@ -20,6 +20,13 @@ start)
 		printf '\000\000\000\000' >/proc/sys/kernel/hotplug
 	fi
 
+	# CYW43455 WiFi: brcmfmac is a module so firmware is read from
+	# /lib/firmware after rootfs is mounted. The SDIO function is already
+	# enumerated by the built-in sdhci-brcmstb host. A built-in brcmfmac
+	# probe happens in device_initcall (firmware not yet available) and
+	# never creates wlan0.
+	modprobe brcmfmac 2>/dev/null || true
+
 	# Coldplug after the daemon is reachable (background so we can exec).
 	(
 		i=0
@@ -31,6 +38,7 @@ start)
 		udevadm trigger --type=subsystems --action=add 2>/dev/null || true
 		udevadm trigger --type=devices --action=add 2>/dev/null || true
 		udevadm settle --timeout="$SETTLE_TIMEOUT" 2>/dev/null || true
+		modprobe brcmfmac 2>/dev/null || true
 	) &
 
 	exec "$UDEVD"

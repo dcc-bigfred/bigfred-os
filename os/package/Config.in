@@ -110,7 +110,9 @@ config BR2_PACKAGE_WIRELESS_PROGRAMMER
 	  and install /usr/sbin/wireless-programmer. Discovers and programs
 	  physical throttle hardware (e.g. NewHeiko WiFred) over WiFi config
 	  APs, driven by bigfred / bigfred-wizard via a Unix socket. Needs
-	  cfg80211 + brcmfmac + rfkill (see os/configs/linux-hub.fragment).
+	  cfg80211 + brcmfmac SDIO + rfkill (see os/configs/linux-hub.fragment)
+	  and Raspberry Pi CYW43455 firmware
+	  (BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_WIFI).
 
 	  https://github.com/dcc-bigfred/wireless-programmer
 

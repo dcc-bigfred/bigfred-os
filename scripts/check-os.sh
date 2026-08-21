@@ -26,6 +26,10 @@ sh_n() {
 
 while IFS= read -r -d '' f; do
 	sh_n "$f"
+	if [[ ! -x "$f" ]]; then
+		echo "not executable: $f" >&2
+		fail=1
+	fi
 done < <(find "$OS/overlays/etc/init.d" -type f -print0 2>/dev/null)
 
 sh_n "$OS/overlays/etc/microinit/early-boot.sh"
@@ -93,6 +97,30 @@ grep -q 'teardown' "$net_init" || {
 	echo "init.d/network: stop must call micronet teardown" >&2
 	fail=1
 }
+grep -q '^BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_WIFI=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_WIFI=y (Pi 5 wlan0)" >&2
+	fail=1
+}
+grep -q '^BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_BT=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_BT=y (Pi 5 hci0)" >&2
+	fail=1
+}
+grep -q '^CONFIG_BRCMFMAC=m' "$OS/configs/linux-hub.fragment" || {
+	echo "linux-hub.fragment: CONFIG_BRCMFMAC must be a module (firmware after rootfs)" >&2
+	fail=1
+}
+grep -q 'prepare_dropbear_keys' "$OS/overlays/etc/init.d/dropbear" || {
+	echo "init.d/dropbear: must create host-key dir (not rely on /var/run/dropbear)" >&2
+	fail=1
+}
+grep -q '/etc/dropbear' "$OS/board/bigfred_hub/post-build.d/10-layout.sh" || {
+	echo "10-layout.sh: must replace Buildroot /etc/dropbear -> /var/run/dropbear symlink" >&2
+	fail=1
+}
+if grep -q '^BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XXX=y' "$defconfig"; then
+	echo "defconfig: BRCM_BCM43XXX conflicts with BRCMFMAC_SDIO_FIRMWARE_RPI_WIFI" >&2
+	fail=1
+fi
 
 if [[ "$fail" -ne 0 ]]; then
 	echo "check-os: FAIL" >&2

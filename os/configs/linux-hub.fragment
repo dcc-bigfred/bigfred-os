@@ -38,16 +38,33 @@ CONFIG_EXT4_FS=y
 # deliberately left at whatever the bcm2712 base defconfig sets rather than
 # overridden here — turning it off would also disable any SoftMAC USB adapter a
 # user plugs in, for a saving we do not need.
+#
+# Pi 5 WiFi is CYW43455 on SDIO2 (`compatible = "brcm,bcm2712-sdhci"`). Keep
+# the SDHCI host built-in so the SDIO function enumerates, but leave brcmfmac
+# as a **module**. Built-in brcmfmac probes in device_initcall, before rootfs
+# (and /lib/firmware) exists, firmware request fails with -2, and wlan0 is
+# never created. udevd coldplugs the module after / is mounted.
+#
+# bcm2712_defconfig compresses modules with XZ; musl kmod has failed to load
+# those silently on this image, so leave modules uncompressed.
+CONFIG_WLAN=y
 CONFIG_WIRELESS=y
 CONFIG_CFG80211=y
 # rfkill for /sys/class/rfkill/*/soft, which the udev rule clears at boot.
 # RFKILL_INPUT is not enabled: it only handles kill-switch key events, and the
 # hub has no such switch.
 CONFIG_RFKILL=y
-# CYW43455 over SDIO on the Pi 5 (bcm2712, the only defconfig in-tree).
-CONFIG_BRCMFMAC=y
+CONFIG_MMC=y
+CONFIG_MMC_SDHCI=y
+CONFIG_MMC_SDHCI_PLTFM=y
+CONFIG_MMC_SDHCI_BRCMSTB=y
+CONFIG_GPIO_BRCMSTB=y
+CONFIG_REGULATOR=y
+CONFIG_REGULATOR_FIXED_VOLTAGE=y
+CONFIG_BRCMFMAC=m
 CONFIG_BRCMFMAC_SDIO=y
-# brcmfmac loads firmware/nvram from /lib/firmware/brcm (linux-firmware pkg).
+# CONFIG_MODULE_COMPRESS is not set
+# CONFIG_MODULE_COMPRESS_XZ is not set
 
 # MicroWAF — AF_PACKET sniff + optional XDP enforce (aya).
 CONFIG_PACKET=y

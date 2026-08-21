@@ -1,7 +1,42 @@
 #!/bin/sh
 
+# Host keys live under /etc/dropbear. New images bind-mount that from
+# /data/etc/dropbear (survives reboot). Older images still have Buildroot's
+# symlink /etc/dropbear -> /var/run/dropbear; mkdir the tmpfs target and
+# seed/save keys on /data so SSH still comes up.
+dropbear_keydir() {
+	if [ -L /etc/dropbear ]; then
+		readlink /etc/dropbear
+	else
+		echo /etc/dropbear
+	fi
+}
+
+prepare_dropbear_keys() {
+	mkdir -p /data/etc/dropbear
+	chmod 700 /data/etc/dropbear
+	_dir=$(dropbear_keydir)
+	mkdir -p "$_dir"
+	chmod 700 "$_dir"
+	if [ -L /etc/dropbear ]; then
+		cp -an /data/etc/dropbear/. "$_dir/" 2>/dev/null || true
+	fi
+	if command -v dropbearkey >/dev/null 2>&1; then
+		for _t in ed25519 rsa ecdsa; do
+			_f="$_dir/dropbear_${_t}_host_key"
+			[ -f "$_f" ] && continue
+			dropbearkey -t "$_t" -f "$_f" >/dev/null 2>&1 || true
+		done
+	fi
+	if [ -L /etc/dropbear ]; then
+		cp -a "$_dir"/dropbear_* /data/etc/dropbear/ 2>/dev/null || true
+		chmod 600 /data/etc/dropbear/dropbear_* 2>/dev/null || true
+	fi
+}
+
 case "$1" in
 start)
+	prepare_dropbear_keys
 	# -F: stay in foreground so microinit can track the PID
 	# -R: create host keys as needed
 	exec /usr/sbin/dropbear -F -R

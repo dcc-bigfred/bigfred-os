@@ -6,7 +6,7 @@
 #
 # Reverse of early-boot + clean block-device shutdown:
 #   0) save fake-hwclock to /data
-#   1) drop binds that hold /data busy (localtime, shadow, root/.ssh)
+#   1) drop binds that hold /data busy (localtime, shadow, root/.ssh, dropbear)
 #   2) remount RO + umount /data (persistent ext4 — SD p3 or NVMe)
 #   3) remount root RO (flush journal if anything remounted RW at runtime)
 #   4) umount -a -r for any remaining real mounts (skip virt/tmpfs)
@@ -61,6 +61,10 @@ fi
 if is_mounted /root/.ssh; then
 	log "umount /root/.ssh"
 	try_umount /root/.ssh || log "WARNING: could not umount /root/.ssh"
+fi
+if is_mounted /etc/dropbear; then
+	log "umount /etc/dropbear"
+	try_umount /etc/dropbear || log "WARNING: could not umount /etc/dropbear"
 fi
 
 # Service logs tmpfs stacked on /data — must go before remount/umount of /data.

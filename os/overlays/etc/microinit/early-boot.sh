@@ -552,6 +552,28 @@ elif ! is_mounted /root/.ssh; then
 	mount --bind "$DATA_ROOT/root/.ssh" /root/.ssh 2>/dev/null || true
 fi
 
+# --- persistent dropbear host keys (bind over /etc/dropbear) ---
+# Buildroot's RO-rootfs hook leaves /etc/dropbear -> /var/run/dropbear.
+# Bind-mounting over a symlink follows it onto tmpfs, so replace the
+# symlink with a real directory first (brief RW remount on old images).
+mkdir -p "$DATA_ROOT/etc/dropbear"
+chmod 700 "$DATA_ROOT/etc/dropbear"
+if [ -L /etc/dropbear ] || [ ! -d /etc/dropbear ]; then
+	mount -o remount,rw / 2>/dev/null || true
+	rm -f /etc/dropbear
+	mkdir -p /etc/dropbear
+	chmod 700 /etc/dropbear
+fi
+if ! is_mounted /etc/dropbear; then
+	if [ "$DATA_ROOT" = /data ]; then
+		if is_mounted /data; then
+			mount --bind "$DATA_ROOT/etc/dropbear" /etc/dropbear 2>/dev/null || true
+		fi
+	else
+		mount --bind "$DATA_ROOT/etc/dropbear" /etc/dropbear 2>/dev/null || true
+	fi
+fi
+
 # --- timezone: persist operator choice from /data/etc (bind over RO /etc/localtime) ---
 # Same category as shadow: must be ready before any supervised process starts
 # (microinit launches dependsOn:[] services in parallel).
