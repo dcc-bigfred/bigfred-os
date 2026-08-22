@@ -12,9 +12,6 @@
         "network",
         "redis"
       ],
-      "securityContext": {
-        "runAsUser": "root"
-      },
       "orderPriority": 140
     }
   ]

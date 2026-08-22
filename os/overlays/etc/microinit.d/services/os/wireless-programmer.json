@@ -12,9 +12,6 @@
         "network",
         "udevd"
       ],
-      "securityContext": {
-        "runAsUser": "root"
-      },
       "orderPriority": 120
     }
   ]
