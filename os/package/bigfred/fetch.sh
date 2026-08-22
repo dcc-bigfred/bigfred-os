@@ -19,7 +19,7 @@ export GOPROXY="${GOPROXY:-direct}"
 FETCH_PKG="${FETCH_PKG:-github.com/dcc-bigfred/common/cmd/fetch@v0.1.4}"
 
 REPO="${BIGFRED_GITHUB_REPO:-dcc-bigfred/bigfred}"
-ARTIFACT="${BIGFRED_ARTIFACT_NAME:-binaries}"
+ARTIFACT="${BIGFRED_ARTIFACT_NAME:-binaries-arm64}"
 WORKFLOW="${BIGFRED_CI_WORKFLOW:-ci.yml}"
 FILES="${BIGFRED_FILES:-loco-server-linux-arm64:bin/bigfred,bigfred-remote-icmp-linux-arm64:bin/bigfred-remote-icmp}"
 

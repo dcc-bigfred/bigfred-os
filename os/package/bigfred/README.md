@@ -4,6 +4,7 @@ Pulls [dcc-bigfred/bigfred](https://github.com/dcc-bigfred/bigfred) hub linux/ar
 binaries via shared GitHub fetch and installs loco-server + remote-icmp under
 `/opt/bigfred/bin/` with `/usr/bin` wrappers.
 
+Tip refs (`master` / `main` / `sha-*`) use the CI artifact `binaries-arm64`.
 Default ref: `master` (repo-root `VERSIONS` / `BIGFRED_REF`). Tip/`master`
 needs a GitHub token; public Releases usually do not.
 

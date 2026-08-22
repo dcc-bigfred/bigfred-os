@@ -142,6 +142,10 @@ grep -q 'BIGFRED_FORCE_REDOWNLOAD' "$OS/package/bigfred/bigfred.mk" || {
 	echo "bigfred.mk: missing BIGFRED_FORCE_REDOWNLOAD (tip refs must re-fetch)" >&2
 	fail=1
 }
+grep -q 'binaries-arm64' "$OS/package/bigfred/fetch.sh" || {
+	echo "bigfred fetch.sh: ARTIFACT must be binaries-arm64" >&2
+	fail=1
+}
 grep -q 'bigfred-dirclean' "$OS/Makefile" || {
 	echo "os/Makefile: image target must run bigfred-dirclean before build" >&2
 	fail=1
