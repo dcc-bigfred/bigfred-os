@@ -20,7 +20,7 @@ BIGFRED_SITE = https://github.com/dcc-bigfred/bigfred
 BIGFRED_LICENSE = proprietary
 BIGFRED_DEPENDENCIES = host-libcap
 
-# Always re-fetch: tip refs and floating tags change under the same filename.
+# Always re-fetch: tip refs (master/main/sha-*) change under the same tarball name.
 define BIGFRED_FETCH_GITHUB
 	mkdir -p $(BIGFRED_DL_DIR)
 	rm -f "$(BIGFRED_DL_DIR)/$(BIGFRED_SOURCE)"
@@ -52,8 +52,9 @@ endef
 
 $(eval $(generic-package))
 
-# Force the download step to re-run on every `make image`: without this,
-# .stamp_downloaded stays present after the first build and Buildroot skips
-# PRE_DOWNLOAD_HOOKS, so a re-pushed tip would never be re-fetched.
+# The tarball name is keyed on the ref, not a commit, so a tip ref such as
+# `master` would otherwise be downloaded once and then pinned forever by
+# .stamp_downloaded. Force the pre-download hook on every package build.
+# os/Makefile also runs `bigfred-dirclean` before each `make image`.
 .PHONY: BIGFRED_FORCE_REDOWNLOAD
 $(BIGFRED_DIR)/.stamp_downloaded: BIGFRED_FORCE_REDOWNLOAD

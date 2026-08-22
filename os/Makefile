@@ -37,7 +37,7 @@ help:
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
 	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
-	@echo "  make image       — apps-build + kernel, rootfs, hub-nvme.img"
+	@echo "  make image       — apps-build + re-fetch bigfred + kernel, rootfs, hub-nvme.img"
 	@echo "  make check       — overlay JSON / shell / micronet packaging checks"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
@@ -89,6 +89,8 @@ image: defconfig
 		fi; \
 	fi
 	$(MAKE) -C $(REPO_ROOT)/apps build
+	@echo "Re-fetching bigfred hub binaries (BIGFRED_REF=$(BIGFRED_REF))…"
+	$(BR2_MAKE) BIGFRED_REF=$(BIGFRED_REF) bigfred-dirclean
 	$(BR2_MAKE) BIGFRED_REF=$(BIGFRED_REF) MICROINIT_REF=$(MICROINIT_REF) MICRONET_REF=$(MICRONET_REF) MICRODNS_REF=$(MICRODNS_REF) WIRELESS_PROGRAMMER_REF=$(WIRELESS_PROGRAMMER_REF) BIGFRED_WIZARD_REF=$(BIGFRED_WIZARD_REF) MICROWAF_REF=$(MICROWAF_REF)
 	@echo ""
 	@echo "Image ready: $(OUTPUT_DIR)/images/hub-nvme.img"

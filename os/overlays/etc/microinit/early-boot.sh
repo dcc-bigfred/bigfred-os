@@ -396,6 +396,14 @@ chown_if bigfred \
 	"$DATA_ROOT/logs/bigfred" \
 	"$DATA_ROOT/etc/microinit.d/services/infra" \
 	"$DATA_ROOT/etc/microinit.d/services/dcc-bus"
+# IPC sockets under $DATA_DIR/run/ (microinit.sock, microdns.sock,
+# wireless-programmer/, bigfred.sock). microinit applies securityContext with
+# cap-stripped uid/gid even for runAsUser root, so those processes cannot
+# bypass directory modes — use root:bigfred 0770 (owner root + group bigfred).
+if id bigfred >/dev/null 2>&1; then
+	chown root:bigfred "$DATA_ROOT/run" 2>/dev/null || true
+	chmod 0770 "$DATA_ROOT/run" 2>/dev/null || true
+fi
 if id bigfred >/dev/null 2>&1; then
 	chown root:bigfred \
 		"$DATA_ROOT/etc/microinit.d" \

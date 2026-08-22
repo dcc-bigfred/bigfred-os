@@ -138,6 +138,22 @@ if grep -q '^BR2_PACKAGE_LINUX_FIRMWARE_BRCM_BCM43XXX=y' "$defconfig"; then
 	fail=1
 fi
 
+grep -q 'BIGFRED_FORCE_REDOWNLOAD' "$OS/package/bigfred/bigfred.mk" || {
+	echo "bigfred.mk: missing BIGFRED_FORCE_REDOWNLOAD (tip refs must re-fetch)" >&2
+	fail=1
+}
+grep -q 'bigfred-dirclean' "$OS/Makefile" || {
+	echo "os/Makefile: image target must run bigfred-dirclean before build" >&2
+	fail=1
+}
+grep -q 'chown root:bigfred "$DATA_ROOT/run"' "$OS/overlays/etc/microinit/early-boot.sh" || {
+	echo "early-boot.sh: /data/run must be root:bigfred (cap-stripped root services)" >&2
+	fail=1
+}
+grep -q 'chmod 0770 "$DATA_ROOT/run"' "$OS/overlays/etc/microinit/early-boot.sh" || {
+	echo "early-boot.sh: /data/run must be mode 0770 (not 0750 bigfred-only)" >&2
+	fail=1
+}
 if [[ "$fail" -ne 0 ]]; then
 	echo "check-os: FAIL" >&2
 	exit 1
