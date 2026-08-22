@@ -25,7 +25,7 @@ BR2_PACKAGE_EUDEV=y
 # Console getty is respawned by microinit (PID 1) on --console (tty1).
 # BR2_TARGET_GENERIC_GETTY is not set
 
-BR2_TARGET_GENERIC_HOSTNAME="bigfred-hub"
+BR2_TARGET_GENERIC_HOSTNAME="bigfred"
 BR2_TARGET_GENERIC_ISSUE="BigFred hub\n"
 BR2_TARGET_GENERIC_ROOT_PASSWD="root"
 BR2_TARGET_ENABLE_ROOT_LOGIN=y

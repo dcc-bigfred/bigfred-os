@@ -158,6 +158,14 @@ grep -q 'chmod 0770 "$DATA_ROOT/run"' "$OS/overlays/etc/microinit/early-boot.sh"
 	echo "early-boot.sh: /data/run must be mode 0770 (not 0750 bigfred-only)" >&2
 	fail=1
 }
+grep -q 'BR2_TARGET_GENERIC_HOSTNAME="bigfred"' "$defconfig" || {
+	echo "defconfig: BR2_TARGET_GENERIC_HOSTNAME must be bigfred (dcc-bus mDNS host)" >&2
+	fail=1
+}
+grep -q '"host": "bigfred"' "$OS/overlays/etc/microdns/microdns.json" || {
+	echo "microdns.json overlay: dccBus.host must be bigfred" >&2
+	fail=1
+}
 if [[ "$fail" -ne 0 ]]; then
 	echo "check-os: FAIL" >&2
 	exit 1

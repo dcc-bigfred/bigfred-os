@@ -3,7 +3,8 @@
   "bigfred": { "enabled": true },
   "microinit": { "enabled": true },
   "dccBus": {
-    "beacon": true
+    "beacon": true,
+    "host": "bigfred"
   },
   "retry": {
     "bigfredMs": 45000,
