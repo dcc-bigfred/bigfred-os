@@ -5,7 +5,7 @@
       "enabled": true,
       "daemon": true,
       "restartPolicy": "always",
-      "restartBackoff": 60,
+      "restartBackoff": 5,
       "startWaitSecs": 1,
       "cmd": "/etc/init.d/microdns",
       "dependsOn": [

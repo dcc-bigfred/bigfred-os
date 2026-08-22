@@ -85,6 +85,8 @@ BR2_PACKAGE_IOTOP=y
 # Full `ip` from iproute2 (also used by micronet)
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_ETHTOOL=y
+# On-hub capture for mDNS/DHCP triage (microdns goodbye packets, micronet churn)
+BR2_PACKAGE_TCPDUMP=y
 BR2_PACKAGE_LIBCURL=y
 BR2_PACKAGE_LIBCURL_CURL=y
 BR2_PACKAGE_NMAP_NCAT=y

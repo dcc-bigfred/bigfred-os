@@ -16,6 +16,8 @@ mkdir -p "${TARGET_DIR}/home/bigfred"
 mkdir -p "${TARGET_DIR}/data/opt/bigfred/bin"
 # Override path for wireless-programmer (RO rootfs prevents /usr/sbin writes)
 mkdir -p "${TARGET_DIR}/data/opt/wireless-programmer"
+# Override path for microdns (make deploy in microdns/)
+mkdir -p "${TARGET_DIR}/data/opt/microdns"
 mkdir -p "${TARGET_DIR}/data/logs/bigfred"
 mkdir -p "${TARGET_DIR}/data/logs/redis"
 mkdir -p "${TARGET_DIR}/data/logs/alloy"
