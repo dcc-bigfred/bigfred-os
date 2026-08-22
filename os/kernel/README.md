@@ -1,12 +1,15 @@
-# Kernel configuration
+# Kernel for the hub image
 
-Kernel options for the hub are applied via Buildroot fragment files:
+The Pi 5 kernel is **not** built in this tree. `package/linux-prebuilt`
+downloads a hash-pinned tarball from
+[dcc-bigfred/hub-kernel](https://github.com/dcc-bigfred/hub-kernel) Releases
+(`Image`, DTBs, overlays, modules). Pin: `LINUX_PREBUILT_VERSION` +
+`linux-prebuilt.hash`.
 
-- `../configs/linux-4k-page-size.fragment` — 4K pages (Pi 5 / aarch64; 16K/64K off)
-- `../configs/linux-hub.fragment` — PREEMPT, watchdog, USB-ACM, ext4, brcmfmac
+Kconfig fragments (`linux-hub.fragment`, 4K pages, brcmfmac as a module)
+live in hub-kernel. A `CONFIG_*` change is a PR there, then a Release tag,
+then:
 
-The kernel source is fetched by Buildroot from `raspberrypi/linux` **rpi-6.18.y**,
-pinned by commit SHA in `configs/bigfred_hub_rpi5_defconfig`
-(`BR2_LINUX_KERNEL_CUSTOM_TARBALL_*`). The tarball hash lives in
-`board/bigfred_hub/patches/linux/linux.hash`. To move the pin, update the SHA,
-recompute the hash, and `linux-dirclean` before rebuilding.
+```bash
+./scripts/sync-kernel.sh --bump v6.18.0-rN
+```

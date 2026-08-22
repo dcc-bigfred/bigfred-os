@@ -23,7 +23,7 @@ dtparam=eee=off
 # Active cooler — kernel pwm-fan driver + thermal framework (hub spec §8.8).
 # The kernel auto-controls the PWM via cooling_device0 using the
 # thresholds/speeds below (millidegrees Celsius, PWM 0-255).
-# Requires CONFIG_SENSORS_PWM_FAN=y (see configs/linux-hub.fragment).
+# Requires CONFIG_SENSORS_PWM_FAN=y (hub-kernel linux-hub.fragment).
 # Levels: <35 OFF | 35–60 LOW (75) | 60–70 MED (150) | >70 HIGH (255).
 dtparam=cooling_fan=on
 dtparam=fan_temp0=35000,fan_temp0_hyst=5000,fan_temp0_speed=75

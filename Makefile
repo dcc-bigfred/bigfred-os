@@ -1,6 +1,6 @@
 # BigFred OS — top-level build entrypoints
 
-.PHONY: image image-using-docker docker-image check-docker-rpath relocate-br-host check
+.PHONY: image image-using-docker docker-image check-docker-rpath relocate-br-host check kernel-status
 
 relocate-br-host:
 	@bash "$(REPO_ROOT)/scripts/relocate-br-host.sh"
@@ -17,6 +17,9 @@ include $(REPO_ROOT)/VERSIONS
 
 check:
 	bash "$(REPO_ROOT)/scripts/check-os.sh"
+
+kernel-status:
+	$(MAKE) -C os kernel-status
 
 image:
 	$(MAKE) -C os image \

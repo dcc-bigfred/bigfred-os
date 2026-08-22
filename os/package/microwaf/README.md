@@ -21,4 +21,4 @@ Persistent enable: set `"enabled": true` in
 `overlays/etc/microinit.d/services/os/microwaf.json` and rebuild the image.
 
 Needs root (`CAP_NET_RAW` / `CAP_NET_ADMIN` / BPF). Kernel options:
-`os/configs/linux-hub.fragment`.
+hub-kernel `configs/linux-hub.fragment`.

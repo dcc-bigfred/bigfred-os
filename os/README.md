@@ -11,7 +11,7 @@ binaries from GitHub (default ref from repo-root `VERSIONS`, usually
 | Layer | Description |
 |-------|-------------|
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
-| **Kernel** | Raspberry Pi `linux` **rpi-6.18.y** (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm); `dtparam=eee=off` |
+| **Kernel** | Prebuilt Pi 5 `Image` from [hub-kernel](https://github.com/dcc-bigfred/hub-kernel) (`bcm2712`, USB-serial cp210x/ftdi_sio/ch341/pl2303/cdc_acm); `dtparam=eee=off` |
 | **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); OS identity via `/etc/lsb-release` (`DISTRIB_ID=bigfred-os`), `/etc/os-release`, and `/usr/lib/bigfred/version/commit` |
 | **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, **bigfred-wizard**, Dropbear (+ OpenSSH `sftp-server` for `scp`/SFTP), **nano**, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), wireless-programmer, **microwaf** (installed, disabled at boot), optional Alloy |
 | **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
@@ -142,13 +142,13 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
    `/data/etc/timezone` + bind of `/data/etc/localtime` over RO `/etc/localtime`
    (default `Europe/Warsaw`). UI: **Time** tab; CLI: `bigfred-set-time`,
    `bigfred-set-timezone`.
-4. **LocoNet USB** — kernel drivers in `configs/linux-hub.fragment`
+4. **LocoNet USB** — kernel drivers in hub-kernel `configs/linux-hub.fragment`
    (`cp210x`, `ftdi_sio`, `ch341`, `pl2303`, `cdc_acm`); **udevd** microinit
    service applies `overlays/etc/udev/rules.d/99-loconet-usb.rules`
    (symlinks `/dev/loconet-63120`, `loconet-lb-usb`, `loconet-ch340`).
    Centrals stub: `99-loconet-centrals.rules`. See §USB / udev below.
-5. **PREEMPT_RT** — `configs/linux-hub.fragment`; if the kernel build fails, use an
-   RT tag/branch from `raspberrypi/linux` or temporarily remove `CONFIG_PREEMPT_RT=y`.
+5. **PREEMPT_RT** — hub-kernel `configs/linux-hub.fragment` uses `CONFIG_PREEMPT`
+   today. An RT-patched `raspberrypi/linux` tree would be a hub-kernel change.
 6. **Grafana Alloy** — enabled in defconfig (`BR2_PACKAGE_ALLOY`); built from
    source as a static musl-compatible binary (official release zips are
    glibc-only). Config: `overlays/etc/alloy/config.alloy`.
@@ -252,11 +252,11 @@ Admin panel: `bigfred-os-ui` (`http://:8090`, config in `/data/etc/bigfred-os-ui
 
 ```text
 os/
-├── configs/           # defconfig, kernel and BusyBox fragments
+├── configs/           # defconfig and BusyBox fragments
 ├── board/bigfred_hub/ # cmdline, config.txt, genimage, post-build.sh + post-build.d/
 ├── overlays/          # fstab, init.d, redis, crontab, udev
-├── kernel/            # (fragments in configs/linux-hub.fragment)
-├── package/           # bigfred, alloy, grafana, victoriametrics (hub apps: ../apps/)
+├── kernel/            # notes; CONFIG_* lives in dcc-bigfred/hub-kernel
+├── package/           # linux-prebuilt, bigfred, alloy, grafana, … (hub apps: ../apps/)
 ├── scripts/           # flash-nvme.sh
 ../apps/                 # apps → apps/.bin/ → /usr/sbin/ (Go + Rust prepare-nvme)
 ../scripts/              # flash-sdcard.sh (repo root)

@@ -101,7 +101,7 @@ jobs:
         id: cache-toolchain
         with:
           path: os/.cache/host-toolchain
-          key: br-host-toolchain-${{ runner.os }}-2025.02-gcc13-${{ hashFiles('os/configs/bigfred_hub_rpi5_defconfig', 'os/configs/linux-4k-page-size.fragment', 'os/external.mk') }}
+          key: br-host-toolchain-${{ runner.os }}-2025.02-gcc13-${{ hashFiles('os/configs/bigfred_hub_rpi5_defconfig', 'os/external.mk') }}
           restore-keys: |
             br-host-toolchain-${{ runner.os }}-2025.02-gcc13-
 

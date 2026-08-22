@@ -1,3 +1,13 @@
+config BR2_PACKAGE_LINUX_PREBUILT
+	bool "Prebuilt Raspberry Pi 5 kernel (hub-kernel)"
+	default y
+	help
+	  Install Image, DTBs, overlays, and modules from a
+	  dcc-bigfred/hub-kernel GitHub Release tarball, hash-pinned
+	  like Grafana. Kernel CONFIG_* lives in hub-kernel, not here.
+
+	  https://github.com/dcc-bigfred/hub-kernel
+
 config BR2_PACKAGE_ALLOY
 	bool "Grafana Alloy (static binary from source)"
 	default n
@@ -110,7 +120,7 @@ config BR2_PACKAGE_WIRELESS_PROGRAMMER
 	  and install /usr/sbin/wireless-programmer. Discovers and programs
 	  physical throttle hardware (e.g. NewHeiko WiFred) over WiFi config
 	  APs, driven by bigfred / bigfred-wizard via a Unix socket. Needs
-	  cfg80211 + brcmfmac SDIO + rfkill (see os/configs/linux-hub.fragment)
+	  cfg80211 + brcmfmac SDIO + rfkill (hub-kernel linux-hub.fragment)
 	  and Raspberry Pi CYW43455 firmware
 	  (BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_WIFI).
 
