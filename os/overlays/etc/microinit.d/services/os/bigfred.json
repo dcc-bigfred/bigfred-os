@@ -29,7 +29,8 @@
         "microdns-port": "8080",
         "microdns-type": "_http._tcp",
         "microdns-host": "bigfred",
-        "microdns-txt-path": "/"
+        "microdns-txt-path": "/",
+        "microdns-txt-bigfred-component": "main"
       }
     }
   ]

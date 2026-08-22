@@ -21,7 +21,14 @@
         ],
         "interval": 300
       },
-      "orderPriority": 400
+      "orderPriority": 400,
+      "labels": {
+        "microdns-port": "3000",
+        "microdns-type": "_http._tcp",
+        "microdns-host": "bigfred",
+        "microdns-txt-path": "/",
+        "microdns-txt-bigfred-component": "grafana"
+      }
     }
   ]
 }

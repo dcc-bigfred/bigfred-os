@@ -53,6 +53,20 @@ Bands used on the hub (leave gaps so new services fit between):
 
 Runtime `dcc-bus-*` drop-ins (written by BigFred) use **350** on the same scale.
 
+## mDNS component TXT
+
+HTTP services advertised via microdns (`microdns-port` + `microdns-type`)
+also set `microdns-txt-bigfred-component`, which becomes DNS-SD TXT
+`bigfred-component=<role>`. The Android client uses this to keep the
+loco-server picker on `main` and hide wizard / OS UI / Grafana.
+
+| Service | `bigfred-component` |
+|---------|---------------------|
+| bigfred | `main` |
+| bigfred-wizard | `wizard` |
+| bigfred-os-ui | `os-admin-ui` |
+| grafana | `grafana` |
+
 ## `network`
 
 `livenessProbe` is `micronet check`. `stop` (and therefore a failed liveness
