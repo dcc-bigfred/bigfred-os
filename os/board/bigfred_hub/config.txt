@@ -16,6 +16,10 @@ device_tree=bcm2712d0-rpi-5-b.dtb
 # Pi 5: enable PCIe Gen3 for NVMe HAT+
 dtparam=pciex1_gen=3
 
+# BCM54213PE AutogrEEEn + macb EEE default-on on 6.18 = link flaps.
+# dtparam=eee=off leaves eee-broken-1000t/100tx on the PHY (Pi 5 / CM5).
+dtparam=eee=off
+
 # Active cooler — kernel pwm-fan driver + thermal framework (hub spec §8.8).
 # The kernel auto-controls the PWM via cooling_device0 using the
 # thresholds/speeds below (millidegrees Celsius, PWM 0-255).

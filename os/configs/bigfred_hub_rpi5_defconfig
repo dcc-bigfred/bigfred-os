@@ -10,10 +10,10 @@ BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6=y
 # musl toolchain (hub spec §8.5)
 BR2_TOOLCHAIN_BUILDROOT_MUSL=y
 
-BR2_GLOBAL_PATCH_DIR="board/raspberrypi/patches"
+BR2_GLOBAL_PATCH_DIR="board/raspberrypi/patches $(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/bigfred_hub/patches"
 BR2_DOWNLOAD_FORCE_CHECK_HASHES=y
 
-# Static IP via network overlay (not DHCP)
+# Addressing is micronet ($DATA_DIR/etc/micronet.json), not BusyBox DHCP.
 # BR2_SYSTEM_DHCP is not set
 
 BR2_INIT_NONE=y
@@ -37,10 +37,10 @@ BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/overlays"
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/bigfred_hub/post-build.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/board/bigfred_hub/post-image.sh"
 
-# Linux kernel (Raspberry Pi 6.6 + hub fragments)
+# Linux kernel (raspberrypi/linux rpi-6.18.y + hub fragments)
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
-BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,raspberrypi,linux,576cc10e1ed50a9eacffc7a05c796051d7343ea4)/linux-576cc10e1ed50a9eacffc7a05c796051d7343ea4.tar.gz"
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,raspberrypi,linux,65495647821026e14223095d1b0124aa3d502dec)/linux-65495647821026e14223095d1b0124aa3d502dec.tar.gz"
 BR2_LINUX_KERNEL_DEFCONFIG="bcm2712"
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_BIGFRED_HUB_PATH)/configs/linux-4k-page-size.fragment $(BR2_EXTERNAL_BIGFRED_HUB_PATH)/configs/linux-hub.fragment"
 BR2_LINUX_KERNEL_DTS_SUPPORT=y

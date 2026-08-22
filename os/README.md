@@ -11,7 +11,7 @@ binaries from GitHub (default ref from repo-root `VERSIONS`, usually
 | Layer | Description |
 |-------|-------------|
 | **Bootloader / firmware** | `rpi-firmware`, `config.txt`, `cmdline.txt` (isolcpus, NVMe root) |
-| **Kernel** | Raspberry Pi `linux` 6.6 (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm) |
+| **Kernel** | Raspberry Pi `linux` **rpi-6.18.y** (`bcm2712`) + USB-serial (cp210x, ftdi_sio, ch341, pl2303, cdc_acm); `dtparam=eee=off` |
 | **Rootfs** | BusyBox utilities, musl, RO `/`, RW `/data` (prefer NVMe via `prepare-nvme`); OS identity via `/etc/lsb-release` (`DISTRIB_ID=bigfred-os`), `/etc/os-release`, and `/usr/lib/bigfred/version/commit` |
 | **Services** | **udevd** (eudev), Redis, SQLite, Grafana, VictoriaMetrics, bigfred-os-ui, **bigfred-wizard**, Dropbear (+ OpenSSH `sftp-server` for `scp`/SFTP), **nano**, watchdog, BigFred (`BR2_PACKAGE_BIGFRED`), wireless-programmer, **microwaf** (installed, disabled at boot), optional Alloy |
 | **Cooling** | Pi 5 active cooler via kernel `pwm-fan` (`dtparam=fan_temp*` in `board/bigfred_hub/config.txt`) |
@@ -130,7 +130,10 @@ sudo ./scripts/flash-nvme.sh /dev/nvme0n1 output/images/hub-nvme.img
 
 ## Configuration before deployment
 
-1. **Network** — `board/bigfred_hub/network.conf` (copied to `/etc/bigfred/network.conf`).
+1. **Network** — `$DATA_DIR/etc/micronet.json` (seeded once from overlay
+   `etc/micronet/micronet.json`, default `192.168.0.1/24`). Hot-reload; do not
+   edit a `network.conf` — that file is unused leftover and can be deleted if
+   present on `/data`.
 2. **Root password** — default `root` in defconfig; change via `make menuconfig`
    → *System configuration* → *Root password*, or on device: `passwd root`
    (password in `/data/etc/shadow`, **Account** panel in `bigfred-os-ui`).
