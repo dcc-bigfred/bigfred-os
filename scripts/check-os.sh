@@ -105,10 +105,23 @@ grep -q '^BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_BT=y' "$defconfig" || {
 	echo "defconfig: missing BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI_BT=y (Pi 5 hci0)" >&2
 	fail=1
 }
-grep -q '^CONFIG_BRCMFMAC=m' "$OS/configs/linux-hub.fragment" || {
-	echo "linux-hub.fragment: CONFIG_BRCMFMAC must be a module (firmware after rootfs)" >&2
+grep -q '^BR2_PACKAGE_LINUX_PREBUILT=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_LINUX_PREBUILT=y" >&2
 	fail=1
 }
+if grep -q '^BR2_LINUX_KERNEL=y' "$defconfig"; then
+	echo "defconfig: BR2_LINUX_KERNEL must be unset (prebuilt kernel)" >&2
+	fail=1
+fi
+hashf="$OS/package/linux-prebuilt/linux-prebuilt.hash"
+ver="$(sed -n 's/^LINUX_PREBUILT_VERSION = //p' "$OS/package/linux-prebuilt/linux-prebuilt.mk" | head -1)"
+asset="bigfred-kernel-rpi5-v${ver}.tar.xz"
+if [[ ! -f "$hashf" ]] || ! grep -qE "^sha256[[:space:]]+[0-9a-f]{64}[[:space:]]+${asset}\$" "$hashf"; then
+	echo "linux-prebuilt.hash: must pin sha256 of ${asset}" >&2
+	fail=1
+fi
+sh_n "$OS/board/bigfred_hub/post-image.sh"
+sh_n "$ROOT/scripts/sync-kernel.sh"
 grep -q 'prepare_dropbear_keys' "$OS/overlays/etc/init.d/dropbear" || {
 	echo "init.d/dropbear: must create host-key dir (not rely on /var/run/dropbear)" >&2
 	fail=1

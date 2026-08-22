@@ -20,7 +20,7 @@ BUILDROOT_TAR     = $(CURDIR)/buildroot-$(BUILDROOT_VERSION).tar.gz
 BR2_MAKE          = $(MAKE) -C $(BUILDROOT_DIR) O=$(OUTPUT_DIR) BR2_EXTERNAL=$(BR2_EXTERNAL)
 
 .PHONY: all help buildroot defconfig menuconfig image legal-info clean distclean flash \
-	apps-build apps-clean check
+	apps-build apps-clean check kernel-status
 
 all: image
 
@@ -37,8 +37,9 @@ help:
 	@echo "  make defconfig   — load $(DEFCONFIG)"
 	@echo "  make menuconfig  — customize Buildroot"
 	@echo "  make apps-build  — build every apps/*/Makefile → apps/.bin/"
-	@echo "  make image       — apps-build + re-fetch bigfred + kernel, rootfs, hub-nvme.img"
+	@echo "  make image       — apps-build + re-fetch bigfred + prebuilt kernel, rootfs, hub-nvme.img"
 	@echo "  make check       — overlay JSON / shell / micronet packaging checks"
+	@echo "  make kernel-status — compare pinned hub-kernel SHA with GitHub Release"
 	@echo "  make clean       — clean build output (keeps download cache)"
 	@echo "  make distclean   — remove output/ and buildroot/"
 	@echo ""
@@ -55,6 +56,9 @@ help:
 
 check:
 	bash "$(REPO_ROOT)/scripts/check-os.sh"
+
+kernel-status:
+	bash "$(REPO_ROOT)/scripts/sync-kernel.sh"
 
 $(BUILDROOT_DIR)/Makefile: $(BUILDROOT_TAR)
 	rm -rf $(BUILDROOT_DIR)

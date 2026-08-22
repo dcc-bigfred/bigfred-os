@@ -20,8 +20,12 @@ rm -rf "${BOOT_DIR}"
 mkdir -p "${BOOT_DIR}/overlays"
 
 cp -v "${BINARIES_DIR}/Image" "${BOOT_DIR}/"
-for dtb in "${BINARIES_DIR}"/*.dtb; do
-	[ -f "$dtb" ] && cp -v "$dtb" "${BOOT_DIR}/"
+for dtb in bcm2712-rpi-5-b.dtb bcm2712d0-rpi-5-b.dtb; do
+	if [ ! -f "${BINARIES_DIR}/${dtb}" ]; then
+		echo "error: linux-prebuilt DTB missing (${BINARIES_DIR}/${dtb})" >&2
+		exit 1
+	fi
+	cp -v "${BINARIES_DIR}/${dtb}" "${BOOT_DIR}/"
 done
 
 # Boot config from board (source of truth; includes D0 device_tree=).
@@ -42,16 +46,17 @@ else
 	echo "NOTE: no ${LOGO_TGA}; skipping logo.cpio"
 fi
 
-# Optional: firmware DT overlays (bcm2712d0.dtbo etc.) from rpi-firmware package.
+# Optional: firmware DT overlays from rpi-firmware, then kernel overlays
+# from linux-prebuilt (BINARIES_DIR/overlays, includes bcm2712d0.dtbo).
 RPI_FW_IMG="${BINARIES_DIR}/rpi-firmware"
 if [ -d "${RPI_FW_IMG}/overlays" ]; then
 	cp -a "${RPI_FW_IMG}/overlays/." "${BOOT_DIR}/overlays/"
 fi
-# Ensure bcm2712d0 overlay from the kernel tree is present even without firmware overlays.
-KERNEL_OVLAY="$(ls -d "${BUILD_DIR}"/build/linux-custom/arch/arm/boot/dts/overlays 2>/dev/null | head -1)"
-if [ -f "${KERNEL_OVLAY}/bcm2712d0.dtbo" ]; then
-	cp -v "${KERNEL_OVLAY}/bcm2712d0.dtbo" "${BOOT_DIR}/overlays/"
+if [ ! -d "${BINARIES_DIR}/overlays" ] || [ ! -f "${BINARIES_DIR}/overlays/bcm2712d0.dtbo" ]; then
+	echo "error: linux-prebuilt overlays missing (${BINARIES_DIR}/overlays/bcm2712d0.dtbo)" >&2
+	exit 1
 fi
+cp -a "${BINARIES_DIR}/overlays/." "${BOOT_DIR}/overlays/"
 
 # mtools image for genimage
 BOOT_MBR="${BINARIES_DIR}/boot.vfat"
