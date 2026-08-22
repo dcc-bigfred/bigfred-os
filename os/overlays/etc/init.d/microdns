@@ -3,7 +3,13 @@
 
 MICRODNS_CONF=/data/etc/microdns.json
 DEFAULT_MICRODNS_CONF=/etc/microdns/microdns.json
-BIN=/usr/sbin/microdns
+
+# Operator override: /data is RW, /usr/sbin is on the RO rootfs.
+if [ -x /data/opt/microdns/microdns ]; then
+	BIN=/data/opt/microdns/microdns
+else
+	BIN=/usr/sbin/microdns
+fi
 
 ensure_microdns_conf() {
 	mkdir -p /data/etc
