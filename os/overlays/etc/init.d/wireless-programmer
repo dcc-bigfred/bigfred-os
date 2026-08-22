@@ -2,7 +2,12 @@
 # wireless-programmer — discovers and programs physical throttle hardware.
 # Driven by bigfred / bigfred-wizard over a Unix socket.
 
-BIN=/usr/sbin/wireless-programmer
+# Operator override: /data is RW, /usr/sbin is on the RO rootfs.
+if [ -x /data/opt/wireless-programmer/wireless-programmer ]; then
+	BIN=/data/opt/wireless-programmer/wireless-programmer
+else
+	BIN=/usr/sbin/wireless-programmer
+fi
 SOCK=/data/run/wireless-programmer/wireless-programmer.sock
 
 case "$1" in

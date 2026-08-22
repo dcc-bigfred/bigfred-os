@@ -69,7 +69,15 @@ BR2_PACKAGE_BUSYBOX_SHOW_OTHERS=y
 
 BR2_PACKAGE_DROPBEAR=y
 BR2_PACKAGE_DROPBEAR_CLIENT=y
+# Modern OpenSSH scp uses SFTP and expects /usr/libexec/sftp-server on the remote.
+# Dropbear does not ship one; build openssh server bits then strip sshd in post-build.
+BR2_PACKAGE_OPENSSH=y
+# BR2_PACKAGE_OPENSSH_CLIENT is not set
+BR2_PACKAGE_OPENSSH_SERVER=y
+# BR2_PACKAGE_OPENSSH_KEY_UTILS is not set
+# BR2_PACKAGE_OPENSSH_SANDBOX is not set
 
+BR2_PACKAGE_NANO=y
 BR2_PACKAGE_SQLITE=y
 BR2_PACKAGE_REDIS=y
 BR2_PACKAGE_HTOP=y

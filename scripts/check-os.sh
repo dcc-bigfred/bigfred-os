@@ -113,6 +113,22 @@ grep -q 'prepare_dropbear_keys' "$OS/overlays/etc/init.d/dropbear" || {
 	echo "init.d/dropbear: must create host-key dir (not rely on /var/run/dropbear)" >&2
 	fail=1
 }
+grep -q '^BR2_PACKAGE_OPENSSH=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_OPENSSH=y (sftp-server for scp)" >&2
+	fail=1
+}
+grep -q '^BR2_PACKAGE_OPENSSH_SERVER=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_OPENSSH_SERVER=y (installs sftp-server)" >&2
+	fail=1
+}
+grep -q 'sftp-server' "$OS/board/bigfred_hub/post-build.d/15-openssh-sftp-only.sh" || {
+	echo "post-build: must strip sshd, keep sftp-server (15-openssh-sftp-only.sh)" >&2
+	fail=1
+}
+grep -q '^BR2_PACKAGE_NANO=y' "$defconfig" || {
+	echo "defconfig: missing BR2_PACKAGE_NANO=y" >&2
+	fail=1
+}
 grep -q '/etc/dropbear' "$OS/board/bigfred_hub/post-build.d/10-layout.sh" || {
 	echo "10-layout.sh: must replace Buildroot /etc/dropbear -> /var/run/dropbear symlink" >&2
 	fail=1
